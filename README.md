@@ -25,7 +25,7 @@ const result = parser.handler(input, 0, {});
 
 // check errors
 if (!result.success) {
-	throw new Error('parsing failed.');
+  throw new Error('parsing failed.');
 }
 
 // show the parsed value
