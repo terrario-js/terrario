@@ -1,2 +1,5 @@
 # terrario
-A stateful parser-combinator library with TypeScript.
+A Parsimmon-like, stateful parser-combinator library with TypeScript.
+
+## License
+MIT License
