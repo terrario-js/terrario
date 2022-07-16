@@ -9,5 +9,11 @@ A Parsimmon-like, stateful parser-combinator library with TypeScript.
 npm i terrario
 ```
 
+## Documenation
+coming soon.
+
+## Examples
+- [JSON parsing](https://github.com/marihachi/terrario/tree/develop/examples/json)
+
 ## License
 MIT License
