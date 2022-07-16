@@ -30,6 +30,7 @@ if (!result.success) {
 
 // show the parsed value
 console.log(result.value);
+// => "hello world"
 ```
 
 ## Examples
