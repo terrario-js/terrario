@@ -104,10 +104,4 @@ function parseJson(input: string) {
 	return result.value;
 }
 
-console.log(parseJson('true'));
-console.log(parseJson('false'));
-console.log(parseJson('123'));
-console.log(parseJson('-123'));
-console.log(parseJson('123.45'));
-console.log(parseJson('-123.45'));
-console.log(parseJson('"abc"'));
+console.log(parseJson('{ "id": 1, "name": "user", "posts": [{ "text": "hello", "reply": false }, { "text": "@abc yeah", "reply": true }] }'));
