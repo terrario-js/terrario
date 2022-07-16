@@ -1,0 +1,17 @@
+{
+  "name": "json",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./built/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ."
+  },
+  "devDependencies": {
+    "@types/node": "18.0.3",
+    "typescript": "4.7.4"
+  },
+  "dependencies": {
+    "terrario": "^0.1.0"
+  }
+}
