@@ -178,7 +178,7 @@ export const cr = str('\r');
 export const lf = str('\n');
 export const crlf = str('\r\n');
 
-export const any = new Parser((input, index, _state) => {
+export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {
 		return failure();
 	}

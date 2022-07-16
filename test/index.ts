@@ -1,9 +1,9 @@
 import assert from 'assert';
 import * as P from '../src/index';
 
-it('any', () => {
+it('char', () => {
 	const input = 'ab';
-	const parser = P.any;
+	const parser = P.char;
 	const result = parser.handler(input, 0, {});
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, 'a');
