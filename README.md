@@ -28,9 +28,8 @@ if (!result.success) {
   throw new Error('parsing failed.');
 }
 
-// show the parsed value
-console.log(result.value);
-// => "hello world"
+console.log(result);
+// => { success: true, value: 'hello world', index: 11 }
 ```
 
 ## Examples
