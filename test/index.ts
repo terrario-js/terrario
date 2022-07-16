@@ -78,10 +78,10 @@ it('parser.text()', () => {
 	assert.strictEqual(result.index, 6);
 });
 
-it('parser.atLeast()', () => {
+it('parser.many()', () => {
 	let input, parser, result;
 
-	parser = P.str('abc').atLeast(1);
+	parser = P.str('abc').many(1);
 
 	input = 'abc123';
 	result = parser.handler(input, 0, {});
