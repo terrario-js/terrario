@@ -12,6 +12,26 @@ npm i terrario
 ## Documenation
 coming soon.
 
+## Basic Example
+```ts
+import * as P from 'terrario';
+
+// build a parser
+const parser = P.str('hello world');
+
+// parse the input string
+const input = 'hello world';
+const result = parser.handler(input, 0, {});
+
+// check errors
+if (!result.success) {
+	throw new Error('parsing failed.');
+}
+
+// show the parsed value
+console.log(result.value);
+```
+
 ## Examples
 - [JSON parsing](https://github.com/marihachi/terrario/tree/develop/examples/json)
 
