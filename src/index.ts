@@ -98,12 +98,6 @@ export class Parser<T> {
 	}
 }
 
-export function succeeded<T>(value: T): Parser<T> {
-	return new Parser((_input, index, _state) => {
-		return success(index, value);
-	});
-}
-
 export function str<T extends string>(value: T): Parser<T> {
 	return new Parser((input, index, _state) => {
 		if ((input.length - index) < value.length) {
@@ -158,6 +152,12 @@ export function alt(parsers: Parser<any>[]): Parser<any> {
 	});
 }
 
+function succeeded<T>(value: T): Parser<T> {
+	return new Parser((_input, index, _state) => {
+		return success(index, value);
+	});
+}
+
 export function option<T>(parser: Parser<T>): Parser<T | null> {
 	return alt([
 		parser,
@@ -172,14 +172,6 @@ export function notMatch(parser: Parser<any>): Parser<null> {
 			? success(index, null)
 			: failure();
 	});
-}
-
-export function lazy<T>(fn: () => Parser<T>): Parser<T> {
-	const parser: Parser<T> = new Parser((input, index, state) => {
-		parser.handler = fn().handler;
-		return parser.handler(input, index, state);
-	});
-	return parser;
 }
 
 export const cr = str('\r');
@@ -219,6 +211,14 @@ export const lineEnd = new Parser((input, index, state) => {
 	}
 	return failure();
 });
+
+function lazy<T>(fn: () => Parser<T>): Parser<T> {
+	const parser: Parser<T> = new Parser((input, index, state) => {
+		parser.handler = fn().handler;
+		return parser.handler(input, index, state);
+	});
+	return parser;
+}
 
 //type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
 //type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;

@@ -1,6 +1,6 @@
 {
   "name": "terrario",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A Parsimmon-like, stateful parser-combinator library with TypeScript.",
   "main": "./built/index.js",
   "types": "./built/index.d.ts",
