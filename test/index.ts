@@ -53,18 +53,6 @@ describe('seq', () => {
 		assert.strictEqual(result.index, 6);
 	});
 
-	it('with parser.text()', () => {
-		const input = 'abc123';
-		const parser = P.seq([
-			P.str('abc'),
-			P.str('123'),
-		]).text();
-		const result = parser.handler(input, 0, {});
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, input);
-		assert.strictEqual(result.index, 6);
-	});
-
 	it('with select param', () => {
 		const input = 'abc123';
 		const parser = P.seq([
@@ -76,4 +64,38 @@ describe('seq', () => {
 		assert.deepStrictEqual(result.value, 'abc');
 		assert.strictEqual(result.index, 6);
 	});
+});
+
+it('parser.text()', () => {
+	const input = 'abc123';
+	const parser = P.seq([
+		P.str('abc'),
+		P.str('123'),
+	]).text();
+	const result = parser.handler(input, 0, {});
+	assert.ok(result.success);
+	assert.deepStrictEqual(result.value, input);
+	assert.strictEqual(result.index, 6);
+});
+
+it('parser.atLeast()', () => {
+	let input, parser, result;
+
+	parser = P.str('abc').atLeast(1);
+
+	input = 'abc123';
+	result = parser.handler(input, 0, {});
+	assert.ok(result.success);
+	assert.deepStrictEqual(result.value, ['abc']);
+	assert.strictEqual(result.index, 3);
+
+	input = 'abcabc123';
+	result = parser.handler(input, 0, {});
+	assert.ok(result.success);
+	assert.deepStrictEqual(result.value, ['abc', 'abc']);
+	assert.strictEqual(result.index, 6);
+
+	input = 'ab123';
+	result = parser.handler(input, 0, {});
+	assert.ok(!result.success);
 });
