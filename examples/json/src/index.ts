@@ -45,7 +45,7 @@ const lang = P.createLanguage({
 			spaces,
 			r.value,
 		]).map((value: unknown[]) => {
-				return { key: value[0], value: value[4] };
+			return { key: value[0], value: value[4] };
 		});
 		const separator = P.seq([
 			spaces,
@@ -95,7 +95,7 @@ const json = P.seq([
 ], 1);
 
 function parseJson(input: string) {
-	const result = json.handler(input, 0, { });
+	const result = json.handler(input, 0, {});
 	if (!result.success || result.index < input.length) {
 		throw new Error('failed to parse JSON.');
 	}
