@@ -1,7 +1,5 @@
 import * as P from 'terrario';
 
-// WIP
-
 const spaces = P.regexp(/[ \t\r\n]*/);
 
 const lang = P.createLanguage({
