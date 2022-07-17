@@ -18,7 +18,7 @@ Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
 
 
-# Built-in Parsers
+# Parsers
 
 ## P.char
 
@@ -27,7 +27,7 @@ The generated parser does not consume input.
 ## P.lf
 
 
-# Parser API
+# Parser APIs
 
 ## parser.map(fn: (value) => any): Parser
 
@@ -38,7 +38,13 @@ The generated parser does not consume input.
 ## parser.sep1(separator: Parser): Parser
 
 
-# General APIs
+# Other APIs
 
 ## P.createLanguage()
 You can use createLanguage to create a set of syntax.
+
+## P.success()
+for custom parser.
+
+## P.failure()
+for custom parser.
