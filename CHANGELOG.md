@@ -11,7 +11,9 @@
 
 -->
 
-## 0.2.0 (unreleased)
+## 0.2.0 (2022/07/17)
+
+npm: https://www.npmjs.com/package/terrario/v/0.2.0 
 
 ### Changes
 - Rename api: parser.atLeast(n) -> parser.many(min)
