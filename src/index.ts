@@ -87,13 +87,16 @@ export class Parser<T> {
 		});
 	}
 
-	sep1(separator: Parser<any>): Parser<T[]> {
+	sep(separator: Parser<any>, min: number): Parser<T[]> {
+		if (min < 1) {
+			throw new Error('"min" must be a value greater than or equal to 1.');
+		}
 		return seq([
 			this,
 			seq([
 				separator,
 				this,
-			], 1).many(0),
+			], 1).many(min - 1),
 		]).map(result => [result[0], ...result[1]]);
 	}
 }

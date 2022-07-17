@@ -99,3 +99,19 @@ it('parser.many()', () => {
 	result = parser.handler(input, 0, {});
 	assert.ok(!result.success);
 });
+
+it('parser.sep()', () => {
+	let input, parser, result;
+
+	parser = P.str('abc').sep(P.str(','), 2);
+
+	input = 'abc,abc';
+	result = parser.handler(input, 0, {});
+	assert.ok(result.success);
+	assert.deepStrictEqual(result.value, ['abc', 'abc']);
+	assert.strictEqual(result.index, 7);
+
+	input = 'abc';
+	result = parser.handler(input, 0, {});
+	assert.ok(!result.success);
+});
