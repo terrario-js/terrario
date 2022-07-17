@@ -1,9 +1,9 @@
 import assert from 'assert';
 import * as P from '../src/index';
 
-it('any', () => {
+it('char', () => {
 	const input = 'ab';
-	const parser = P.any;
+	const parser = P.char;
 	const result = parser.handler(input, 0, {});
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, 'a');
@@ -78,10 +78,10 @@ it('parser.text()', () => {
 	assert.strictEqual(result.index, 6);
 });
 
-it('parser.atLeast()', () => {
+it('parser.many()', () => {
 	let input, parser, result;
 
-	parser = P.str('abc').atLeast(1);
+	parser = P.str('abc').many(1);
 
 	input = 'abc123';
 	result = parser.handler(input, 0, {});

@@ -67,7 +67,7 @@ export class Parser<T> {
 		});
 	}
 
-	atLeast(n: number): Parser<T[]> {
+	many(min: number): Parser<T[]> {
 		return new Parser((input, index, state) => {
 			let result;
 			let latestIndex = index;
@@ -80,7 +80,7 @@ export class Parser<T> {
 				latestIndex = result.index;
 				accum.push(result.value);
 			}
-			if (accum.length < n) {
+			if (accum.length < min) {
 				return failure();
 			}
 			return success(latestIndex, accum);
@@ -93,7 +93,7 @@ export class Parser<T> {
 			seq([
 				separator,
 				this,
-			], 1).atLeast(0),
+			], 1).many(0),
 		]).map(result => [result[0], ...result[1]]);
 	}
 }
@@ -178,7 +178,7 @@ export const cr = str('\r');
 export const lf = str('\n');
 export const crlf = str('\r\n');
 
-export const any = new Parser((input, index, _state) => {
+export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {
 		return failure();
 	}
