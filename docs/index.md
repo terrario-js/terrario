@@ -1,4 +1,3 @@
-
 # Combinators
 
 ## P.str(value: string): Parser
@@ -17,6 +16,7 @@ Generates a new parser that returns null even if the match fails.
 ## P.notMatch(parser: Parser): Parser
 Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
+
 
 # Built-in Parsers
 

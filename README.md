@@ -10,7 +10,8 @@ npm i terrario
 ```
 
 ## Documenation
-coming soon.
+WIP
+[docs](https://github.com/marihachi/terrario/tree/develop/docs/index.md)
 
 ## Basic Example
 ```ts
