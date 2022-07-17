@@ -1,2 +1,3 @@
-- [api](./api)
-- [custom parser](./custom-parser)
+# Documantation
+- [api](api.md)
+- [custom parser](custom-parser.md)
