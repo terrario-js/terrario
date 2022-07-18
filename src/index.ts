@@ -87,14 +87,24 @@ export class Parser<T> {
 		});
 	}
 
-	sep1(separator: Parser<any>): Parser<T[]> {
+	sep(separator: Parser<any>, min: number): Parser<T[]> {
+		if (min < 1) {
+			throw new Error('"min" must be a value greater than or equal to 1.');
+		}
 		return seq([
 			this,
 			seq([
 				separator,
 				this,
-			], 1).many(0),
+			], 1).many(min - 1),
 		]).map(result => [result[0], ...result[1]]);
+	}
+
+	option<T>(): Parser<T | null> {
+		return alt([
+			this,
+			succeeded(null),
+		]);
 	}
 }
 
@@ -158,13 +168,6 @@ function succeeded<T>(value: T): Parser<T> {
 	});
 }
 
-export function option<T>(parser: Parser<T>): Parser<T | null> {
-	return alt([
-		parser,
-		succeeded(null),
-	]);
-}
-
 export function notMatch(parser: Parser<any>): Parser<null> {
 	return new Parser((input, index, state) => {
 		const result = parser.handler(input, index, state);
@@ -177,6 +180,7 @@ export function notMatch(parser: Parser<any>): Parser<null> {
 export const cr = str('\r');
 export const lf = str('\n');
 export const crlf = str('\r\n');
+export const newline = alt([crlf, cr, lf]);
 
 export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {

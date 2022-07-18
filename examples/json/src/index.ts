@@ -25,8 +25,8 @@ const lang = P.createLanguage({
 		P.str('"'),
 		P.seq([
 			P.notMatch(P.alt([P.str('"'), P.cr, P.lf])),
-			P.any
-		]).atLeast(0).text(),
+			P.char,
+		]).many(0).text(),
 		P.str('"'),
 	], 1),
 
