@@ -10,9 +10,6 @@ Generates a new parser that consumes the input string using the specified regula
 
 ## P.alt(parsers: Parser[]): Parser
 
-## P.option(parser: Parser): Parser
-Generates a new parser that returns null even if the match fails.
-
 ## P.notMatch(parser: Parser): Parser
 Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
@@ -26,6 +23,8 @@ The generated parser does not consume input.
 
 ## P.lf
 
+## P.newline
+
 
 # Parser APIs
 
@@ -35,7 +34,10 @@ The generated parser does not consume input.
 
 ## parser.many(min: number): Parser
 
-## parser.sep1(separator: Parser): Parser
+## parser.sep(separator: Parser, min: number): Parser
+
+## parser.option(): Parser
+Generates a new parser that returns null even if the match fails.
 
 
 # Other APIs
