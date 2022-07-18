@@ -13,8 +13,12 @@
 
 ## 0.3.x (unreleased)
 
+### Features
+- Add api: newline
+
 ### Changes
-- change api: parser.sep1(separator) -> parser.sep(separator, min)
+- Change api: parser.sep1(separator) -> parser.sep(separator, min)
+
 
 ## 0.2.0 (2022/07/17)
 
@@ -23,6 +27,7 @@ npm: https://www.npmjs.com/package/terrario/v/0.2.0
 ### Changes
 - Rename api: parser.atLeast(n) -> parser.many(min)
 - Rename api: P.any -> P.char
+
 
 ## 0.1.0 (2022/07/16)
 

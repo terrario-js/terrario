@@ -180,6 +180,7 @@ export function notMatch(parser: Parser<any>): Parser<null> {
 export const cr = str('\r');
 export const lf = str('\n');
 export const crlf = str('\r\n');
+export const newline = alt([crlf, cr, lf]);
 
 export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {
