@@ -1,108 +1,56 @@
 import assert from 'assert';
 import { parse } from '../src/peg/index';
 
+function parseOk(input: string) {
+	const result = parse(input);
+
+	assert.ok(result.success);
+	assert.ok(result.index == input.length);
+
+	return result;
+}
+
 describe('rule', () => {
 	it('single', () => {
-		let input, result;
-
-		input = 'test = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"\n'
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"  \n';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"\n  ';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"\n\n  ';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"\n  \n  ';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"  \n\n';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"  \n  \n';
-		result = parse(input);
-		assert.ok(result.success);
+		parseOk('test = "abc"');
+		parseOk('test = "abc"\n');
+		parseOk('test = "abc"  \n');
+		parseOk('test = "abc"\n  ');
+		parseOk('test = "abc"\n\n  ');
+		parseOk('test = "abc"\n  \n  ');
+		parseOk('test = "abc"  \n\n');
+		parseOk('test = "abc"  \n  \n');
 	});
 
 	it('multiple', () => {
-		let input, result;
+		parseOk('test = "abc"\ntest = "abc"');
+		parseOk('test = "abc"  \ntest = "abc"');
+		parseOk('test = "abc"\n  test = "abc"');
+		parseOk('test = "abc"\n\n  test = "abc"');
+		parseOk('test = "abc"\n  \n  test = "abc"');
+		parseOk('test = "abc"  \n\ntest = "abc"');
+		parseOk('test = "abc"  \n  \ntest = "abc"');
+	});
 
-		input = 'test = "abc"\ntest = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"  \ntest = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"\n  test = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"\n\n  test = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"\n  \n  test = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"  \n\ntest = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"  \n  \ntest = "abc"';
-		result = parse(input);
-		assert.ok(result.success);
+	it('sequence', () => {
+		parseOk('test = "abc" "123"');
+		parseOk('test = "abc"  "123"');
+		parseOk('test = "abc"\n"123"');
+		parseOk('test = "abc"\n\n"123"');
 	});
 
 	it('*', () => {
-		let input, result;
-
-		input = 'test = "abc"*';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"* "123"*';
-		result = parse(input);
-		assert.ok(result.success);
+		parseOk('test = "abc"*');
+		parseOk('test = "abc"* "123"*');
 	});
 
 	it('+', () => {
-		let input, result;
-
-		input = 'test = "abc"+';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"+ "123"+';
-		result = parse(input);
-		assert.ok(result.success);
+		parseOk('test = "abc"+');
+		parseOk('test = "abc"+ "123"+');
 	});
 
 	it('?', () => {
-		let input, result;
-
-		input = 'test = "abc"?';
-		result = parse(input);
-		assert.ok(result.success);
-
-		input = 'test = "abc"? "123"?';
-		result = parse(input);
-		assert.ok(result.success);
+		parseOk('test = "abc"?');
+		parseOk('test = "abc"? "123"?');
 	});
 });

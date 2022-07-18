@@ -57,7 +57,7 @@ const lang = P.createLanguage({
 
 	// sequence
 	exprLayer2: r => {
-		const sequence = r.exprLayer3.sep(_.many(1), 2).map(values => {
+		const sequence = r.exprLayer3.sep(P.alt([_, P.newline]).many(1), 2).map(values => {
 			return { type: 'sequence', exprs: values };
 		});
 		return P.alt([
@@ -76,7 +76,6 @@ const lang = P.createLanguage({
 				P.str('+').map(v => { return { type: 'many', min: 1 }; }),
 				P.str('*').map(v => { return { type: 'many', min: 0 }; }),
 			]),
-			P.alt([_, P.newline]).many(0),
 		]).map(values => {
 			return { ...values[0], op: values[2] };
 		});
