@@ -1,18 +1,43 @@
 import * as P from '../index';
 
-const space = P.regexp(/[ \t\r\n]/);
+const _ = P.regexp(/[ \t]/);
 
-const lang = P.createLanguage({
-	rule: r => P.seq([
-		P.regexp(/[a-z0-9]+/i),
-		space.many(0),
-		P.str('='),
-		space.many(0),
-		r.exprLayer1,
-		P.str(';'),
-	]).map(values => {
-		return { type: 'rule', name: values[0], expr: values[4] };
-	}),
+export const lang = P.createLanguage({
+	rules: r => {
+		// const separator = P.alt([
+		// 	P.seq([
+		// 		P.alt([_, P.newline]).many(0),
+		// 		P.str(';'),
+		// 		P.alt([_, P.newline]).many(0),
+		// 	]),
+		// 	P.seq([
+		// 		_.many(0),
+		// 		P.newline,
+		// 		P.alt([_, P.newline]).many(0),
+		// 	]),
+		// ]);
+		const separator = P.seq([
+			_.many(0),
+			P.newline,
+			P.alt([_, P.newline]).many(0),
+		]);
+		return P.seq([
+			r.rule.sep(separator, 1),
+			separator.option(),
+		], 0);
+	},
+
+	rule: r => {
+		return P.seq([
+			P.regexp(/[a-z0-9]+/i),
+			P.alt([_, P.newline]).many(0),
+			P.str('='),
+			P.alt([_, P.newline]).many(0),
+			r.exprLayer1,
+		]).map(values => {
+			return { type: 'rule', name: values[0], expr: values[4] };
+		});
+	},
 
 	exprLayer1: r => P.alt([
 		r.choice,
@@ -30,9 +55,9 @@ const lang = P.createLanguage({
 
 	choice: r => {
 		const choiceSep = P.seq([
-			space.many(1),
+			P.alt([_, P.newline]).many(1),
 			P.str('/'),
-			space.many(1),
+			P.alt([_, P.newline]).many(1),
 		]);
 		return r.exprLayer2.sep(choiceSep, 2).map(values => {
 			return { type: 'choice', exprs: values };
@@ -40,7 +65,7 @@ const lang = P.createLanguage({
 	},
 
 	sequence: r => {
-		return r.exprLayer3.sep(space.many(1), 2).map(values => {
+		return r.exprLayer3.sep(_.many(1), 2).map(values => {
 			return { type: 'sequence', exprs: values };
 		});
 	},
@@ -57,22 +82,10 @@ const lang = P.createLanguage({
 	}),
 });
 
-function parse(input: string) {
-	const result = lang.rule.handler(input, 0, {});
-	if (!result.success || result.index < input.length) {
-		throw new Error('parse error');
-	}
-	return result.value;
-}
-
-let input;
-
-input = 'test = "abc";';
-
-console.log(input, '=>', JSON.stringify(parse(input)));
-
-input = 'test = "abc" "123";';
-console.log(input, '=>', JSON.stringify(parse(input)));
-
-input = 'test = "abc" "123" / "xyz";';
-console.log(input, '=>', JSON.stringify(parse(input)));
+// function parse(input: string) {
+// 	const result = lang.rules.handler(input, 0, {});
+// 	if (!result.success || result.index < input.length) {
+// 		throw new Error('parse error');
+// 	}
+// 	return result.value;
+// }
