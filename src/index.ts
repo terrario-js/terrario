@@ -99,6 +99,13 @@ export class Parser<T> {
 			], 1).many(min - 1),
 		]).map(result => [result[0], ...result[1]]);
 	}
+
+	option<T>(): Parser<T | null> {
+		return alt([
+			this,
+			succeeded(null),
+		]);
+	}
 }
 
 export function str<T extends string>(value: T): Parser<T> {
@@ -159,13 +166,6 @@ function succeeded<T>(value: T): Parser<T> {
 	return new Parser((_input, index, _state) => {
 		return success(index, value);
 	});
-}
-
-export function option<T>(parser: Parser<T>): Parser<T | null> {
-	return alt([
-		parser,
-		succeeded(null),
-	]);
 }
 
 export function notMatch(parser: Parser<any>): Parser<null> {

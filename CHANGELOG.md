@@ -18,7 +18,7 @@
 
 ### Changes
 - Change api: parser.sep1(separator) -> parser.sep(separator, min)
-
+- Change api: P.option(parser) -> parser.option()
 
 ## 0.2.0 (2022/07/17)
 
