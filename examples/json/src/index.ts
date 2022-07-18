@@ -55,7 +55,7 @@ const lang = P.createLanguage({
 		return P.seq([
 			P.str('{'),
 			spaces,
-			P.option(entry.sep1(separator)),
+			entry.sep(separator, 1).option(),
 			spaces,
 			P.str('}'),
 		], 2).map((value: { key: string, value: unknown }[] | null) => {
@@ -79,7 +79,7 @@ const lang = P.createLanguage({
 		return P.seq([
 			P.str('['),
 			spaces,
-			P.option(r.value.sep1(separator)),
+			r.value.sep(separator, 1).option(),
 			spaces,
 			P.str(']'),
 		], 2).map((value: unknown[] | null) => {
