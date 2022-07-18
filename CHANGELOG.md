@@ -11,7 +11,7 @@
 
 -->
 
-## 0.3.x (unreleased)
+## 0.3.0 (2022/07/18)
 
 ### Features
 - Add api: newline
