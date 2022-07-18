@@ -12,18 +12,6 @@ const lang = P.createLanguage({
 	]).text(),
 
 	rules: r => {
-		// const separator = P.alt([
-		// 	P.seq([
-		// 		P.alt([_, P.newline]).many(0),
-		// 		P.str(';'),
-		// 		P.alt([_, P.newline]).many(0),
-		// 	]),
-		// 	P.seq([
-		// 		_.many(0),
-		// 		P.newline,
-		// 		P.alt([_, P.newline]).many(0),
-		// 	]),
-		// ]);
 		const separator = P.seq([
 			_.many(0),
 			P.newline,
