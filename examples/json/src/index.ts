@@ -94,12 +94,10 @@ const json = P.seq([
 	spaces,
 ], 1);
 
-function parseJson(input: string) {
+export function parse(input: string) {
 	const result = json.handler(input, 0, {});
 	if (!result.success || result.index < input.length) {
 		throw new Error('failed to parse JSON.');
 	}
 	return result.value;
 }
-
-console.log(parseJson('{ "id": 1, "name": "user", "posts": [{ "text": "hello", "reply": false }, { "text": "@abc yeah", "reply": true }] }'));
