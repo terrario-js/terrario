@@ -54,3 +54,7 @@ describe('rule', () => {
 		parseOk('test = "abc"? "123"?');
 	});
 });
+
+it('group many', () => {
+	parseOk('abc = ("ab" "cd")+');
+});
