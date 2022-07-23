@@ -47,6 +47,7 @@ const parser = P.seq([
 ], 1);
 
 const result = parser.handler('a1', 0, {});
+console.log(result);
 // => { success: true, value: '1', index: 2 }
 ```
 
@@ -62,9 +63,11 @@ const parser = P.alt([
 let result;
 
 result = parser.handler('a', 0, {});
+console.log(result);
 // => { success: true, value: 'a', index: 1 }
 
 result = parser.handler('1', 0, {});
+console.log(result);
 // => { success: true, value: '1', index: 1 }
 ```
 
@@ -86,6 +89,7 @@ Matches any character.
 const parser = P.char;
 
 const result = parser.handler('a', 0, {});
+console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
@@ -112,6 +116,7 @@ const parser = P.seq([
 });
 
 const result = parser.handler('abc', 0, {});
+console.log(result);
 // => { success: true, value: [ 'a', 'c' ], index: 3 }
 ```
 
@@ -125,6 +130,7 @@ const parser = P.seq([
 ]).text();
 
 const result = parser.handler('abc', 0, {});
+console.log(result);
 // => { success: true, value: 'abc', index: 3 }
 ```
 
@@ -138,9 +144,11 @@ const parser = P.str('abc').many(0);
 let result;
 
 result = parser.handler('', 0, {});
+console.log(result);
 // => { success: true, value: [], index: 0 }
 
 result = parser.handler('abc', 0, {});
+console.log(result);
 // => { success: true, value: [ 'abc' ], index: 3 }
 ```
 
@@ -152,9 +160,11 @@ const parser = P.str('abc').many(1);
 let result;
 
 result = parser.handler('abc', 0, {});
+console.log(result);
 // => { success: true, value: [ 'abc' ], index: 3 }
 
 result = parser.handler('abcabc', 0, {});
+console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
@@ -168,9 +178,11 @@ const parser = item.sep(P.str(','), 1);
 let result;
 
 result = parser.handler('a', 0, {});
+console.log(result);
 // => { success: true, value: [ 'a' ], index: 1 }
 
 result = parser.handler('a,a', 0, {});
+console.log(result);
 // => { success: true, value: [ 'a', 'a' ], index: 3 }
 ```
 
@@ -187,9 +199,11 @@ const parser = P.seq([
 let result;
 
 result = parser.handler('ab', 0, {});
+console.log(result);
 // => { success: true, value: [ 'a', 'b' ], index: 2 }
 
 result = parser.handler('a', 0, {});
+console.log(result);
 // => { success: true, value: [ 'a', null ], index: 1 }
 ```
 
@@ -217,6 +231,7 @@ const lang = P.createLanguage({
 });
 
 const result = lang.root.handler('a', 0, {});
+console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
