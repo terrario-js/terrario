@@ -4,6 +4,7 @@
 Generates a new parser that consumes the input string using the specified string.
 
 ```ts
+// PEG syntax: "test"
 const parser = P.str('test');
 
 const result = parser.handler('test', 0, {});
@@ -17,6 +18,7 @@ if (result.success) {
 Generates a new parser that consumes the input string using the specified regular expression.
 
 ```ts
+// PEG syntax: [a-z]
 const parser = P.regexp(/[a-z]/);
 
 const result = parser.handler('a', 0, {});
@@ -29,6 +31,7 @@ if (result.success) {
 ## P.seq(parsers: Parser[], select?: boolean): Parser
 
 ```ts
+// PEG syntax: "a" "1"
 const parser = P.seq([
 	P.str('a'),
 	P.str('1'),
@@ -43,6 +46,7 @@ if (result.success) {
 
 You can also select a result to be returned from all of them:
 ```ts
+// PEG syntax: value0:"a" value1:"1" { return value1; }
 const parser = P.seq([
 	P.str('a'),
 	P.str('1'),
@@ -58,6 +62,7 @@ if (result.success) {
 ## P.alt(parsers: Parser[]): Parser
 
 ```ts
+// PEG syntax: "a" / "1"
 const parser = P.alt([
 	P.str('a'),
 	P.str('1'),
@@ -97,8 +102,38 @@ The generated parser does not consume input.
 # Parser APIs
 
 ## parser.map(fn: (value) => any): Parser
+```ts
+// PEG syntax: value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
+const parser = P.seq([
+	P.str('a'),
+	P.str('b'),
+	P.str('c'),
+]).map(value => {
+	return [value[0], value[2]];
+});
+
+const result = parser.handler('abc', 0, {});
+if (result.success) {
+	console.log(result.value);
+	// => ["a", "c"]
+}
+```
 
 ## parser.text(): Parser
+```ts
+// PEG syntax: $("a" "b" "c")
+const parser = P.seq([
+	P.str('a'),
+	P.str('b'),
+	P.str('c'),
+]).text();
+
+const result = parser.handler('abc', 0, {});
+if (result.success) {
+	console.log(result.value);
+	// => "abc"
+}
+```
 
 ## parser.many(min: number): Parser
 
@@ -107,6 +142,27 @@ The generated parser does not consume input.
 ## parser.option(): Parser
 Generates a new parser that returns null even if the match fails.
 
+```ts
+// PEG syntax: "a" "b"?
+const parser = P.seq([
+	P.str('a'),
+	P.str('b').option(),
+]);
+
+let result;
+
+result = parser.handler('ab', 0, {});
+if (result.success) {
+	console.log(result.value);
+	// => "ab"
+}
+
+result = parser.handler('a', 0, {});
+if (result.success) {
+	console.log(result.value);
+	// => "a"
+}
+```
 
 # Other APIs
 
