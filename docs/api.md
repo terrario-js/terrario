@@ -4,7 +4,7 @@
 Generates a new parser that consumes the input string using the specified string.
 
 ```ts
-// [PEG syntax] "test"
+// [Equivalent PEG] "test"
 const parser = P.str('test');
 
 const result = parser.handler('test', 0, {});
@@ -18,7 +18,7 @@ if (result.success) {
 Generates a new parser that consumes the input string using the specified regular expression.
 
 ```ts
-// [PEG syntax] [a-z]
+// [Equivalent PEG] [a-z]
 const parser = P.regexp(/[a-z]/);
 
 const result = parser.handler('a', 0, {});
@@ -31,7 +31,7 @@ if (result.success) {
 ## P.seq(parsers: Parser[], select?: boolean): Parser
 
 ```ts
-// [PEG syntax] "a" "1"
+// [Equivalent PEG] "a" "1"
 const parser = P.seq([
   P.str('a'),
   P.str('1'),
@@ -46,7 +46,7 @@ if (result.success) {
 
 You can also select a result to be returned from all of them:
 ```ts
-// [PEG syntax] value0:"a" value1:"1" { return value1; }
+// [Equivalent PEG] value0:"a" value1:"1" { return value1; }
 const parser = P.seq([
   P.str('a'),
   P.str('1'),
@@ -62,7 +62,7 @@ if (result.success) {
 ## P.alt(parsers: Parser[]): Parser
 
 ```ts
-// [PEG syntax] "a" / "1"
+// [Equivalent PEG] "a" / "1"
 const parser = P.alt([
   P.str('a'),
   P.str('1'),
@@ -103,7 +103,7 @@ The generated parser does not consume input.
 
 ## parser.map(fn: (value) => any): Parser
 ```ts
-// [PEG syntax] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
+// [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
 const parser = P.seq([
   P.str('a'),
   P.str('b'),
@@ -121,7 +121,7 @@ if (result.success) {
 
 ## parser.text(): Parser
 ```ts
-// [PEG syntax] $("a" "b" "c")
+// [Equivalent PEG] $("a" "b" "c")
 const parser = P.seq([
   P.str('a'),
   P.str('b'),
@@ -139,7 +139,7 @@ if (result.success) {
 
 Matches 0 or more items:
 ```ts
-// [PEG syntax] "abc"*
+// [Equivalent PEG] "abc"*
 const parser = P.str('abc').many(0);
 
 let result;
@@ -159,7 +159,7 @@ if (result.success) {
 
 Matches 1 or more items:
 ```ts
-// [PEG syntax] "abc"+
+// [Equivalent PEG] "abc"+
 const parser = P.str('abc').many(1);
 
 let result;
@@ -179,11 +179,31 @@ if (result.success) {
 
 ## parser.sep(separator: Parser, min: number): Parser
 
+```ts
+// [Equivalent PEG] head:"a" tail:("," @"a")* { return [head, ...tail]; }
+const item = P.str('a');
+const parser = item.sep(P.str(','), 1);
+
+let result;
+
+result = parser.handler('a', 0, {});
+if (result.success) {
+  console.log(result.value);
+  // => ["a"]
+}
+
+result = parser.handler('a,a', 0, {});
+if (result.success) {
+  console.log(result.value);
+  // => ["a", "a"]
+}
+```
+
 ## parser.option(): Parser
 Generates a new parser that returns null even if the match fails.
 
 ```ts
-// [PEG syntax] "a" "b"?
+// [Equivalent PEG] "a" "b"?
 const parser = P.seq([
   P.str('a'),
   P.str('b').option(),
@@ -208,6 +228,31 @@ if (result.success) {
 
 ## P.createLanguage()
 You can use createLanguage to create a set of syntax.
+
+```ts
+const lang = P.createLanguage({
+	root: rules => {
+		return P.alt([
+			rules.rule1,
+			rules.rule2,
+		]);
+	},
+
+	rule1: rules => {
+		return P.regexp('a');
+	},
+
+	rule2: rules => {
+		return P.regexp('b');
+	},
+});
+
+const result = lang.root.handler('a', 0, {});
+if (result.success) {
+  console.log(result.value);
+  // => "a"
+}
+```
 
 ## P.success()
 for custom parser.
