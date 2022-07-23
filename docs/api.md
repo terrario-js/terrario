@@ -91,13 +91,27 @@ The generated parser does not consume input.
 # Parsers
 
 ## P.char
+Matches any character.
+
+```ts
+// [Equivalent PEG] .
+const parser = P.char;
+
+const result = parser.handler('a', 0, {});
+if (result.success) {
+  console.log(result.value);
+  // => "a"
+}
+```
 
 ## P.cr
+Matches `\r` (CR)
 
 ## P.lf
+Matches `\n` (LF)
 
 ## P.newline
-
+Matches `\r\n` or `\r` or `\n`
 
 # Parser APIs
 
