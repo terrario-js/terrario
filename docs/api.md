@@ -8,10 +8,8 @@ Generates a new parser that consumes the input string using the specified string
 const parser = P.str('test');
 
 const result = parser.handler('test', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "test"
-}
+console.log(result);
+// => { success: true, value: 'test', index: 4 }
 ```
 
 ## P.regexp(pattern: Regexp): Parser
@@ -22,10 +20,8 @@ Generates a new parser that consumes the input string using the specified regula
 const parser = P.regexp(/[a-z]/);
 
 const result = parser.handler('a', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "a"
-}
+console.log(result);
+// => { success: true, value: 'a', index: 1 }
 ```
 
 ## P.seq(parsers: Parser[], select?: boolean): Parser
@@ -38,10 +34,8 @@ const parser = P.seq([
 ]);
 
 const result = parser.handler('a1', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => ["a", "1"]
-}
+console.log(result);
+// => { success: true, value: [ 'a', '1' ], index: 2 }
 ```
 
 You can also select a result to be returned from all of them:
@@ -53,10 +47,7 @@ const parser = P.seq([
 ], 1);
 
 const result = parser.handler('a1', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "1"
-}
+// => { success: true, value: '1', index: 2 }
 ```
 
 ## P.alt(parsers: Parser[]): Parser
@@ -71,22 +62,19 @@ const parser = P.alt([
 let result;
 
 result = parser.handler('a', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "a"
-}
+// => { success: true, value: 'a', index: 1 }
 
 result = parser.handler('1', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "1"
-}
+// => { success: true, value: '1', index: 1 }
 ```
 
 ## P.notMatch(parser: Parser): Parser
 Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
 
+```ts
+// TODO
+```
 
 # Parsers
 
@@ -98,10 +86,7 @@ Matches any character.
 const parser = P.char;
 
 const result = parser.handler('a', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "a"
-}
+// => { success: true, value: 'a', index: 1 }
 ```
 
 ## P.cr
@@ -127,15 +112,12 @@ const parser = P.seq([
 });
 
 const result = parser.handler('abc', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => ["a", "c"]
-}
+// => { success: true, value: [ 'a', 'c' ], index: 3 }
 ```
 
 ## parser.text(): Parser
 ```ts
-// [Equivalent PEG] $("a" "b" "c")
+// [Equivalent PEG] "a" "b" "c" { return text(); }
 const parser = P.seq([
   P.str('a'),
   P.str('b'),
@@ -143,10 +125,7 @@ const parser = P.seq([
 ]).text();
 
 const result = parser.handler('abc', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "abc"
-}
+// => { success: true, value: 'abc', index: 3 }
 ```
 
 ## parser.many(min: number): Parser
@@ -159,16 +138,10 @@ const parser = P.str('abc').many(0);
 let result;
 
 result = parser.handler('', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => []
-}
+// => { success: true, value: [], index: 0 }
 
 result = parser.handler('abc', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => ["abc"]
-}
+// => { success: true, value: [ 'abc' ], index: 3 }
 ```
 
 Matches 1 or more items:
@@ -179,16 +152,10 @@ const parser = P.str('abc').many(1);
 let result;
 
 result = parser.handler('abc', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => ["abc"]
-}
+// => { success: true, value: [ 'abc' ], index: 3 }
 
 result = parser.handler('abcabc', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => ["abc", "abc"]
-}
+// => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
 ## parser.sep(separator: Parser, min: number): Parser
@@ -201,16 +168,10 @@ const parser = item.sep(P.str(','), 1);
 let result;
 
 result = parser.handler('a', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => ["a"]
-}
+// => { success: true, value: [ 'a' ], index: 1 }
 
 result = parser.handler('a,a', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => ["a", "a"]
-}
+// => { success: true, value: [ 'a', 'a' ], index: 3 }
 ```
 
 ## parser.option(): Parser
@@ -226,16 +187,10 @@ const parser = P.seq([
 let result;
 
 result = parser.handler('ab', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "ab"
-}
+// => { success: true, value: [ 'a', 'b' ], index: 2 }
 
 result = parser.handler('a', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "a"
-}
+// => { success: true, value: [ 'a', null ], index: 1 }
 ```
 
 # Other APIs
@@ -262,10 +217,7 @@ const lang = P.createLanguage({
 });
 
 const result = lang.root.handler('a', 0, {});
-if (result.success) {
-  console.log(result.value);
-  // => "a"
-}
+// => { success: true, value: 'a', index: 1 }
 ```
 
 ## P.success()
