@@ -9,8 +9,8 @@ const parser = P.str('test');
 
 const result = parser.handler('test', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "test"
+  console.log(result.value);
+  // => "test"
 }
 ```
 
@@ -23,8 +23,8 @@ const parser = P.regexp(/[a-z]/);
 
 const result = parser.handler('a', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "a"
+  console.log(result.value);
+  // => "a"
 }
 ```
 
@@ -33,14 +33,14 @@ if (result.success) {
 ```ts
 // PEG syntax: "a" "1"
 const parser = P.seq([
-	P.str('a'),
-	P.str('1'),
+  P.str('a'),
+  P.str('1'),
 ]);
 
 const result = parser.handler('a1', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => ["a", "1"]
+  console.log(result.value);
+  // => ["a", "1"]
 }
 ```
 
@@ -48,14 +48,14 @@ You can also select a result to be returned from all of them:
 ```ts
 // PEG syntax: value0:"a" value1:"1" { return value1; }
 const parser = P.seq([
-	P.str('a'),
-	P.str('1'),
+  P.str('a'),
+  P.str('1'),
 ], 1);
 
 const result = parser.handler('a1', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "1"
+  console.log(result.value);
+  // => "1"
 }
 ```
 
@@ -64,22 +64,22 @@ if (result.success) {
 ```ts
 // PEG syntax: "a" / "1"
 const parser = P.alt([
-	P.str('a'),
-	P.str('1'),
+  P.str('a'),
+  P.str('1'),
 ]);
 
 let result;
 
 result = parser.handler('a', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "a"
+  console.log(result.value);
+  // => "a"
 }
 
 result = parser.handler('1', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "1"
+  console.log(result.value);
+  // => "1"
 }
 ```
 
@@ -105,17 +105,17 @@ The generated parser does not consume input.
 ```ts
 // PEG syntax: value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
 const parser = P.seq([
-	P.str('a'),
-	P.str('b'),
-	P.str('c'),
+  P.str('a'),
+  P.str('b'),
+  P.str('c'),
 ]).map(value => {
-	return [value[0], value[2]];
+  return [value[0], value[2]];
 });
 
 const result = parser.handler('abc', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => ["a", "c"]
+  console.log(result.value);
+  // => ["a", "c"]
 }
 ```
 
@@ -123,15 +123,15 @@ if (result.success) {
 ```ts
 // PEG syntax: $("a" "b" "c")
 const parser = P.seq([
-	P.str('a'),
-	P.str('b'),
-	P.str('c'),
+  P.str('a'),
+  P.str('b'),
+  P.str('c'),
 ]).text();
 
 const result = parser.handler('abc', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "abc"
+  console.log(result.value);
+  // => "abc"
 }
 ```
 
@@ -145,22 +145,22 @@ Generates a new parser that returns null even if the match fails.
 ```ts
 // PEG syntax: "a" "b"?
 const parser = P.seq([
-	P.str('a'),
-	P.str('b').option(),
+  P.str('a'),
+  P.str('b').option(),
 ]);
 
 let result;
 
 result = parser.handler('ab', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "ab"
+  console.log(result.value);
+  // => "ab"
 }
 
 result = parser.handler('a', 0, {});
 if (result.success) {
-	console.log(result.value);
-	// => "a"
+  console.log(result.value);
+  // => "a"
 }
 ```
 
