@@ -231,20 +231,20 @@ You can use createLanguage to create a set of syntax.
 
 ```ts
 const lang = P.createLanguage({
-	root: rules => {
-		return P.alt([
-			rules.rule1,
-			rules.rule2,
-		]);
-	},
+  root: rules => {
+    return P.alt([
+      rules.rule1,
+      rules.rule2,
+    ]);
+  },
 
-	rule1: rules => {
-		return P.regexp('a');
-	},
+  rule1: rules => {
+    return P.regexp('a');
+  },
 
-	rule2: rules => {
-		return P.regexp('b');
-	},
+  rule2: rules => {
+    return P.regexp('b');
+  },
 });
 
 const result = lang.root.handler('a', 0, {});
