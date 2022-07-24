@@ -2,8 +2,8 @@ import * as P from '../index';
 
 const _ = P.regexp(/[ \t]/);
 
-// TODO: regex
-// TODO: action
+// TODO: [a-z]
+// TODO: { /*action*/ }
 
 const lang = P.createLanguage({
 	identifier: r => P.seq([
@@ -35,7 +35,7 @@ const lang = P.createLanguage({
 		});
 	},
 
-	// expr / expr
+	// expr1 / expr2
 	exprLayer1: r => {
 		const choiceSep = P.seq([
 			P.alt([_, P.newline]).many(1),
@@ -51,7 +51,7 @@ const lang = P.createLanguage({
 		]);
 	},
 
-	// expr expr
+	// expr1 expr2
 	exprLayer2: r => {
 		const sequence = r.exprLayer3.sep(P.alt([_, P.newline]).many(1), 2).map(values => {
 			return { type: 'sequence', exprs: values };
@@ -120,5 +120,5 @@ const lang = P.createLanguage({
 });
 
 export function parse(input: string) {
-	return lang.rules.handler(input, 0, {});
+	return lang.rules.parse(input, {});
 }
