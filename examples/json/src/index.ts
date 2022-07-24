@@ -55,7 +55,7 @@ const lang = P.createLanguage({
 		return P.seq([
 			P.str('{'),
 			spaces,
-			entry.sep(separator, 1).option(),
+			P.sep(entry, separator, 1).option(),
 			spaces,
 			P.str('}'),
 		], 2).map((value: { key: string, value: unknown }[] | null) => {
@@ -79,7 +79,7 @@ const lang = P.createLanguage({
 		return P.seq([
 			P.str('['),
 			spaces,
-			r.value.sep(separator, 1).option(),
+			P.sep(r.value, separator, 1).option(),
 			spaces,
 			P.str(']'),
 		], 2).map((value: unknown[] | null) => {
@@ -95,7 +95,7 @@ const json = P.seq([
 ], 1);
 
 export function parse(input: string) {
-	const result = json.handler(input, 0, {});
+	const result = json.parse(input);
 	if (!result.success || result.index < input.length) {
 		throw new Error('failed to parse JSON.');
 	}
