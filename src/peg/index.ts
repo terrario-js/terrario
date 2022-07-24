@@ -62,18 +62,16 @@ const lang = P.createLanguage({
 		]);
 	},
 
-	// expr? expr+ expr*
+	// &expr !expr
 	exprLayer3: r => {
 		const exprOp = P.seq([
-			r.exprLayer4,
-			P.alt([_, P.newline]).many(0),
 			P.alt([
-				P.str('?').map(v => { return { type: 'option' }; }),
-				P.str('+').map(v => { return { type: 'many', min: 1 }; }),
-				P.str('*').map(v => { return { type: 'many', min: 0 }; }),
+				P.str('&').map(v => 'match'),
+				P.str('!').map(v => 'notMatch'),
 			]),
+			r.exprLayer4,
 		]).map(values => {
-			return { ...values[0], op: values[2] };
+			return { type: values[0], expr: values[1] };
 		});
 		return P.alt([
 			exprOp,
@@ -81,7 +79,26 @@ const lang = P.createLanguage({
 		]);
 	},
 
-	exprLayer4: r => P.alt([
+	// expr? expr+ expr*
+	exprLayer4: r => {
+		const exprOp = P.seq([
+			r.exprLayer5,
+			P.alt([_, P.newline]).many(0),
+			P.alt([
+				P.str('?').map(v => { return { type: 'option' }; }),
+				P.str('+').map(v => { return { type: 'many', min: 1 }; }),
+				P.str('*').map(v => { return { type: 'many', min: 0 }; }),
+			]),
+		]).map(values => {
+			return { ...values[2], expr: values[0] };
+		});
+		return P.alt([
+			exprOp,
+			r.exprLayer5,
+		]);
+	},
+
+	exprLayer5: r => P.alt([
 		r.stringLiteral,
 		r.ref,
 		r.group,
