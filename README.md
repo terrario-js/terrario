@@ -12,8 +12,7 @@ npm i terrario
 ```
 
 ## Documenation
-WIP
-[docs](https://github.com/marihachi/terrario/tree/develop/docs/index.md)
+[Docs](https://github.com/marihachi/terrario/tree/develop/docs/index.md)
 
 ## Basic Example
 ```ts
