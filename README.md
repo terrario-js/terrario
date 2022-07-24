@@ -23,7 +23,7 @@ const parser = P.str('hello world');
 
 // parse the input string
 const input = 'hello world';
-const result = parser.parse(input, {});
+const result = parser.parse(input);
 
 // check errors
 if (!result.success) {
