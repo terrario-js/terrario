@@ -81,7 +81,7 @@ The generated parser does not consume input.
 
 # Parsers
 
-## P.char
+## P.char: Parser
 Matches any character.
 
 ```ts
@@ -93,13 +93,13 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## P.cr
+## P.cr: Parser
 Matches `\r` (CR)
 
-## P.lf
+## P.lf: Parser
 Matches `\n` (LF)
 
-## P.newline
+## P.newline: Parser
 Matches `\r\n` or `\r` or `\n`
 
 # Parser APIs
@@ -219,8 +219,10 @@ console.log(result);
 
 # Other APIs
 
-## P.createLanguage()
+## P.createLanguage(Record<string, (rules: Record<string, Parser>) => Parser>): Record<string, Parser>
 You can use createLanguage to create a set of syntax.
+
+Each rule is lazy evaluated.
 
 ```ts
 const lang = P.createLanguage({
