@@ -172,6 +172,15 @@ function succeeded<T>(value: T): Parser<T> {
 	});
 }
 
+export function match<T>(parser: Parser<T>): Parser<T> {
+	return new Parser((input, index, state) => {
+		const result = parser.handler(input, index, state);
+		return result.success
+			? success(index, result.value)
+			: failure();
+	});
+}
+
 export function notMatch(parser: Parser<any>): Parser<null> {
 	return new Parser((input, index, state) => {
 		const result = parser.handler(input, index, state);

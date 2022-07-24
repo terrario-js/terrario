@@ -15,6 +15,7 @@
 
 ### Features
 - Add api: parser.parse
+- Add api: P.match
 
 ## 0.3.0 (2022/07/18)
 

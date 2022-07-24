@@ -71,6 +71,14 @@ console.log(result);
 // => { success: true, value: '1', index: 1 }
 ```
 
+## P.match(parser: Parser): Parser
+Generates a new parser to continue if the match is successful.
+The generated parser does not consume input.
+
+```ts
+// TODO
+```
+
 ## P.notMatch(parser: Parser): Parser
 Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
