@@ -7,7 +7,7 @@ Generates a new parser that consumes the input string using the specified string
 // [Equivalent PEG] "test"
 const parser = P.str('test');
 
-const result = parser.handler('test', 0, {});
+const result = parser.parse('test');
 console.log(result);
 // => { success: true, value: 'test', index: 4 }
 ```
@@ -19,7 +19,7 @@ Generates a new parser that consumes the input string using the specified regula
 // [Equivalent PEG] [a-z]
 const parser = P.regexp(/[a-z]/);
 
-const result = parser.handler('a', 0, {});
+const result = parser.parse('a');
 console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
@@ -33,7 +33,7 @@ const parser = P.seq([
   P.str('1'),
 ]);
 
-const result = parser.handler('a1', 0, {});
+const result = parser.parse('a1');
 console.log(result);
 // => { success: true, value: [ 'a', '1' ], index: 2 }
 ```
@@ -46,7 +46,7 @@ const parser = P.seq([
   P.str('1'),
 ], 1);
 
-const result = parser.handler('a1', 0, {});
+const result = parser.parse('a1');
 console.log(result);
 // => { success: true, value: '1', index: 2 }
 ```
@@ -62,11 +62,11 @@ const parser = P.alt([
 
 let result;
 
-result = parser.handler('a', 0, {});
+result = parser.parse('a');
 console.log(result);
 // => { success: true, value: 'a', index: 1 }
 
-result = parser.handler('1', 0, {});
+result = parser.parse('1');
 console.log(result);
 // => { success: true, value: '1', index: 1 }
 ```
@@ -88,7 +88,7 @@ Matches any character.
 // [Equivalent PEG] .
 const parser = P.char;
 
-const result = parser.handler('a', 0, {});
+const result = parser.parse('a');
 console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
@@ -104,6 +104,16 @@ Matches `\r\n` or `\r` or `\n`
 
 # Parser APIs
 
+## parser.parse(input: string, state?: any): Result
+```ts
+const parser = P.str('a');
+
+parser.parse('a');
+
+// specify states
+parser.parse('a', { flag: true, count: 0 });
+```
+
 ## parser.map(fn: (value) => any): Parser
 ```ts
 // [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
@@ -115,7 +125,7 @@ const parser = P.seq([
   return [value[0], value[2]];
 });
 
-const result = parser.handler('abc', 0, {});
+const result = parser.parse('abc');
 console.log(result);
 // => { success: true, value: [ 'a', 'c' ], index: 3 }
 ```
@@ -129,7 +139,7 @@ const parser = P.seq([
   P.str('c'),
 ]).text();
 
-const result = parser.handler('abc', 0, {});
+const result = parser.parse('abc');
 console.log(result);
 // => { success: true, value: 'abc', index: 3 }
 ```
@@ -143,11 +153,11 @@ const parser = P.str('abc').many(0);
 
 let result;
 
-result = parser.handler('', 0, {});
+result = parser.parse('');
 console.log(result);
 // => { success: true, value: [], index: 0 }
 
-result = parser.handler('abc', 0, {});
+result = parser.parse('abc');
 console.log(result);
 // => { success: true, value: [ 'abc' ], index: 3 }
 ```
@@ -159,11 +169,11 @@ const parser = P.str('abc').many(1);
 
 let result;
 
-result = parser.handler('abc', 0, {});
+result = parser.parse('abc');
 console.log(result);
 // => { success: true, value: [ 'abc' ], index: 3 }
 
-result = parser.handler('abcabc', 0, {});
+result = parser.parse('abcabc');
 console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
@@ -177,11 +187,11 @@ const parser = item.sep(P.str(','), 1);
 
 let result;
 
-result = parser.handler('a', 0, {});
+result = parser.parse('a');
 console.log(result);
 // => { success: true, value: [ 'a' ], index: 1 }
 
-result = parser.handler('a,a', 0, {});
+result = parser.parse('a,a');
 console.log(result);
 // => { success: true, value: [ 'a', 'a' ], index: 3 }
 ```
@@ -198,11 +208,11 @@ const parser = P.seq([
 
 let result;
 
-result = parser.handler('ab', 0, {});
+result = parser.parse('ab');
 console.log(result);
 // => { success: true, value: [ 'a', 'b' ], index: 2 }
 
-result = parser.handler('a', 0, {});
+result = parser.parse('a');
 console.log(result);
 // => { success: true, value: [ 'a', null ], index: 1 }
 ```
@@ -230,7 +240,7 @@ const lang = P.createLanguage({
   },
 });
 
-const result = lang.root.handler('a', 0, {});
+const result = lang.root.parse('a');
 console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
