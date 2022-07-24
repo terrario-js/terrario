@@ -2,34 +2,30 @@ import * as P from '../index';
 
 const _ = P.regexp(/[ \t]/);
 
-export const lang = P.createLanguage({
+// TODO: [a-z]
+// TODO: { /*action*/ }
+
+const lang = P.createLanguage({
+	identifier: r => P.seq([
+		P.regexp(/[a-z_]/i),
+		P.regexp(/[a-z0-9_]*/i),
+	]).text(),
+
 	rules: r => {
-		// const separator = P.alt([
-		// 	P.seq([
-		// 		P.alt([_, P.newline]).many(0),
-		// 		P.str(';'),
-		// 		P.alt([_, P.newline]).many(0),
-		// 	]),
-		// 	P.seq([
-		// 		_.many(0),
-		// 		P.newline,
-		// 		P.alt([_, P.newline]).many(0),
-		// 	]),
-		// ]);
 		const separator = P.seq([
 			_.many(0),
 			P.newline,
 			P.alt([_, P.newline]).many(0),
 		]);
 		return P.seq([
-			r.rule.sep(separator, 1),
+			P.sep(r.rule, separator, 1),
 			separator.option(),
 		], 0);
 	},
 
 	rule: r => {
 		return P.seq([
-			P.regexp(/[a-z0-9]+/i),
+			r.identifier,
 			P.alt([_, P.newline]).many(0),
 			P.str('='),
 			P.alt([_, P.newline]).many(0),
@@ -39,36 +35,57 @@ export const lang = P.createLanguage({
 		});
 	},
 
-	exprLayer1: r => P.alt([
-		r.choice,
-		r.exprLayer2,
-	]),
-
-	exprLayer2: r => P.alt([
-		r.sequence,
-		r.exprLayer3,
-	]),
-
-	exprLayer3: r => P.alt([
-		r.stringLiteral,
-	]),
-
-	choice: r => {
+	// expr1 / expr2
+	exprLayer1: r => {
 		const choiceSep = P.seq([
 			P.alt([_, P.newline]).many(1),
 			P.str('/'),
 			P.alt([_, P.newline]).many(1),
 		]);
-		return r.exprLayer2.sep(choiceSep, 2).map(values => {
+		const choice = P.sep(r.exprLayer2, choiceSep, 2).map(values => {
 			return { type: 'choice', exprs: values };
 		});
+		return P.alt([
+			choice,
+			r.exprLayer2,
+		]);
 	},
 
-	sequence: r => {
-		return r.exprLayer3.sep(_.many(1), 2).map(values => {
+	// expr1 expr2
+	exprLayer2: r => {
+		const sequence = P.sep(r.exprLayer3, P.alt([_, P.newline]).many(1), 2).map(values => {
 			return { type: 'sequence', exprs: values };
 		});
+		return P.alt([
+			sequence,
+			r.exprLayer3,
+		]);
 	},
+
+	// expr? expr+ expr*
+	exprLayer3: r => {
+		const exprOp = P.seq([
+			r.exprLayer4,
+			P.alt([_, P.newline]).many(0),
+			P.alt([
+				P.str('?').map(v => { return { type: 'option' }; }),
+				P.str('+').map(v => { return { type: 'many', min: 1 }; }),
+				P.str('*').map(v => { return { type: 'many', min: 0 }; }),
+			]),
+		]).map(values => {
+			return { ...values[0], op: values[2] };
+		});
+		return P.alt([
+			exprOp,
+			r.exprLayer4,
+		]);
+	},
+
+	exprLayer4: r => P.alt([
+		r.stringLiteral,
+		r.ref,
+		r.group,
+	]),
 
 	stringLiteral: r => P.seq([
 		P.str('"'),
@@ -80,12 +97,28 @@ export const lang = P.createLanguage({
 	], 1).map(value => {
 		return { type: 'string', value: value };
 	}),
+
+	ref: r => {
+		return P.seq([
+			r.identifier,
+			P.notMatch(P.seq([
+				P.alt([_, P.newline]).many(0),
+				P.str('='),
+			])),
+		]).map(values => {
+			return { type: 'ref', name: values[0] };
+		});
+	},
+
+	group: r => P.seq([
+		P.str('('),
+		P.alt([_, P.newline]).many(0),
+		r.exprLayer1,
+		P.alt([_, P.newline]).many(0),
+		P.str(')'),
+	], 2),
 });
 
-// function parse(input: string) {
-// 	const result = lang.rules.handler(input, 0, {});
-// 	if (!result.success || result.index < input.length) {
-// 		throw new Error('parse error');
-// 	}
-// 	return result.value;
-// }
+export function parse(input: string) {
+	return lang.rules.parse(input, {});
+}

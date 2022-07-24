@@ -2,7 +2,7 @@
   "name": "json",
   "version": "0.1.0",
   "private": true,
-  "main": "./built/index.js",
+  "main": "./cli.js",
   "scripts": {
     "build": "tsc",
     "start": "node ."
@@ -12,6 +12,6 @@
     "typescript": "4.7.4"
   },
   "dependencies": {
-    "terrario": "0.3.0"
+    "terrario": "0.4.0"
   }
 }

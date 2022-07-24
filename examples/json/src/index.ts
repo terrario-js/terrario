@@ -55,7 +55,7 @@ const lang = P.createLanguage({
 		return P.seq([
 			P.str('{'),
 			spaces,
-			entry.sep(separator, 1).option(),
+			P.sep(entry, separator, 1).option(),
 			spaces,
 			P.str('}'),
 		], 2).map((value: { key: string, value: unknown }[] | null) => {
@@ -79,7 +79,7 @@ const lang = P.createLanguage({
 		return P.seq([
 			P.str('['),
 			spaces,
-			r.value.sep(separator, 1).option(),
+			P.sep(r.value, separator, 1).option(),
 			spaces,
 			P.str(']'),
 		], 2).map((value: unknown[] | null) => {
@@ -94,12 +94,10 @@ const json = P.seq([
 	spaces,
 ], 1);
 
-function parseJson(input: string) {
-	const result = json.handler(input, 0, {});
+export function parse(input: string) {
+	const result = json.parse(input);
 	if (!result.success || result.index < input.length) {
 		throw new Error('failed to parse JSON.');
 	}
 	return result.value;
 }
-
-console.log(parseJson('{ "id": 1, "name": "user", "posts": [{ "text": "hello", "reply": false }, { "text": "@abc yeah", "reply": true }] }'));

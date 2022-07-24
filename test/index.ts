@@ -4,7 +4,7 @@ import * as P from '../src/index';
 it('char', () => {
 	const input = 'ab';
 	const parser = P.char;
-	const result = parser.handler(input, 0, {});
+	const result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, 'a');
 	assert.strictEqual(result.index, 1);
@@ -13,7 +13,7 @@ it('char', () => {
 it('str', () => {
 	const input = 'abc';
 	const parser = P.str('abc');
-	const result = parser.handler(input, 0, {});
+	const result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, input);
 	assert.strictEqual(result.index, 3);
@@ -22,7 +22,7 @@ it('str', () => {
 it('regexp', () => {
 	const input = 'abcDEF';
 	const parser = P.regexp(/[a-z]+/i);
-	const result = parser.handler(input, 0, {});
+	const result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, input);
 	assert.strictEqual(result.index, 6);
@@ -34,7 +34,7 @@ it('alt', () => {
 		P.str('abc'),
 		P.str('123'),
 	]);
-	const result = parser.handler(input, 0, {});
+	const result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, input);
 	assert.strictEqual(result.index, 3);
@@ -47,7 +47,7 @@ describe('seq', () => {
 			P.str('abc'),
 			P.str('123'),
 		]);
-		const result = parser.handler(input, 0, {});
+		const result = parser.parse(input);
 		assert.ok(result.success);
 		assert.deepStrictEqual(result.value, ['abc', '123']);
 		assert.strictEqual(result.index, 6);
@@ -59,7 +59,7 @@ describe('seq', () => {
 			P.str('abc'),
 			P.str('123'),
 		], 0);
-		const result = parser.handler(input, 0, {});
+		const result = parser.parse(input);
 		assert.ok(result.success);
 		assert.deepStrictEqual(result.value, 'abc');
 		assert.strictEqual(result.index, 6);
@@ -72,7 +72,7 @@ it('parser.text()', () => {
 		P.str('abc'),
 		P.str('123'),
 	]).text();
-	const result = parser.handler(input, 0, {});
+	const result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, input);
 	assert.strictEqual(result.index, 6);
@@ -84,34 +84,34 @@ it('parser.many()', () => {
 	parser = P.str('abc').many(1);
 
 	input = 'abc123';
-	result = parser.handler(input, 0, {});
+	result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, ['abc']);
 	assert.strictEqual(result.index, 3);
 
 	input = 'abcabc123';
-	result = parser.handler(input, 0, {});
+	result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, ['abc', 'abc']);
 	assert.strictEqual(result.index, 6);
 
 	input = 'ab123';
-	result = parser.handler(input, 0, {});
+	result = parser.parse(input);
 	assert.ok(!result.success);
 });
 
 it('parser.sep()', () => {
 	let input, parser, result;
 
-	parser = P.str('abc').sep(P.str(','), 2);
+	parser = P.sep(P.str('abc'), P.str(','), 2);
 
 	input = 'abc,abc';
-	result = parser.handler(input, 0, {});
+	result = parser.parse(input);
 	assert.ok(result.success);
 	assert.deepStrictEqual(result.value, ['abc', 'abc']);
 	assert.strictEqual(result.index, 7);
 
 	input = 'abc';
-	result = parser.handler(input, 0, {});
+	result = parser.parse(input);
 	assert.ok(!result.success);
 });

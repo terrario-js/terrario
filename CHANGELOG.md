@@ -11,6 +11,16 @@
 
 -->
 
+## 0.4.0 (2022/07/24)
+
+### Features
+- Add api: parser.parse
+- Add api: P.match
+- Add api: P.lazy
+
+### Changes
+- Change api: parser.sep(separator, min) -> P.sep(item, separator, min)
+
 ## 0.3.0 (2022/07/18)
 
 ### Features
