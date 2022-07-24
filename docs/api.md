@@ -71,6 +71,23 @@ console.log(result);
 // => { success: true, value: '1', index: 1 }
 ```
 
+## P.sep(item: Parser, separator: Parser, min: number): Parser
+
+```ts
+// [Equivalent PEG] head:"a" tail:("," @"a")* { return [head, ...tail]; }
+const parser = P.sep(P.str('a'), P.str(','), 1);
+
+let result;
+
+result = parser.parse('a');
+console.log(result);
+// => { success: true, value: [ 'a' ], index: 1 }
+
+result = parser.parse('a,a');
+console.log(result);
+// => { success: true, value: [ 'a', 'a' ], index: 3 }
+```
+
 ## P.match(parser: Parser): Parser
 Generates a new parser to continue if the match is successful.
 The generated parser does not consume input.
@@ -184,24 +201,6 @@ console.log(result);
 result = parser.parse('abcabc');
 console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
-```
-
-## parser.sep(separator: Parser, min: number): Parser
-
-```ts
-// [Equivalent PEG] head:"a" tail:("," @"a")* { return [head, ...tail]; }
-const item = P.str('a');
-const parser = item.sep(P.str(','), 1);
-
-let result;
-
-result = parser.parse('a');
-console.log(result);
-// => { success: true, value: [ 'a' ], index: 1 }
-
-result = parser.parse('a,a');
-console.log(result);
-// => { success: true, value: [ 'a', 'a' ], index: 3 }
 ```
 
 ## parser.option(): Parser

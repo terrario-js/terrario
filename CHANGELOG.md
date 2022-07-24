@@ -17,6 +17,9 @@
 - Add api: parser.parse
 - Add api: P.match
 
+### Changes
+- Change api: parser.sep(separator, min) -> P.sep(item, separator, min)
+
 ## 0.3.0 (2022/07/18)
 
 ### Features
