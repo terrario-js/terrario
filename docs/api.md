@@ -219,7 +219,7 @@ console.log(result);
 
 # Other APIs
 
-## P.createLanguage(Record<string, (rules: Record<string, Parser>) => Parser>): Record<string, Parser>
+## P.createLanguage(syntaxes: Record<string, (rules: Language) => Parser>): Language
 You can use createLanguage to create a set of syntax.
 
 Each rule is lazy evaluated.
