@@ -103,7 +103,7 @@ it('parser.many()', () => {
 it('parser.sep()', () => {
 	let input, parser, result;
 
-	parser = P.str('abc').sep(P.str(','), 2);
+	parser = P.sep(P.str('abc'), P.str(','), 2);
 
 	input = 'abc,abc';
 	result = parser.parse(input);

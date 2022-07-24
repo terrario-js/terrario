@@ -18,7 +18,7 @@ const lang = P.createLanguage({
 			P.alt([_, P.newline]).many(0),
 		]);
 		return P.seq([
-			r.rule.sep(separator, 1),
+			P.sep(r.rule, separator, 1),
 			separator.option(),
 		], 0);
 	},
@@ -42,7 +42,7 @@ const lang = P.createLanguage({
 			P.str('/'),
 			P.alt([_, P.newline]).many(1),
 		]);
-		const choice = r.exprLayer2.sep(choiceSep, 2).map(values => {
+		const choice = P.sep(r.exprLayer2, choiceSep, 2).map(values => {
 			return { type: 'choice', exprs: values };
 		});
 		return P.alt([
@@ -53,7 +53,7 @@ const lang = P.createLanguage({
 
 	// expr1 expr2
 	exprLayer2: r => {
-		const sequence = r.exprLayer3.sep(P.alt([_, P.newline]).many(1), 2).map(values => {
+		const sequence = P.sep(r.exprLayer3, P.alt([_, P.newline]).many(1), 2).map(values => {
 			return { type: 'sequence', exprs: values };
 		});
 		return P.alt([
