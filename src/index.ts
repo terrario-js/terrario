@@ -46,6 +46,10 @@ export class Parser<T> {
 		this.name = name;
 	}
 
+	parse(input: string, state: any = {}): Result<T> {
+		return this.handler(input, 0, state);
+	}
+
 	map<U>(fn: (value: T) => U): Parser<U> {
 		return new Parser((input, index, state) => {
 			const result = this.handler(input, index, state);
