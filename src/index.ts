@@ -166,6 +166,14 @@ export function sep<T>(item: Parser<T>, separator: Parser<any>, min: number): Pa
 	]).map(result => [result[0], ...result[1]]);
 }
 
+export function lazy<T>(fn: () => Parser<T>): Parser<T> {
+	const parser: Parser<T> = new Parser((input, index, state) => {
+		parser.handler = fn().handler;
+		return parser.handler(input, index, state);
+	});
+	return parser;
+}
+
 function succeeded<T>(value: T): Parser<T> {
 	return new Parser((_input, index, _state) => {
 		return success(index, value);
@@ -228,14 +236,6 @@ export const lineEnd = new Parser((input, index, state) => {
 	}
 	return failure();
 });
-
-function lazy<T>(fn: () => Parser<T>): Parser<T> {
-	const parser: Parser<T> = new Parser((input, index, state) => {
-		parser.handler = fn().handler;
-		return parser.handler(input, index, state);
-	});
-	return parser;
-}
 
 //type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
 //type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;

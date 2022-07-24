@@ -88,6 +88,9 @@ console.log(result);
 // => { success: true, value: [ 'a', 'a' ], index: 3 }
 ```
 
+## P.lazy(fn: () => Parser): Parser
+Generates a new parser that is lazy-evaluated.
+
 ## P.match(parser: Parser): Parser
 Generates a new parser to continue if the match is successful.
 The generated parser does not consume input.

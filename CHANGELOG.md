@@ -16,6 +16,7 @@
 ### Features
 - Add api: parser.parse
 - Add api: P.match
+- Add api: P.lazy
 
 ### Changes
 - Change api: parser.sep(separator, min) -> P.sep(item, separator, min)
