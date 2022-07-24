@@ -11,6 +11,11 @@
 
 -->
 
+## 0.4.0 (unreleased)
+
+### Features
+- Add api: parser.parse
+
 ## 0.3.0 (2022/07/18)
 
 ### Features
