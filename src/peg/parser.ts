@@ -1,4 +1,5 @@
 import * as P from '../index';
+import * as N from './node';
 
 const space = P.regexp(/[ \t]/);
 const spacing = P.alt([space, P.newline]).many(0);
@@ -32,7 +33,7 @@ const lang = P.createLanguage({
 			spacing,
 			r.exprLayer1,
 		]).map(values => {
-			return { type: 'rule', name: values[0], expr: values[4] };
+			return { type: 'rule', name: values[0], expr: values[4] } as N.Rule;
 		});
 	},
 
@@ -44,7 +45,7 @@ const lang = P.createLanguage({
 			spacing,
 		]);
 		const choice = P.sep(r.exprLayer2, choiceSep, 2).map(values => {
-			return { type: 'alt', exprs: values };
+			return { type: 'alt', exprs: values } as N.Alt;
 		});
 		return P.alt([
 			choice,
@@ -56,7 +57,7 @@ const lang = P.createLanguage({
 	exprLayer2: r => {
 		const separator = P.alt([space, P.newline]).many(1);
 		const sequence = P.sep(r.exprLayer3, separator, 2).map(values => {
-			return { type: 'seq', exprs: values };
+			return { type: 'seq', exprs: values } as N.Seq;
 		});
 		return P.alt([
 			sequence,
@@ -74,7 +75,7 @@ const lang = P.createLanguage({
 			spacing,
 			r.exprLayer4,
 		]).map(values => {
-			return { type: values[0], expr: values[1] };
+			return { type: values[0], expr: values[1] } as N.Match | N.NotMatch;
 		});
 		return P.alt([
 			exprOp,
@@ -93,7 +94,7 @@ const lang = P.createLanguage({
 				P.str('*').map(v => { return { type: 'many', min: 0 }; }),
 			]),
 		]).map(values => {
-			return { ...values[2], expr: values[0] };
+			return { ...values[2], expr: values[0] } as N.Option | N.Many;
 		});
 		return P.alt([
 			exprOp,
@@ -115,7 +116,7 @@ const lang = P.createLanguage({
 		]).many(0).text(),
 		P.str('"'),
 	], 1).map(value => {
-		return { type: 'str', value: value };
+		return { type: 'str', value: value } as N.Str;
 	}),
 
 	ref: r => {
@@ -126,7 +127,7 @@ const lang = P.createLanguage({
 				P.str('='),
 			])),
 		]).map(values => {
-			return { type: 'ref', name: values[0] };
+			return { type: 'ref', name: values[0] } as N.Ref;
 		});
 	},
 
