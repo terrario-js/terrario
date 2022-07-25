@@ -1,5 +1,5 @@
-import * as P from '../index';
-import * as N from './node';
+import * as P from '../../index';
+import * as N from './ast-node';
 
 const space = P.regexp(/[ \t]/);
 const spacing = P.alt([space, P.newline]).many(0);
@@ -20,7 +20,7 @@ const lang = P.createLanguage({
 			spacing,
 		]);
 		return P.seq([
-			P.sep(r.rule, separator, 1),
+			P.sep(r.rule as P.Parser<N.Rule>, separator, 1),
 			separator.option(),
 		], 0);
 	},
@@ -140,6 +140,10 @@ const lang = P.createLanguage({
 	], 2),
 });
 
-export function parse(input: string) {
-	return lang.rules.parse(input, {});
+export function parse(input: string): N.Rule[] {
+	const result = (lang.rules as P.Parser<N.Rule[]>).parse(input, {});
+	if (!result.success) {
+		throw new Error('parsing error');
+	}
+	return result.value;
 }

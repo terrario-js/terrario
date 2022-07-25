@@ -1,8 +1,9 @@
-import * as N from './node';
+import * as Ast from './ast-node';
+import * as IR from './ir-node';
 
 type State = {};
 
-function processExpr(expr: N.Expr, state: State) {
+function processExpr(expr: Ast.Expr, state: State) {
 	switch (expr.type) {
 		case 'alt': {
 			for (let inner of expr.exprs) {
@@ -49,10 +50,10 @@ function processExpr(expr: N.Expr, state: State) {
 			return;
 		}
 	}
-	console.log('skip unknown node', expr);
+	console.log('skip unknown expr', expr);
 }
 
-export function generate(rules: N.Rule[]) {
+export function generate(rules: Ast.Rule[]) {
 	const state: State = {};
 
 	// process rules
