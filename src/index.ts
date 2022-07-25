@@ -91,7 +91,7 @@ export class Parser<T> {
 		});
 	}
 
-	option<T>(): Parser<T | null> {
+	option(): Parser<T | null> {
 		return alt([
 			this,
 			succeeded(null),
@@ -123,7 +123,9 @@ export function regexp<T extends RegExp>(pattern: T): Parser<string> {
 	});
 }
 
-export function seq(parsers: Parser<any>[], select?: number): Parser<any> {
+export function seq<T extends Parser<any>[]>(parsers: T): Parser<any[]>
+export function seq<T extends Parser<any>[]>(parsers: T, select: number): Parser<any>
+export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parser<any[] | any> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
