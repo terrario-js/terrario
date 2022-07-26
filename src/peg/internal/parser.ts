@@ -1,5 +1,5 @@
 import * as P from '../../index';
-import * as N from './ast-node';
+import * as N from './node';
 
 const space = P.regexp(/[ \t]/);
 const spacing = P.alt([space, P.newline]).many(0);
