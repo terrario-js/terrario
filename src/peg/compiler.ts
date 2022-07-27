@@ -1,5 +1,5 @@
-import * as Parser from './internal/parser';
-import * as Emitter from './internal/emitter';
+import * as Parser from './internal/peg-parser';
+import * as Emitter from './internal/peg-emitter';
 
 export function compile(input: string): string {
 	const rules = Parser.parse(input);

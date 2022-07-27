@@ -1,4 +1,4 @@
-import * as Parser from './internal/parser';
+import * as Parser from './internal/peg-parser';
 import * as P from '..';
 
 export function run(input: string): P.Result<any> {

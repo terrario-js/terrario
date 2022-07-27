@@ -1,6 +1,6 @@
 const { performance } = require('perf_hooks');
 const readLine = require('readline');
-const { parse } = require('./built/peg/index');
+const { compile } = require('./built/peg/compiler');
 
 
 class InputCanceledError extends Error {
@@ -38,20 +38,21 @@ async function entryPoint() {
 		}
 
 		input = input
+			.replace(/\\r/g, '\r')
 			.replace(/\\n/g, '\n')
 			.replace(/\\t/g, '\t')
 			.replace(/\\u00a0/g, '\u00a0');
 
 		try {
 			const parseTimeStart = performance.now();
-			const result = parse(input);
+			const result = compile(input);
 			const parseTimeEnd = performance.now();
-			console.log(JSON.stringify(result));
+			console.log(result);
 			const parseTime = (parseTimeEnd - parseTimeStart).toFixed(3);
-			console.log(`parsing time: ${parseTime}ms`);
+			console.log(`time: ${parseTime}ms`);
 		}
 		catch (err) {
-			console.log('parsing error:');
+			console.log('error:');
 			console.log(err);
 		}
 		console.log();
