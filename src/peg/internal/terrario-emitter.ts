@@ -8,21 +8,31 @@ export function emit(rules: N.Rule[]) {
 	const state: State = {
 		code: ''
 	};
-	if (rules.length > 0) {
-		emitRule(rules[0], state);
-		for (let i = 1; i < rules.length; i++) {
-			state.code += '\r\n';
-			emitRule(rules[i], state);
-		}
-	}
+
+	state.code += 'import * as P from \'terrario\';\r\n';
+	state.code += 'export const language = P.createLanguage({\r\n';
+
+	emitRules(rules, state);
+
+	state.code += '});\r\n';
 
 	return state.code;
 }
 
+function emitRules(rules: N.Rule[], state: State) {
+	if (rules.length === 0) {
+		return;
+	}
+	emitRule(rules[0], state);
+	for (let i = 1; i < rules.length; i++) {
+		emitRule(rules[i], state);
+	}
+}
+
 function emitRule(rule: N.Rule, state: State) {
-	state.code += rule.name;
-	state.code += ' = ';
+	state.code += `${rule.name}: r => { return `;
 	emitExpr(rule.expr, state);
+	state.code += '; },\r\n';
 }
 
 function emitExpr(expr: N.Expr, state: State) {
@@ -60,71 +70,59 @@ function emitExpr(expr: N.Expr, state: State) {
 	console.log('skipped unknown expr', expr);
 }
 
-function emitExprIfNeededGroup(node: N.Expr, state: State) {
-	const needGroup = ((node.type === 'alt' || node.type === 'seq') && node.exprs.length > 1);
-	if (needGroup) {
-		state.code += '(';
-	}
-	emitExpr(node, state);
-	if (needGroup) {
-		state.code += ')';
-	}
-}
-
 function emitAlt(node: N.Alt, state: State) {
 	if (node.exprs.length === 0) {
 		return;
 	}
+	state.code += 'P.alt([';
 	emitExpr(node.exprs[0], state);
 	for (let i = 1; i < node.exprs.length; i++) {
-		state.code += ' / ';
+		state.code += ', ';
 		emitExpr(node.exprs[i], state);
 	}
+	state.code += '])';
 }
 
 function emitSeq(node: N.Seq, state: State) {
 	if (node.exprs.length === 0) {
 		return;
 	}
+	state.code += 'P.seq([';
 	emitExpr(node.exprs[0], state);
 	for (let i = 1; i < node.exprs.length; i++) {
-		state.code += ' ';
+		state.code += ', ';
 		emitExpr(node.exprs[i], state);
 	}
+	state.code += '])';
 }
 
 function emitMatchOrNotMatch(node: N.Match | N.NotMatch, state: State) {
 	if (node.type === 'match') {
-		state.code += '&';
+		state.code += 'P.match(';
 	} else {
-		state.code += '!';
+		state.code += 'P.notMatch(';
 	}
-	emitExprIfNeededGroup(node.expr, state);
+	emitExpr(node.expr, state);
+	state.code += ')';
 }
 
 function emitOption(node: N.Option, state: State) {
-	emitExprIfNeededGroup(node.expr, state);
-	state.code += '?';
+	emitExpr(node.expr, state);
+	state.code += '.option()';
 }
 
 function emitMany(node: N.Many, state: State) {
-	if (node.min > 1) {
-		throw new Error('not supported');
-	}
-	emitExprIfNeededGroup(node.expr, state);
-	if (node.min === 0) {
-		state.code += '*';
-	} else {
-		state.code += '+';
-	}
+	emitExpr(node.expr, state);
+	state.code += `.many(${node.min})`;
 }
 
 function emitStr(node: N.Str, state: State) {
-	state.code += '"';
+	state.code += 'P.str(\'';
 	state.code += node.value;
-	state.code += '"';
+	state.code += '\')';
 }
 
 function emitRef(node: N.Ref, state: State) {
+	state.code += 'r.';
 	state.code += node.name;
 }

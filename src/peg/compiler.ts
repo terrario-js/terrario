@@ -1,5 +1,5 @@
 import * as Parser from './internal/peg-parser';
-import * as Emitter from './internal/peg-emitter';
+import * as Emitter from './internal/terrario-emitter';
 
 export function compile(input: string): string {
 	const rules = Parser.parse(input);
