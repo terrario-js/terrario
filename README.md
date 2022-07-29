@@ -35,11 +35,6 @@ const parser = P.alt([
 const input = 'hello world';
 const result = parser.parse(input);
 
-// check errors
-if (!result.success) {
-  throw new Error('parsing failed.');
-}
-
 console.log(result);
 // => { success: true, value: [ 'hello', ' ', 'world' ], index: 11 }
 ```
