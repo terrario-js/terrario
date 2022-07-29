@@ -7,6 +7,7 @@ A simple parser-combinator library with TypeScript.
 - ✨Zero dependency
 
 Conditional branching by state allows for the creation of practical parsers.
+
 The Terrario is inspired by PEG.js, Parsimmon, etc.
 
 [![NPM](https://nodei.co/npm/terrario.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/terrario)
