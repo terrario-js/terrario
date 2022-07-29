@@ -23,9 +23,9 @@ import * as P from 'terrario';
 
 // build a parser
 const parser = P.alt([
-	P.str('hello'),
-	P.str('world'),
-	P.str(' '),
+  P.str('hello'),
+  P.str('world'),
+  P.str(' '),
 ]).many(0);
 
 // parse the input string
