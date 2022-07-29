@@ -15,7 +15,7 @@ The Terrario is inspired by PEG.js, Parsimmon, etc.
 npm i terrario
 ```
 
-## Documenation
+## Documentation
 [Docs](https://github.com/marihachi/terrario/tree/develop/docs/index.md)
 
 ## Basic Example
