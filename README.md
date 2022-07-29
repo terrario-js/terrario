@@ -1,8 +1,11 @@
-# terrario
-A Parsimmon-like, stateful parser-combinator library with TypeScript.
+# Terrario
+A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
 
-The terrario is a parser-combinator library inspired by PEG.js, Parsimmon, etc.
+- simple APIs
+- stateful parsing is supported
+
+The Terrario is inspired by PEG.js, Parsimmon, etc.
 
 [![NPM](https://nodei.co/npm/terrario.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/terrario)
 
@@ -19,7 +22,11 @@ npm i terrario
 import * as P from 'terrario';
 
 // build a parser
-const parser = P.str('hello world');
+const parser = P.alt([
+	P.str('hello'),
+	P.str('world'),
+	P.str(' '),
+]).many(0);
 
 // parse the input string
 const input = 'hello world';
@@ -31,7 +38,7 @@ if (!result.success) {
 }
 
 console.log(result);
-// => { success: true, value: 'hello world', index: 11 }
+// => { success: true, value: [ 'hello', ' ', 'world' ], index: 11 }
 ```
 
 ## Examples
