@@ -205,6 +205,12 @@ export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
+export const eof = new Parser((input, index, _state) => {
+	return index >= input.length
+		? success(index, null)
+		: failure();
+});
+
 export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {
 		return failure();

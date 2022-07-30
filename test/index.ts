@@ -115,3 +115,15 @@ it('parser.sep()', () => {
 	result = parser.parse(input);
 	assert.ok(!result.success);
 });
+
+it('eof', () => {
+	let input, parser, result;
+
+	parser = P.eof;
+
+	result = parser.parse('');
+	assert.ok(result.success);
+
+	result = parser.parse('a');
+	assert.ok(!result.success);
+});
