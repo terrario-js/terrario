@@ -127,3 +127,18 @@ it('eof', () => {
 	result = parser.parse('a');
 	assert.ok(!result.success);
 });
+
+it('cond', () => {
+	let input, parser, result;
+
+	parser = P.seq([
+		P.cond(state => state.enabled),
+		P.char,
+	]);
+
+	result = parser.parse('a', { enabled: true });
+	assert.ok(result.success);
+
+	result = parser.parse('a', { enabled: false });
+	assert.ok(!result.success);
+});

@@ -15,6 +15,7 @@
 
 ### Features
 - Add api: P.eof
+- Add api: P.cond
 
 ## 0.4.0 (2022/07/24)
 

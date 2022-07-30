@@ -200,6 +200,14 @@ export function notMatch(parser: Parser<any>): Parser<null> {
 	});
 }
 
+export function cond(predicate: (state: any) => boolean): Parser<null> {
+	return new Parser((input, index, state) => {
+		return predicate(state)
+			? success(index, null)
+			: failure();
+	});
+}
+
 export const cr = str('\r');
 export const lf = str('\n');
 export const crlf = str('\r\n');
@@ -232,18 +240,11 @@ export const lineBegin = new Parser((input, index, state) => {
 	return failure();
 });
 
-export const lineEnd = new Parser((input, index, state) => {
-	if (index === input.length) {
-		return success(index, null);
-	}
-	if (cr.handler(input, index, state).success) {
-		return success(index, null);
-	}
-	if (lf.handler(input, index, state).success) {
-		return success(index, null);
-	}
-	return failure();
-});
+export const lineEnd = match(alt([
+	eof,
+	cr,
+	lf,
+])).map(value => null);
 
 //type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
 //type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;
