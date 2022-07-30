@@ -1,8 +1,9 @@
 # Terrario
+
+<img align="right" src="https://github.com/marihachi/terrario/blob/cecf09e96bb50ea0f7f51a33827a39e4721dfc72/assets/terrario-logo.png" alt="Terrario" />
+
 A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
-
-<img src="https://github.com/marihachi/terrario/blob/cecf09e96bb50ea0f7f51a33827a39e4721dfc72/assets/terrario-logo.png?raw=true" />
 
 - 📍Simple APIs
 - ⚙Supports conditional branching by state
