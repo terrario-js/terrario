@@ -1,15 +1,12 @@
 # Terrario
-
-<img alt="Terrario" align="right" width="280px" src="https://github.com/marihachi/terrario/blob/cecf09e96bb50ea0f7f51a33827a39e4721dfc72/assets/terrario-logo.png" />
-
 A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
+
+<p align="left"><img alt="Terrario" src="https://github.com/marihachi/terrario/blob/cecf09e96bb50ea0f7f51a33827a39e4721dfc72/assets/terrario-logo.png" /></p>
 
 - 📍Simple APIs
 - ⚙Supports conditional branching by state
 - ✨Zero dependency
-
-Conditional branching by state allows for the creation of practical parsers.
 
 The Terrario is inspired by PEG.js, Parsimmon, etc.
 
