@@ -2,6 +2,8 @@
 A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
 
+[![Test](https://github.com/marihachi/terrario/actions/workflows/test.yml/badge.svg)](https://github.com/marihachi/terrario/actions/workflows/test.yml)
+
 <p align="left"><img alt="Terrario" src="https://github.com/marihachi/terrario/blob/cecf09e96bb50ea0f7f51a33827a39e4721dfc72/assets/terrario-logo.png" /></p>
 
 - 📍Simple APIs
