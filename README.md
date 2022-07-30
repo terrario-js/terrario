@@ -1,6 +1,6 @@
 # Terrario
 
-<img align="right" src="https://github.com/marihachi/terrario/blob/cecf09e96bb50ea0f7f51a33827a39e4721dfc72/assets/terrario-logo.png" alt="Terrario" />
+<img alt="Terrario" align="right" width="280px" src="https://github.com/marihachi/terrario/blob/cecf09e96bb50ea0f7f51a33827a39e4721dfc72/assets/terrario-logo.png" />
 
 A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
