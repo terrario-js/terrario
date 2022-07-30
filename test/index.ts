@@ -2,11 +2,37 @@ import assert from 'assert';
 import * as P from '../src/index';
 
 describe('Parser', () => {
-	// it('parse()', () => {
-	// });
+	describe('parse()', () => {
+		it('input', () => {
+			const parser = new P.Parser((input, index, state) => {
+				return P.success(index, null);
+			});
+			const result = parser.parse('');
+			assert.ok(result.success);
+		});
 
-	// it('map()', () => {
-	// });
+		it('state', () => {
+			const parser = new P.Parser((input, index, state) => {
+				if (state.value !== 1) {
+					return P.failure();
+				}
+				return P.success(index, null);
+			});
+			const result = parser.parse('', { value: 1 });
+			assert.ok(result.success);
+		});
+	});
+
+	it('map()', () => {
+		const parser = new P.Parser((input, index, state) => {
+			return P.success(index, 1);
+		}).map(value => {
+			return value === 1 ? 2 : 3;
+		});
+		const result = parser.parse('');
+		assert.ok(result.success);
+		assert.deepStrictEqual(result.value, 2);
+	});
 
 	it('text()', () => {
 		const input = 'abc123';
