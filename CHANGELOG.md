@@ -11,6 +11,11 @@
 
 -->
 
+## 0.5.x (unreleased)
+
+### Features
+- Add api: P.eof
+
 ## 0.4.0 (2022/07/24)
 
 ### Features
