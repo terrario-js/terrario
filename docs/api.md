@@ -91,6 +91,10 @@ console.log(result);
 ## P.lazy(fn: () => Parser): Parser
 Generates a new parser that is lazy-evaluated.
 
+```ts
+// TODO
+```
+
 ## P.match(parser: Parser): Parser
 Generates a new parser to continue if the match is successful.
 The generated parser does not consume input.
@@ -124,11 +128,23 @@ console.log(result);
 ## P.cr: Parser
 Matches `\r` (CR)
 
+```ts
+// TODO
+```
+
 ## P.lf: Parser
 Matches `\n` (LF)
 
+```ts
+// TODO
+```
+
 ## P.newline: Parser
 Matches `\r\n` or `\r` or `\n`
+
+```ts
+// TODO
+```
 
 # Parser APIs
 
@@ -260,5 +276,13 @@ console.log(result);
 ## P.success()
 for custom parser.
 
+```ts
+// TODO
+```
+
 ## P.failure()
 for custom parser.
+
+```ts
+// TODO
+```
