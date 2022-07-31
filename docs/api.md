@@ -76,10 +76,11 @@ console.log(result);
 ## P.sep(item: Parser, separator: Parser, min: number): Parser
 
 ```ts
-// [Equivalent PEG] head:"a" tail:("," @"a")* { return [head, ...tail]; }
-const parser = P.sep(P.str('a'), P.str(','), 1);
+let parser, result;
 
-let result;
+// (1)
+// [Equivalent PEG] head:"a" tail:("," @"a")* { return [head, ...tail]; }
+parser = P.sep(P.str('a'), P.str(','), 1);
 
 result = parser.parse('a');
 console.log(result);
@@ -88,16 +89,18 @@ console.log(result);
 result = parser.parse('a,a');
 console.log(result);
 // => { success: true, value: [ 'a', 'a' ], index: 3 }
-```
 
-```ts
-const inner = P.seq([
-	P.notMatch(P.newline),
-	P.char
-], 1).many(0).text();
-const parser = P.sep(inner, P.newline, 1);
+// (2)
+// [Equivalent PEG]
+// newline = "\r\n" / [\r\n]
+// item = $(!newline .)+
+// parser = head:item tail:(newline @item)* { return [head, ...tail]; }
+parser = P.sep(P.seq([
+  P.notMatch(P.newline),
+  P.char
+], 1).many(0).text(), P.newline, 1);
 
-const result = parser.parse('abc\r\nxyz');
+result = parser.parse('abc\r\nxyz');
 console.log(result);
 // => { success: true, value: [ 'abc', 'xyz' ], index: 8 }
 ```
