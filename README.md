@@ -4,7 +4,7 @@ A simple parser-combinator library with TypeScript.
 
 [![Test](https://github.com/marihachi/terrario/actions/workflows/test.yml/badge.svg)](https://github.com/marihachi/terrario/actions/workflows/test.yml)
 
-<p align="left"><img alt="Terrario" src="https://github.com/marihachi/terrario/blob/308ec5c529dc69c0711fe7b580c180587ece170d/assets/terrario-logo.png" /></p>
+<img alt="Terrario" src="https://github.com/marihachi/terrario/blob/308ec5c529dc69c0711fe7b580c180587ece170d/assets/terrario-logo.png?raw=true" />
 
 - 📍Simple APIs
 - ⚙Supports conditional branching by state
