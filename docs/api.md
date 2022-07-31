@@ -90,19 +90,36 @@ console.log(result);
 // => { success: true, value: [ 'a', 'a' ], index: 3 }
 ```
 
+```ts
+const inner = P.seq([
+	P.notMatch(P.newline),
+	P.char
+], 1).many(0).text();
+const parser = P.sep(inner, P.newline, 1);
+
+const result = parser.parse('abc\r\nxyz');
+console.log(result);
+// => { success: true, value: [ 'abc', 'xyz' ], index: 8 }
+```
+
 ## P.lazy(fn: () => Parser): Parser
 Generates a new parser that is lazy-evaluated.
 
-```ts
-// TODO
-```
+Normally there is no need to use this API. Use P.createLanguage() instead.
 
 ## P.match(parser: Parser): Parser
 Generates a new parser to continue if the match is successful.
 The generated parser does not consume input.
 
 ```ts
-// TODO
+// [Equivalent PEG] &"a" "abc"
+const parser = P.seq([
+  P.match(P.str('a')),
+  P.str('abc'),
+]);
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'a', 'abc' ], index: 3 }
 ```
 
 ## P.notMatch(parser: Parser): Parser
@@ -110,7 +127,14 @@ Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
 
 ```ts
-// TODO
+// [Equivalent PEG] !"x" "abc"
+const parser = P.seq([
+  P.notMatch(P.str('x')),
+  P.str('abc'),
+]);
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ null, 'abc' ], index: 3 }
 ```
 
 # Parsers
@@ -130,23 +154,11 @@ console.log(result);
 ## P.cr: Parser
 Matches `\r` (CR)
 
-```ts
-// TODO
-```
-
 ## P.lf: Parser
 Matches `\n` (LF)
 
-```ts
-// TODO
-```
-
 ## P.newline: Parser
 Matches `\r\n` or `\r` or `\n`
-
-```ts
-// TODO
-```
 
 # Parser APIs
 
