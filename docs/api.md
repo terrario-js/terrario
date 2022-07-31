@@ -140,6 +140,20 @@ console.log(result);
 // => { success: true, value: [ null, 'abc' ], index: 3 }
 ```
 
+## P.cond(predicate: (state: any) => boolean): Parser
+Conditional branching can be performed using the state.
+
+```ts
+const parser = P.seq([
+  P.cond(state => state.enabled),
+  P.char,
+]);
+
+const result = parser.parse('a', { enabled: true });
+console.log(result);
+// => { success: true, value: [ null, 'a' ], index: 1 }
+```
+
 # Parsers
 
 ## P.char: Parser
@@ -290,16 +304,19 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
+## Parser constructor (custom parser)
+
+```ts
+const parser = new Parser((input, index, state) => {
+  if (index >= input.length) {
+    return P.failure();
+  }
+  return P.success(index, 'result value');
+});
+```
+
 ## P.success()
 for custom parser.
 
-```ts
-// TODO
-```
-
 ## P.failure()
 for custom parser.
-
-```ts
-// TODO
-```
