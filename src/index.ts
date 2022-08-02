@@ -244,7 +244,7 @@ export const lineEnd = match(alt([
 	eof,
 	cr,
 	lf,
-])).map(value => null);
+])).map(() => null);
 
 //type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
 //type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;
