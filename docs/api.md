@@ -1,5 +1,103 @@
 WIP!
 
+
+# Parser APIs
+
+## parser.parse(input: string, state?: any): Result
+```ts
+const parser = P.str('a');
+
+parser.parse('a');
+
+// specify states
+parser.parse('a', { flag: true, count: 0 });
+```
+
+## parser.map(fn: (value) => any): Parser
+```ts
+// [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
+const parser = P.seq([
+  P.str('a'),
+  P.str('b'),
+  P.str('c'),
+]).map(value => {
+  return [value[0], value[2]];
+});
+
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'a', 'c' ], index: 3 }
+```
+
+## parser.text(): Parser
+```ts
+// [Equivalent PEG] "a" "b" "c" { return text(); }
+const parser = P.seq([
+  P.str('a'),
+  P.str('b'),
+  P.str('c'),
+]).text();
+
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: 'abc', index: 3 }
+```
+
+## parser.many(min: number): Parser
+
+Matches 0 or more items:
+```ts
+// [Equivalent PEG] "abc"*
+const parser = P.str('abc').many(0);
+
+let result;
+
+result = parser.parse('');
+console.log(result);
+// => { success: true, value: [], index: 0 }
+
+result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'abc' ], index: 3 }
+```
+
+Matches 1 or more items:
+```ts
+// [Equivalent PEG] "abc"+
+const parser = P.str('abc').many(1);
+
+let result;
+
+result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'abc' ], index: 3 }
+
+result = parser.parse('abcabc');
+console.log(result);
+// => { success: true, value: [ 'abc', 'abc' ], index: 6 }
+```
+
+## parser.option(): Parser
+Generates a new parser that returns null even if the match fails.
+
+```ts
+// [Equivalent PEG] "a" "b"?
+const parser = P.seq([
+  P.str('a'),
+  P.str('b').option(),
+]);
+
+let result;
+
+result = parser.parse('ab');
+console.log(result);
+// => { success: true, value: [ 'a', 'b' ], index: 2 }
+
+result = parser.parse('a');
+console.log(result);
+// => { success: true, value: [ 'a', null ], index: 1 }
+```
+
 # Combinators
 
 ## P.str(value: string): Parser
@@ -110,6 +208,12 @@ Generates a new parser that is lazy-evaluated.
 
 Normally there is no need to use this API. Use P.createLanguage() instead.
 
+## P.succeeded(value: any): Parser
+
+```ts
+//TODO
+```
+
 ## P.match(parser: Parser): Parser
 Generates a new parser to continue if the match is successful.
 The generated parser does not consume input.
@@ -156,6 +260,33 @@ console.log(result);
 
 # Parsers
 
+## P.cr: Parser
+Matches `\r` (CR)
+
+## P.lf: Parser
+Matches `\n` (LF)
+
+## P.crlf: Parser
+Matches `\r\n` (CR + LF)
+
+## P.newline: Parser
+Matches `\r\n` or `\r` or `\n`
+
+## P.eof: Parser
+Matches end of input string
+
+```ts
+// [Equivalent PEG] "a" !.
+const parser = P.seq([
+  P.str('a'),
+  P.eof,
+]);
+
+const result = parser.parse('a');
+console.log(result);
+// => { success: true, value: [ 'a', null ], index: 1 }
+```
+
 ## P.char: Parser
 Matches any character.
 
@@ -168,110 +299,16 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## P.cr: Parser
-Matches `\r` (CR)
+## P.lineBegin: Parser
 
-## P.lf: Parser
-Matches `\n` (LF)
-
-## P.newline: Parser
-Matches `\r\n` or `\r` or `\n`
-
-# Parser APIs
-
-## parser.parse(input: string, state?: any): Result
 ```ts
-const parser = P.str('a');
-
-parser.parse('a');
-
-// specify states
-parser.parse('a', { flag: true, count: 0 });
+//TODO
 ```
 
-## parser.map(fn: (value) => any): Parser
-```ts
-// [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
-const parser = P.seq([
-  P.str('a'),
-  P.str('b'),
-  P.str('c'),
-]).map(value => {
-  return [value[0], value[2]];
-});
-
-const result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: [ 'a', 'c' ], index: 3 }
-```
-
-## parser.text(): Parser
-```ts
-// [Equivalent PEG] "a" "b" "c" { return text(); }
-const parser = P.seq([
-  P.str('a'),
-  P.str('b'),
-  P.str('c'),
-]).text();
-
-const result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: 'abc', index: 3 }
-```
-
-## parser.many(min: number): Parser
-
-Matches 0 or more items:
-```ts
-// [Equivalent PEG] "abc"*
-const parser = P.str('abc').many(0);
-
-let result;
-
-result = parser.parse('');
-console.log(result);
-// => { success: true, value: [], index: 0 }
-
-result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: [ 'abc' ], index: 3 }
-```
-
-Matches 1 or more items:
-```ts
-// [Equivalent PEG] "abc"+
-const parser = P.str('abc').many(1);
-
-let result;
-
-result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: [ 'abc' ], index: 3 }
-
-result = parser.parse('abcabc');
-console.log(result);
-// => { success: true, value: [ 'abc', 'abc' ], index: 6 }
-```
-
-## parser.option(): Parser
-Generates a new parser that returns null even if the match fails.
+## P.lineEnd: Parser
 
 ```ts
-// [Equivalent PEG] "a" "b"?
-const parser = P.seq([
-  P.str('a'),
-  P.str('b').option(),
-]);
-
-let result;
-
-result = parser.parse('ab');
-console.log(result);
-// => { success: true, value: [ 'a', 'b' ], index: 2 }
-
-result = parser.parse('a');
-console.log(result);
-// => { success: true, value: [ 'a', null ], index: 1 }
+//TODO
 ```
 
 # Other APIs
@@ -304,7 +341,7 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## Parser constructor (custom parser)
+## custom parser (constructor of Parser class)
 
 ```ts
 const parser = new Parser((input, index, state) => {
@@ -315,8 +352,8 @@ const parser = new Parser((input, index, state) => {
 });
 ```
 
-## P.success()
+### P.success()
 for custom parser.
 
-## P.failure()
+### P.failure()
 for custom parser.
