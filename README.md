@@ -3,8 +3,9 @@ A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
 
 [![Test](https://github.com/marihachi/terrario/actions/workflows/test.yml/badge.svg)](https://github.com/marihachi/terrario/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-<img alt="Terrario" src="https://github.com/marihachi/terrario/blob/308ec5c529dc69c0711fe7b580c180587ece170d/assets/terrario-logo.png?raw=true" />
+<img alt="Terrario" src="https://github.com/marihachi/terrario/blob/develop/assets/terrario-logo.png?raw=true" />
 
 - 📍Simple APIs
 - ⚙Supports conditional branching by state
