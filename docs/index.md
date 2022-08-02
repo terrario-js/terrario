@@ -1,3 +1,3 @@
 # Documantation
-- [api](api.md)
-- [custom parser](custom-parser.md)
+- [Tutorials](tutorials.md)
+- [API Reference](api.md)

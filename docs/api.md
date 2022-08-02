@@ -1,3 +1,5 @@
+WIP!
+
 # Combinators
 
 ## P.str(value: string): Parser
@@ -74,10 +76,11 @@ console.log(result);
 ## P.sep(item: Parser, separator: Parser, min: number): Parser
 
 ```ts
-// [Equivalent PEG] head:"a" tail:("," @"a")* { return [head, ...tail]; }
-const parser = P.sep(P.str('a'), P.str(','), 1);
+let parser, result;
 
-let result;
+// (1)
+// [Equivalent PEG] head:"a" tail:("," @"a")* { return [head, ...tail]; }
+parser = P.sep(P.str('a'), P.str(','), 1);
 
 result = parser.parse('a');
 console.log(result);
@@ -86,17 +89,40 @@ console.log(result);
 result = parser.parse('a,a');
 console.log(result);
 // => { success: true, value: [ 'a', 'a' ], index: 3 }
+
+// (2)
+// [Equivalent PEG]
+// newline = "\r\n" / [\r\n]
+// item = $(!newline .)+
+// parser = head:item tail:(newline @item)* { return [head, ...tail]; }
+parser = P.sep(P.seq([
+  P.notMatch(P.newline),
+  P.char
+], 1).many(0).text(), P.newline, 1);
+
+result = parser.parse('abc\r\nxyz');
+console.log(result);
+// => { success: true, value: [ 'abc', 'xyz' ], index: 8 }
 ```
 
 ## P.lazy(fn: () => Parser): Parser
 Generates a new parser that is lazy-evaluated.
+
+Normally there is no need to use this API. Use P.createLanguage() instead.
 
 ## P.match(parser: Parser): Parser
 Generates a new parser to continue if the match is successful.
 The generated parser does not consume input.
 
 ```ts
-// TODO
+// [Equivalent PEG] &"a" "abc"
+const parser = P.seq([
+  P.match(P.str('a')),
+  P.str('abc'),
+]);
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'a', 'abc' ], index: 3 }
 ```
 
 ## P.notMatch(parser: Parser): Parser
@@ -104,7 +130,28 @@ Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
 
 ```ts
-// TODO
+// [Equivalent PEG] !"x" "abc"
+const parser = P.seq([
+  P.notMatch(P.str('x')),
+  P.str('abc'),
+]);
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ null, 'abc' ], index: 3 }
+```
+
+## P.cond(predicate: (state: any) => boolean): Parser
+Conditional branching can be performed using the state.
+
+```ts
+const parser = P.seq([
+  P.cond(state => state.enabled),
+  P.char,
+]);
+
+const result = parser.parse('a', { enabled: true });
+console.log(result);
+// => { success: true, value: [ null, 'a' ], index: 1 }
 ```
 
 # Parsers
@@ -255,6 +302,17 @@ const lang = P.createLanguage({
 const result = lang.root.parse('a');
 console.log(result);
 // => { success: true, value: 'a', index: 1 }
+```
+
+## Parser constructor (custom parser)
+
+```ts
+const parser = new Parser((input, index, state) => {
+  if (index >= input.length) {
+    return P.failure();
+  }
+  return P.success(index, 'result value');
+});
 ```
 
 ## P.success()

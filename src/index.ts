@@ -91,7 +91,7 @@ export class Parser<T> {
 		});
 	}
 
-	option<T>(): Parser<T | null> {
+	option(): Parser<T | null> {
 		return alt([
 			this,
 			succeeded(null),
@@ -123,7 +123,9 @@ export function regexp<T extends RegExp>(pattern: T): Parser<string> {
 	});
 }
 
-export function seq(parsers: Parser<any>[], select?: number): Parser<any> {
+export function seq<T extends Parser<any>[]>(parsers: T): Parser<any[]>
+export function seq<T extends Parser<any>[]>(parsers: T, select: number): Parser<any>
+export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parser<any[] | any> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -174,7 +176,7 @@ export function lazy<T>(fn: () => Parser<T>): Parser<T> {
 	return parser;
 }
 
-function succeeded<T>(value: T): Parser<T> {
+export function succeeded<T>(value: T): Parser<T> {
 	return new Parser((_input, index, _state) => {
 		return success(index, value);
 	});
@@ -198,10 +200,24 @@ export function notMatch(parser: Parser<any>): Parser<null> {
 	});
 }
 
+export function cond(predicate: (state: any) => boolean): Parser<null> {
+	return new Parser((input, index, state) => {
+		return predicate(state)
+			? success(index, null)
+			: failure();
+	});
+}
+
 export const cr = str('\r');
 export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
+
+export const eof = new Parser((input, index, _state) => {
+	return index >= input.length
+		? success(index, null)
+		: failure();
+});
 
 export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {
@@ -224,18 +240,11 @@ export const lineBegin = new Parser((input, index, state) => {
 	return failure();
 });
 
-export const lineEnd = new Parser((input, index, state) => {
-	if (index === input.length) {
-		return success(index, null);
-	}
-	if (cr.handler(input, index, state).success) {
-		return success(index, null);
-	}
-	if (lf.handler(input, index, state).success) {
-		return success(index, null);
-	}
-	return failure();
-});
+export const lineEnd = match(alt([
+	eof,
+	cr,
+	lf,
+])).map(value => null);
 
 //type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
 //type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;
