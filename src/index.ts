@@ -176,7 +176,7 @@ export function lazy<T>(fn: () => Parser<T>): Parser<T> {
 	return parser;
 }
 
-function succeeded<T>(value: T): Parser<T> {
+export function succeeded<T>(value: T): Parser<T> {
 	return new Parser((_input, index, _state) => {
 		return success(index, value);
 	});
