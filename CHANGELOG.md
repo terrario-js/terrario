@@ -16,6 +16,7 @@
 ### Features
 - Add api: P.eof
 - Add api: P.cond
+- Add api: P.succeeded
 
 ## 0.4.0 (2022/07/24)
 
