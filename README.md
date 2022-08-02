@@ -13,7 +13,9 @@ A simple parser-combinator library with TypeScript.
 
 The Terrario is inspired by PEG.js, Parsimmon, etc.
 
-[![NPM](https://nodei.co/npm/terrario.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/terrario)
+**Notice:**  
+**This library is under development.**  
+**The API may change without notice, and the behavior may be unstable.**  
 
 ## Installation
 ```
