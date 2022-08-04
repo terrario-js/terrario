@@ -1,9 +1,9 @@
-import * as P from 'terrario';
+import * as T from 'terrario';
 
-const spaces = P.regexp(/[ \t\r\n]*/);
+const spaces = T.regexp(/[ \t\r\n]*/);
 
-const lang = P.createLanguage({
-	value: r => P.alt([
+const lang = T.createLanguage({
+	value: r => T.alt([
 		r.null,
 		r.bool,
 		r.string,
@@ -12,52 +12,52 @@ const lang = P.createLanguage({
 		r.number,
 	]),
 
-	null: r => P.str('null'),
+	null: r => T.str('null'),
 
-	bool: r => P.alt([
-		P.str('true'),
-		P.str('false'),
+	bool: r => T.alt([
+		T.str('true'),
+		T.str('false'),
 	]).map((value: 'true' | 'false') => {
 		return (value === 'true');
 	}),
 
-	string: r => P.seq([
-		P.str('"'),
-		P.seq([
-			P.notMatch(P.alt([P.str('"'), P.cr, P.lf])),
-			P.char,
+	string: r => T.seq([
+		T.str('"'),
+		T.seq([
+			T.notMatch(T.alt([T.str('"'), T.cr, T.lf])),
+			T.char,
 		]).many(0).text(),
-		P.str('"'),
+		T.str('"'),
 	], 1),
 
-	number: r => P.alt([
-		P.regexp(/[+-]?[0-9]+\.[0-9]+/),
-		P.regexp(/[+-]?[0-9]+/),
+	number: r => T.alt([
+		T.regexp(/[+-]?[0-9]+\.[0-9]+/),
+		T.regexp(/[+-]?[0-9]+/),
 	]).map((value: string) => {
 		return parseFloat(value);
 	}),
 
 	object: r => {
-		const entry = P.seq([
+		const entry = T.seq([
 			r.string,
 			spaces,
-			P.str(':'),
+			T.str(':'),
 			spaces,
 			r.value,
 		]).map((value: unknown[]) => {
 			return { key: value[0], value: value[4] };
 		});
-		const separator = P.seq([
+		const separator = T.seq([
 			spaces,
-			P.str(','),
+			T.str(','),
 			spaces,
 		]);
-		return P.seq([
-			P.str('{'),
+		return T.seq([
+			T.str('{'),
 			spaces,
-			P.sep(entry, separator, 1).option(),
+			T.sep(entry, separator, 1).option(),
 			spaces,
-			P.str('}'),
+			T.str('}'),
 		], 2).map((value: { key: string, value: unknown }[] | null) => {
 			if (value == null) {
 				return {};
@@ -71,24 +71,24 @@ const lang = P.createLanguage({
 	},
 
 	array: r => {
-		const separator = P.seq([
+		const separator = T.seq([
 			spaces,
-			P.str(','),
+			T.str(','),
 			spaces,
 		]);
-		return P.seq([
-			P.str('['),
+		return T.seq([
+			T.str('['),
 			spaces,
-			P.sep(r.value, separator, 1).option(),
+			T.sep(r.value, separator, 1).option(),
 			spaces,
-			P.str(']'),
+			T.str(']'),
 		], 2).map((value: unknown[] | null) => {
 			return (value != null ? value : []);
 		});
 	},
 });
 
-const json = P.seq([
+const json = T.seq([
 	spaces,
 	lang.value,
 	spaces,
