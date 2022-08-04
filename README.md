@@ -7,6 +7,7 @@ A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
 
 - 📍Simple APIs
+- Scannerless parsing
 - ⚙Supports conditional branching by state
 - ✨Zero dependency
 
