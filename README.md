@@ -27,13 +27,13 @@ npm i terrario
 
 ## Basic Example
 ```ts
-import * as P from 'terrario';
+import * as T from 'terrario';
 
 // build a parser
-const parser = P.alt([
-  P.str('hello'),
-  P.str('world'),
-  P.str(' '),
+const parser = T.alt([
+  T.str('hello'),
+  T.str('world'),
+  T.str(' '),
 ]).many(0);
 
 // parse the input string
