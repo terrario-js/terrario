@@ -1,4 +1,4 @@
-<h1><img src="https://github.com/marihachi/terrario/blob/develop/assets/terrario-logo.svg?raw=true" alt="Terrario" width="500px" /></h1>
+<h1><img src="https://github.com/marihachi/terrario/blob/develop/assets/terrario-logo.svg?raw=true" alt="Terrario" width="230px" /></h1>
 
 [![Test](https://github.com/marihachi/terrario/actions/workflows/test.yml/badge.svg)](https://github.com/marihachi/terrario/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
