@@ -6,10 +6,10 @@
 A simple parser-combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
 
-- 📍Simple APIs
-- 🖨Scannerless parsing
-- ⚙Supports conditional branching by state
-- ✨Zero dependency
+- 📍 Simple APIs
+- 🖨 Scannerless parsing
+- ⚙ Supports conditional branching by state
+- ✨ Zero dependency
 
 The Terrario is inspired by PEG.js, Parsimmon, etc.
 
