@@ -124,7 +124,7 @@ export function regexp<T extends RegExp>(pattern: T): Parser<string> {
 }
 
 export function seq<T extends Parser<any>[]>(parsers: T): Parser<any[]>
-export function seq<T extends Parser<any>[]>(parsers: T, select: number): Parser<any>
+export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U]
 export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parser<any[] | any> {
 	return new Parser((input, index, state) => {
 		let result;
