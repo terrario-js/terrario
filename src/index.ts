@@ -127,7 +127,7 @@ type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
 type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
 export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>;
 export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U];
-export function seq(parsers: Parser<any>[], select?: number | undefined) {
+export function seq(parsers: Parser<any>[], select?: number) {
 	return (select == null) ? seqInternal(parsers) : seqInternalWithSelect(parsers, select);
 }
 
