@@ -1,35 +1,35 @@
-import * as P from '../../index';
+import * as T from '../../index';
 import * as N from './node';
 
-const space = P.regexp(/[ \t]/);
-const spacing = P.alt([space, P.newline]).many(0);
+const space = T.regexp(/[ \t]/);
+const spacing = T.alt([space, T.newline]).many(0);
 
 // TODO: [a-z]
 // TODO: { /*action*/ }
 
-const lang = P.createLanguage({
-	identifier: r => P.seq([
-		P.regexp(/[a-z_]/i),
-		P.regexp(/[a-z0-9_]*/i),
+const lang = T.createLanguage({
+	identifier: r => T.seq([
+		T.regexp(/[a-z_]/i),
+		T.regexp(/[a-z0-9_]*/i),
 	]).text(),
 
 	rules: r => {
-		const separator = P.seq([
+		const separator = T.seq([
 			space.many(0),
-			P.newline,
+			T.newline,
 			spacing,
 		]);
-		return P.seq([
-			P.sep(r.rule as P.Parser<N.Rule>, separator, 1),
+		return T.seq([
+			T.sep(r.rule as T.Parser<N.Rule>, separator, 1),
 			separator.option(),
 		], 0);
 	},
 
 	rule: r => {
-		return P.seq([
+		return T.seq([
 			r.identifier,
 			spacing,
-			P.str('='),
+			T.str('='),
 			spacing,
 			r.exprLayer1,
 		]).map(values => {
@@ -39,15 +39,15 @@ const lang = P.createLanguage({
 
 	// expr1 / expr2
 	exprLayer1: r => {
-		const choiceSep = P.seq([
+		const choiceSep = T.seq([
 			spacing,
-			P.str('/'),
+			T.str('/'),
 			spacing,
 		]);
-		const choice = P.sep(r.exprLayer2, choiceSep, 2).map(values => {
+		const choice = T.sep(r.exprLayer2, choiceSep, 2).map(values => {
 			return { type: 'alt', exprs: values } as N.Alt;
 		});
-		return P.alt([
+		return T.alt([
 			choice,
 			r.exprLayer2,
 		]);
@@ -55,11 +55,11 @@ const lang = P.createLanguage({
 
 	// expr1 expr2
 	exprLayer2: r => {
-		const separator = P.alt([space, P.newline]).many(1);
-		const sequence = P.sep(r.exprLayer3, separator, 2).map(values => {
+		const separator = T.alt([space, T.newline]).many(1);
+		const sequence = T.sep(r.exprLayer3, separator, 2).map(values => {
 			return { type: 'seq', exprs: values } as N.Seq;
 		});
-		return P.alt([
+		return T.alt([
 			sequence,
 			r.exprLayer3,
 		]);
@@ -67,17 +67,17 @@ const lang = P.createLanguage({
 
 	// &expr !expr
 	exprLayer3: r => {
-		const exprOp = P.seq([
-			P.alt([
-				P.str('&').map(v => 'match'),
-				P.str('!').map(v => 'notMatch'),
+		const exprOp = T.seq([
+			T.alt([
+				T.str('&').map(v => 'match'),
+				T.str('!').map(v => 'notMatch'),
 			]),
 			spacing,
 			r.exprLayer4,
 		]).map(values => {
-			return { type: values[0], expr: values[1] } as N.Match | N.NotMatch;
+			return { type: values[0], expr: values[2] } as N.Match | N.NotMatch;
 		});
-		return P.alt([
+		return T.alt([
 			exprOp,
 			r.exprLayer4,
 		]);
@@ -85,63 +85,63 @@ const lang = P.createLanguage({
 
 	// expr? expr+ expr*
 	exprLayer4: r => {
-		const exprOp = P.seq([
+		const exprOp = T.seq([
 			r.exprLayer5,
 			spacing,
-			P.alt([
-				P.str('?').map(v => { return { type: 'option' }; }),
-				P.str('+').map(v => { return { type: 'many', min: 1 }; }),
-				P.str('*').map(v => { return { type: 'many', min: 0 }; }),
+			T.alt([
+				T.str('?').map(v => { return { type: 'option' }; }),
+				T.str('+').map(v => { return { type: 'many', min: 1 }; }),
+				T.str('*').map(v => { return { type: 'many', min: 0 }; }),
 			]),
 		]).map(values => {
 			return { ...values[2], expr: values[0] } as N.Option | N.Many;
 		});
-		return P.alt([
+		return T.alt([
 			exprOp,
 			r.exprLayer5,
 		]);
 	},
 
-	exprLayer5: r => P.alt([
+	exprLayer5: r => T.alt([
 		r.stringLiteral,
 		r.ref,
 		r.group,
 	]),
 
-	stringLiteral: r => P.seq([
-		P.str('"'),
-		P.seq([
-			P.notMatch(P.alt([P.str('"'), P.cr, P.lf])),
-			P.char,
+	stringLiteral: r => T.seq([
+		T.str('"'),
+		T.seq([
+			T.notMatch(T.alt([T.str('"'), T.cr, T.lf])),
+			T.char,
 		]).many(0).text(),
-		P.str('"'),
+		T.str('"'),
 	], 1).map(value => {
 		return { type: 'str', value: value } as N.Str;
 	}),
 
 	ref: r => {
-		return P.seq([
+		return T.seq([
 			r.identifier,
-			P.notMatch(P.seq([
+			T.notMatch(T.seq([
 				spacing,
-				P.str('='),
+				T.str('='),
 			])),
 		]).map(values => {
 			return { type: 'ref', name: values[0] } as N.Ref;
 		});
 	},
 
-	group: r => P.seq([
-		P.str('('),
+	group: r => T.seq([
+		T.str('('),
 		spacing,
 		r.exprLayer1,
 		spacing,
-		P.str(')'),
+		T.str(')'),
 	], 2),
 });
 
 export function parse(input: string): N.Rule[] {
-	const result = (lang.rules as P.Parser<N.Rule[]>).parse(input, {});
+	const result = (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
 	if (!result.success) {
 		throw new Error('parsing error');
 	}

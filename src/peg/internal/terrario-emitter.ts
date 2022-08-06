@@ -9,8 +9,8 @@ export function emit(rules: N.Rule[]) {
 		code: ''
 	};
 
-	state.code += 'import * as P from \'terrario\';\r\n';
-	state.code += 'export const language = P.createLanguage({\r\n';
+	state.code += 'import * as T from \'terrario\';\r\n';
+	state.code += 'export const language = T.createLanguage({\r\n';
 
 	emitRules(rules, state);
 
@@ -74,7 +74,7 @@ function emitAlt(node: N.Alt, state: State) {
 	if (node.exprs.length === 0) {
 		return;
 	}
-	state.code += 'P.alt([';
+	state.code += 'T.alt([';
 	emitExpr(node.exprs[0], state);
 	for (let i = 1; i < node.exprs.length; i++) {
 		state.code += ', ';
@@ -87,7 +87,7 @@ function emitSeq(node: N.Seq, state: State) {
 	if (node.exprs.length === 0) {
 		return;
 	}
-	state.code += 'P.seq([';
+	state.code += 'T.seq([';
 	emitExpr(node.exprs[0], state);
 	for (let i = 1; i < node.exprs.length; i++) {
 		state.code += ', ';
@@ -98,9 +98,9 @@ function emitSeq(node: N.Seq, state: State) {
 
 function emitMatchOrNotMatch(node: N.Match | N.NotMatch, state: State) {
 	if (node.type === 'match') {
-		state.code += 'P.match(';
+		state.code += 'T.match(';
 	} else {
-		state.code += 'P.notMatch(';
+		state.code += 'T.notMatch(';
 	}
 	emitExpr(node.expr, state);
 	state.code += ')';
@@ -117,7 +117,7 @@ function emitMany(node: N.Many, state: State) {
 }
 
 function emitStr(node: N.Str, state: State) {
-	state.code += 'P.str(\'';
+	state.code += 'T.str(\'';
 	state.code += node.value;
 	state.code += '\')';
 }

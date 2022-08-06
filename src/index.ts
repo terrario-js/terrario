@@ -111,7 +111,7 @@ export function str<T extends string>(value: T): Parser<T> {
 	});
 }
 
-export function regexp<T extends RegExp>(pattern: T): Parser<string> {
+export function regexp(pattern: RegExp): Parser<string> {
 	const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
 	return new Parser((input, index, _state) => {
 		const text = input.slice(index);
@@ -123,9 +123,15 @@ export function regexp<T extends RegExp>(pattern: T): Parser<string> {
 	});
 }
 
-export function seq<T extends Parser<any>[]>(parsers: T): Parser<any[]>
-export function seq<T extends Parser<any>[]>(parsers: T, select: number): Parser<any>
-export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parser<any[] | any> {
+type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
+type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
+export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>;
+export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U];
+export function seq(parsers: Parser<any>[], select?: number) {
+	return (select == null) ? seqInternal(parsers) : seqInternalWithSelect(parsers, select);
+}
+
+function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -138,11 +144,15 @@ export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parse
 			latestIndex = result.index;
 			accum.push(result.value);
 		}
-		return success(latestIndex, (select != null ? accum[select] : accum));
+		return success(latestIndex, (accum as SeqResult<[...T]>));
 	});
 }
 
-export function alt(parsers: Parser<any>[]): Parser<any> {
+function seqInternalWithSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
+	return seqInternal(parsers).map(values => values[select]);
+}
+
+export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
 	return new Parser((input, index, state) => {
 		let result;
 		for (let i = 0; i < parsers.length; i++) {
@@ -155,7 +165,7 @@ export function alt(parsers: Parser<any>[]): Parser<any> {
 	});
 }
 
-export function sep<T>(item: Parser<T>, separator: Parser<any>, min: number): Parser<T[]> {
+export function sep<T>(item: Parser<T>, separator: Parser<unknown>, min: number): Parser<T[]> {
 	if (min < 1) {
 		throw new Error('"min" must be a value greater than or equal to 1.');
 	}
@@ -191,7 +201,7 @@ export function match<T>(parser: Parser<T>): Parser<T> {
 	});
 }
 
-export function notMatch(parser: Parser<any>): Parser<null> {
+export function notMatch(parser: Parser<unknown>): Parser<null> {
 	return new Parser((input, index, state) => {
 		const result = parser.handler(input, index, state);
 		return !result.success
@@ -244,7 +254,7 @@ export const lineEnd = match(alt([
 	eof,
 	cr,
 	lf,
-])).map(value => null);
+])).map(() => null);
 
 //type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
 //type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;

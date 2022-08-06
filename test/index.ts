@@ -1,22 +1,22 @@
 import assert from 'assert';
-import * as P from '../src/index';
+import * as T from '../src/index';
 
 describe('Parser', () => {
 	describe('parse()', () => {
 		it('input', () => {
-			const parser = new P.Parser((input, index, state) => {
-				return P.success(index, null);
+			const parser = new T.Parser((input, index, state) => {
+				return T.success(index, null);
 			});
 			const result = parser.parse('');
 			assert.ok(result.success);
 		});
 
 		it('state', () => {
-			const parser = new P.Parser((input, index, state) => {
+			const parser = new T.Parser((input, index, state) => {
 				if (state.value !== 1) {
-					return P.failure();
+					return T.failure();
 				}
-				return P.success(index, null);
+				return T.success(index, null);
 			});
 			const result = parser.parse('', { value: 1 });
 			assert.ok(result.success);
@@ -24,8 +24,8 @@ describe('Parser', () => {
 	});
 
 	it('map()', () => {
-		const parser = new P.Parser((input, index, state) => {
-			return P.success(index, 1);
+		const parser = new T.Parser((input, index, state) => {
+			return T.success(index, 1);
 		}).map(value => {
 			return value === 1 ? 2 : 3;
 		});
@@ -36,9 +36,9 @@ describe('Parser', () => {
 
 	it('text()', () => {
 		const input = 'abc123';
-		const parser = P.seq([
-			P.str('abc'),
-			P.str('123'),
+		const parser = T.seq([
+			T.str('abc'),
+			T.str('123'),
 		]).text();
 		const result = parser.parse(input);
 		assert.ok(result.success);
@@ -49,7 +49,7 @@ describe('Parser', () => {
 	it('many()', () => {
 		let input, parser, result;
 
-		parser = P.str('abc').many(1);
+		parser = T.str('abc').many(1);
 
 		input = 'abc123';
 		result = parser.parse(input);
@@ -75,7 +75,7 @@ describe('Parser', () => {
 describe('Combinators', () => {
 	it('str()', () => {
 		const input = 'abc';
-		const parser = P.str('abc');
+		const parser = T.str('abc');
 		const result = parser.parse(input);
 		assert.ok(result.success);
 		assert.deepStrictEqual(result.value, input);
@@ -84,7 +84,7 @@ describe('Combinators', () => {
 
 	it('regexp()', () => {
 		const input = 'abcDEF';
-		const parser = P.regexp(/[a-z]+/i);
+		const parser = T.regexp(/[a-z]+/i);
 		const result = parser.parse(input);
 		assert.ok(result.success);
 		assert.deepStrictEqual(result.value, input);
@@ -94,9 +94,9 @@ describe('Combinators', () => {
 	describe('seq()', () => {
 		it('basic', () => {
 			const input = 'abc123';
-			const parser = P.seq([
-				P.str('abc'),
-				P.str('123'),
+			const parser = T.seq([
+				T.str('abc'),
+				T.str('123'),
 			]);
 			const result = parser.parse(input);
 			assert.ok(result.success);
@@ -106,9 +106,9 @@ describe('Combinators', () => {
 
 		it('with select param', () => {
 			const input = 'abc123';
-			const parser = P.seq([
-				P.str('abc'),
-				P.str('123'),
+			const parser = T.seq([
+				T.str('abc'),
+				T.str('123'),
 			], 0);
 			const result = parser.parse(input);
 			assert.ok(result.success);
@@ -119,9 +119,9 @@ describe('Combinators', () => {
 
 	it('alt()', () => {
 		const input = '123';
-		const parser = P.alt([
-			P.str('abc'),
-			P.str('123'),
+		const parser = T.alt([
+			T.str('abc'),
+			T.str('123'),
 		]);
 		const result = parser.parse(input);
 		assert.ok(result.success);
@@ -132,7 +132,7 @@ describe('Combinators', () => {
 	it('sep()', () => {
 		let input, parser, result;
 
-		parser = P.sep(P.str('abc'), P.str(','), 2);
+		parser = T.sep(T.str('abc'), T.str(','), 2);
 
 		input = 'abc,abc';
 		result = parser.parse(input);
@@ -157,9 +157,9 @@ describe('Combinators', () => {
 	it('cond()', () => {
 		let input, parser, result;
 
-		parser = P.seq([
-			P.cond(state => state.enabled),
-			P.char,
+		parser = T.seq([
+			T.cond(state => state.enabled),
+			T.char,
 		]);
 
 		result = parser.parse('a', { enabled: true });
@@ -172,7 +172,7 @@ describe('Combinators', () => {
 	it('eof', () => {
 		let input, parser, result;
 
-		parser = P.eof;
+		parser = T.eof;
 
 		result = parser.parse('');
 		assert.ok(result.success);
@@ -183,7 +183,7 @@ describe('Combinators', () => {
 
 	it('char', () => {
 		const input = 'ab';
-		const parser = P.char;
+		const parser = T.char;
 		const result = parser.parse(input);
 		assert.ok(result.success);
 		assert.deepStrictEqual(result.value, 'a');

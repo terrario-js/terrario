@@ -11,22 +11,33 @@
 
 -->
 
+## 0.6.0 (2022/08/06)
+
+### Changes
+- Improves type inference
+  - T.seq (#8 by @ThinaticSystem)
+  - T.alt
+- Improves type declaration
+  - T.regexp
+  - T.sep
+  - T.notMatch
+
 ## 0.5.0 (2022/08/02)
 
 ### Features
-- Add api: P.eof
-- Add api: P.cond
-- Add api: P.succeeded
+- Add api: T.eof
+- Add api: T.cond
+- Add api: T.succeeded
 
 ## 0.4.0 (2022/07/24)
 
 ### Features
 - Add api: parser.parse
-- Add api: P.match
-- Add api: P.lazy
+- Add api: T.match
+- Add api: T.lazy
 
 ### Changes
-- Change api: parser.sep(separator, min) -> P.sep(item, separator, min)
+- Change api: parser.sep(separator, min) -> T.sep(item, separator, min)
 
 ## 0.3.0 (2022/07/18)
 
@@ -35,13 +46,13 @@
 
 ### Changes
 - Change api: parser.sep1(separator) -> parser.sep(separator, min)
-- Change api: P.option(parser) -> parser.option()
+- Change api: T.option(parser) -> parser.option()
 
 ## 0.2.0 (2022/07/17)
 
 ### Changes
 - Rename api: parser.atLeast(n) -> parser.many(min)
-- Rename api: P.any -> P.char
+- Rename api: T.any -> T.char
 
 ## 0.1.0 (2022/07/16)
 
