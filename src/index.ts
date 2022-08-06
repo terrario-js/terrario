@@ -142,7 +142,7 @@ export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parse
 	});
 }
 
-export function alt(parsers: Parser<any>[]): Parser<any> {
+export function alt<T extends Parser<any>[]>(parsers: T): T[number] {
 	return new Parser((input, index, state) => {
 		let result;
 		for (let i = 0; i < parsers.length; i++) {
