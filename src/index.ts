@@ -144,9 +144,9 @@ export function seq<T extends Parser<any>[], U extends number | undefined>(parse
 		// こう書きたいが動かない↓
 		// return success(latestIndex, (typeof select) === 'number' ? accum[select] : accum);
 		if (typeof select === 'number') {
-		  return success(latestIndex, accum[select]);
+			return success(latestIndex, accum[select]);
 		} else {
-		  return success(latestIndex, accum);
+			return success(latestIndex, accum);
 		}
 	});
 }
