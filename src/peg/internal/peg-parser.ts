@@ -75,7 +75,7 @@ const lang = T.createLanguage({
 			spacing,
 			r.exprLayer4,
 		]).map(values => {
-			return { type: values[0], expr: values[1] } as N.Match | N.NotMatch;
+			return { type: values[0], expr: values[2] } as N.Match | N.NotMatch;
 		});
 		return T.alt([
 			exprOp,
