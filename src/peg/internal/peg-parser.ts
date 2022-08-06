@@ -27,11 +27,11 @@ const lang = T.createLanguage({
 
 	rule: r => {
 		return T.seq([
-			r.identifier,
+			r.identifier as T.Parser<string>,
 			spacing,
 			T.str('='),
 			spacing,
-			r.exprLayer1,
+			r.exprLayer1 as T.Parser<N.Expr>,
 		]).map(values => {
 			return { type: 'rule', name: values[0], expr: values[4] } as N.Rule;
 		});
@@ -44,24 +44,24 @@ const lang = T.createLanguage({
 			T.str('/'),
 			spacing,
 		]);
-		const choice = T.sep(r.exprLayer2, choiceSep, 2).map(values => {
+		const choice = T.sep((r.exprLayer2 as T.Parser<N.Expr>), choiceSep, 2).map(values => {
 			return { type: 'alt', exprs: values } as N.Alt;
 		});
 		return T.alt([
 			choice,
-			r.exprLayer2,
+			r.exprLayer2 as T.Parser<N.Expr>,
 		]);
 	},
 
 	// expr1 expr2
 	exprLayer2: r => {
 		const separator = T.alt([space, T.newline]).many(1);
-		const sequence = T.sep(r.exprLayer3, separator, 2).map(values => {
+		const sequence = T.sep((r.exprLayer3 as T.Parser<N.Expr>), separator, 2).map(values => {
 			return { type: 'seq', exprs: values } as N.Seq;
 		});
 		return T.alt([
 			sequence,
-			r.exprLayer3,
+			r.exprLayer3 as T.Parser<N.Expr>,
 		]);
 	},
 
@@ -73,20 +73,20 @@ const lang = T.createLanguage({
 				T.str('!').map(v => 'notMatch'),
 			]),
 			spacing,
-			r.exprLayer4,
+			r.exprLayer4 as T.Parser<N.Expr>,
 		]).map(values => {
 			return { type: values[0], expr: values[2] } as N.Match | N.NotMatch;
 		});
 		return T.alt([
 			exprOp,
-			r.exprLayer4,
+			r.exprLayer4 as T.Parser<N.Expr>,
 		]);
 	},
 
 	// expr? expr+ expr*
 	exprLayer4: r => {
 		const exprOp = T.seq([
-			r.exprLayer5,
+			r.exprLayer5 as T.Parser<N.Expr>,
 			spacing,
 			T.alt([
 				T.str('?').map(v => { return { type: 'option' }; }),
@@ -98,14 +98,14 @@ const lang = T.createLanguage({
 		});
 		return T.alt([
 			exprOp,
-			r.exprLayer5,
+			r.exprLayer5 as T.Parser<N.Expr>,
 		]);
 	},
 
 	exprLayer5: r => T.alt([
-		r.stringLiteral,
-		r.ref,
-		r.group,
+		r.stringLiteral as T.Parser<N.Str>,
+		r.ref as T.Parser<N.Ref>,
+		r.group as T.Parser<N.Expr>,
 	]),
 
 	stringLiteral: r => T.seq([
@@ -121,7 +121,7 @@ const lang = T.createLanguage({
 
 	ref: r => {
 		return T.seq([
-			r.identifier,
+			r.identifier as T.Parser<string>,
 			T.notMatch(T.seq([
 				spacing,
 				T.str('='),
@@ -134,7 +134,7 @@ const lang = T.createLanguage({
 	group: r => T.seq([
 		T.str('('),
 		spacing,
-		r.exprLayer1,
+		r.exprLayer1 as T.Parser<N.Expr>,
 		spacing,
 		T.str(')'),
 	], 2),
