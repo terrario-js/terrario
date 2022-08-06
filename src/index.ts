@@ -148,13 +148,8 @@ function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult
 	});
 }
 
-function seqInternalWithSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U) {
-	if (typeof select === 'number') {
-		return seqInternal(parsers).map(values => values[select]);
-	} else {
-		// selectへ明示的にundefinedが突っ込まれた場合
-		return seqInternal(parsers);
-	}
+function seqInternalWithSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
+	return seqInternal(parsers).map(values => values[select]);
 }
 
 export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
