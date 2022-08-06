@@ -123,12 +123,15 @@ export function regexp<T extends RegExp>(pattern: T): Parser<string> {
 	});
 }
 
-type SeqResultsElement<T> = T extends Parser<infer R> ? R : never
-type SeqResultsInner<T> = T extends [infer Head, ...infer Tail] ? [SeqResultsElement<Head>, ...SeqResultsInner<Tail>] : []
-type SeqResultWithSelect<T extends Parser<any>[], U extends number | undefined> = U extends number ? T[U] : Parser<SeqResultsInner<[...T]>>
-export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResultsInner<[...T]>>
-export function seq<T extends Parser<any>[], U extends number | undefined>(parsers: [...T], select?: U): SeqResultWithSelect<T, U>
-export function seq<T extends Parser<any>[], U extends number | undefined>(parsers: [...T], select?: U): Parser<SeqResultsInner<[...T]>> | SeqResultWithSelect<T, U> {
+type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
+type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
+export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>;
+export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U];
+export function seq(parsers: Parser<any>[], select?: number | undefined) {
+	return (select == null) ? seqInternal(parsers) : seqInternalWithSelect(parsers, select);
+}
+
+function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -141,14 +144,17 @@ export function seq<T extends Parser<any>[], U extends number | undefined>(parse
 			latestIndex = result.index;
 			accum.push(result.value);
 		}
-		// こう書きたいが動かない↓
-		// return success(latestIndex, (typeof select) === 'number' ? accum[select] : accum);
-		if (typeof select === 'number') {
-			return success(latestIndex, accum[select]);
-		} else {
-			return success(latestIndex, accum);
-		}
+		return success(latestIndex, (accum as SeqResult<[...T]>));
 	});
+}
+
+function seqInternalWithSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U) {
+	if (typeof select === 'number') {
+		return seqInternal(parsers).map(values => values[select]);
+	} else {
+		// selectへ明示的にundefinedが突っ込まれた場合
+		return seqInternal(parsers);
+	}
 }
 
 export function alt<T extends Parser<any>[]>(parsers: T): T[number] {
