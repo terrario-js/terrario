@@ -111,7 +111,7 @@ export function str<T extends string>(value: T): Parser<T> {
 	});
 }
 
-export function regexp<T extends RegExp>(pattern: T): Parser<string> {
+export function regexp(pattern: RegExp): Parser<string> {
 	const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
 	return new Parser((input, index, _state) => {
 		const text = input.slice(index);
@@ -142,7 +142,7 @@ export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parse
 	});
 }
 
-export function alt<T extends Parser<any>[]>(parsers: T): T[number] {
+export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
 	return new Parser((input, index, state) => {
 		let result;
 		for (let i = 0; i < parsers.length; i++) {
@@ -155,7 +155,7 @@ export function alt<T extends Parser<any>[]>(parsers: T): T[number] {
 	});
 }
 
-export function sep<T>(item: Parser<T>, separator: Parser<any>, min: number): Parser<T[]> {
+export function sep<T>(item: Parser<T>, separator: Parser<unknown>, min: number): Parser<T[]> {
 	if (min < 1) {
 		throw new Error('"min" must be a value greater than or equal to 1.');
 	}
@@ -191,7 +191,7 @@ export function match<T>(parser: Parser<T>): Parser<T> {
 	});
 }
 
-export function notMatch(parser: Parser<any>): Parser<null> {
+export function notMatch(parser: Parser<unknown>): Parser<null> {
 	return new Parser((input, index, state) => {
 		const result = parser.handler(input, index, state);
 		return !result.success
