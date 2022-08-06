@@ -11,7 +11,7 @@
 
 -->
 
-## 0.x.x (unreleased)
+## 0.6.0 (2022/08/06)
 
 ### Changes
 - Improves type inference

@@ -1,7 +1,7 @@
 {
   "name": "terrario",
-  "version": "0.5.0",
-  "description": "A simple parser-combinator library with TypeScript.",
+  "version": "0.6.0",
+  "description": "A simple parser combinator library with TypeScript.",
   "main": "./built/index.js",
   "types": "./built/index.d.ts",
   "scripts": {
