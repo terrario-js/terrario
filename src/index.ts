@@ -123,9 +123,15 @@ export function regexp(pattern: RegExp): Parser<string> {
 	});
 }
 
-export function seq<T extends Parser<any>[]>(parsers: T): Parser<any[]>
-export function seq<T extends Parser<any>[]>(parsers: T, select: number): Parser<any>
-export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parser<any[] | any> {
+type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
+type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
+export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>;
+export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U];
+export function seq(parsers: Parser<any>[], select?: number) {
+	return (select == null) ? seqInternal(parsers) : seqInternalWithSelect(parsers, select);
+}
+
+function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -138,8 +144,12 @@ export function seq<T extends Parser<any>[]>(parsers: T, select?: number): Parse
 			latestIndex = result.index;
 			accum.push(result.value);
 		}
-		return success(latestIndex, (select != null ? accum[select] : accum));
+		return success(latestIndex, (accum as SeqResult<[...T]>));
 	});
+}
+
+function seqInternalWithSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
+	return seqInternal(parsers).map(values => values[select]);
 }
 
 export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
