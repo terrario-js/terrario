@@ -15,7 +15,7 @@
 
 ### Changes
 - Improves type inference
-  - T.seq
+  - T.seq (@ThinaticSystem) #8
   - T.alt
 - Improves type declaration
   - T.regexp
