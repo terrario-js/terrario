@@ -11,6 +11,17 @@
 
 -->
 
+## 0.x.x (unreleased)
+
+### Changes
+- Improves type inference
+  - T.seq
+  - T.alt
+- Improves type declaration
+  - T.regexp
+  - T.sep
+  - T.notMatch
+
 ## 0.5.0 (2022/08/02)
 
 ### Features
