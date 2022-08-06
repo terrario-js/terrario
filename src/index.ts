@@ -125,10 +125,10 @@ export function regexp<T extends RegExp>(pattern: T): Parser<string> {
 
 type SeqResultsElement<T> = T extends Parser<infer R> ? R : never
 type SeqResultsInner<T> = T extends [infer Head, ...infer Tail] ? [SeqResultsElement<Head>, ...SeqResultsInner<Tail>] : []
-type SeqResultWithSelect<T extends Parser<any>[], U extends NonNullable<number> | undefined> = U extends NonNullable<number> ? T[U] : Parser<SeqResultsInner<[...T]>>
+type SeqResultWithSelect<T extends Parser<any>[], U extends number | undefined> = U extends number ? T[U] : Parser<SeqResultsInner<[...T]>>
 export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResultsInner<[...T]>>
-export function seq<T extends Parser<any>[], U extends NonNullable<number> | undefined>(parsers: [...T], select?: U): SeqResultWithSelect<T, U>
-export function seq<T extends Parser<any>[], U extends NonNullable<number> | undefined>(parsers: [...T], select?: U): Parser<SeqResultsInner<[...T]>> | SeqResultWithSelect<T, U> {
+export function seq<T extends Parser<any>[], U extends number | undefined>(parsers: [...T], select?: U): SeqResultWithSelect<T, U>
+export function seq<T extends Parser<any>[], U extends number | undefined>(parsers: [...T], select?: U): Parser<SeqResultsInner<[...T]>> | SeqResultWithSelect<T, U> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -144,7 +144,6 @@ export function seq<T extends Parser<any>[], U extends NonNullable<number> | und
 		return success(latestIndex, (select != null ? accum[select] : accum));
 	});
 }
-const honi = seq([str('honi'), str('1').map(v => Number(v))], undefined)
 
 export function alt<T extends Parser<any>[]>(parsers: T): T[number] {
 	return new Parser((input, index, state) => {
