@@ -130,12 +130,12 @@ console.log(result);
 // => { success: true, value: 'test', index: 4 }
 ```
 
-## T.regexp(pattern: Regexp): Parser
+## T.str(pattern: Regexp): Parser
 Generates a new parser that consumes the input string using the specified regular expression.
 
 ```ts
 // [Equivalent PEG] [a-z]
-const parser = T.regexp(/[a-z]/);
+const parser = T.str(/[a-z]/);
 
 const result = parser.parse('a');
 console.log(result);
