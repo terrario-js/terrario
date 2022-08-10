@@ -272,7 +272,7 @@ export function createLanguage<T>(syntaxes: { [K in keyof T]: (r: Record<string,
 	for (const key of Object.keys(syntaxes)) {
 		rules[key] = lazy(() => {
 			const parser = (syntaxes as any)[key](rules);
-			if (parser == null) {
+			if (parser == null || !(parser instanceof Parser)) {
 				throw new Error('syntax must return a parser.');
 			}
 			parser.name = key;
