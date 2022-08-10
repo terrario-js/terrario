@@ -11,6 +11,17 @@
 
 -->
 
+## 0.x.x (unreleased)
+
+### Features
+- Add api: parser.many(min, terminator)
+
+### Improvements
+- improves rules validation for T.createLanguage()
+
+### Changes
+- Change api: T.regexp(RegExp) -> T.str(RegExp)
+
 ## 0.6.0 (2022/08/06)
 
 ### Changes
