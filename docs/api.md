@@ -77,6 +77,24 @@ console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
+## parser.many(min: number, terminator: Parser): Parser
+The many() can have a termination condition.
+
+The following example uses many to match strings up to ")".
+The terminating condition ")" is not consumed.
+```ts
+// [Equivalent PEG] "(" (!")" @.)+ ")"
+const parser = T.seq([
+	T.str('('),
+	T.char.many(1, T.str(')')),
+	T.str(')'),
+]);
+
+const result = parser.parse('(abc)');
+console.log(result);
+// => { success: true, value: [ '(', [ 'a', 'b', 'c' ], ')' ], index: 5 }
+```
+
 ## parser.option(): Parser
 Generates a new parser that returns null even if the match fails.
 
