@@ -102,10 +102,10 @@ export class Parser<T> {
 export function str<T extends string>(value: T): Parser<T>
 export function str(pattern: RegExp): Parser<string>
 export function str(value: string | RegExp): Parser<string> {
-	return (typeof value == 'string') ? internalStr(value) : internalRegexp(value);
+	return (typeof value == 'string') ? strWithString(value) : strWithRegExp(value);
 }
 
-function internalStr<T extends string>(value: T): Parser<T> {
+function strWithString<T extends string>(value: T): Parser<T> {
 	return new Parser((input, index, _state) => {
 		if ((input.length - index) < value.length) {
 			return failure();
@@ -117,7 +117,7 @@ function internalStr<T extends string>(value: T): Parser<T> {
 	});
 }
 
-function internalRegexp(pattern: RegExp): Parser<string> {
+function strWithRegExp(pattern: RegExp): Parser<string> {
 	const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
 	return new Parser((input, index, _state) => {
 		const text = input.slice(index);
@@ -131,13 +131,14 @@ function internalRegexp(pattern: RegExp): Parser<string> {
 
 type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
 type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
+
 export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>;
 export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U];
 export function seq(parsers: Parser<any>[], select?: number) {
-	return (select == null) ? seqInternal(parsers) : seqInternalWithSelect(parsers, select);
+	return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
 
-function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
+function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -154,8 +155,8 @@ function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult
 	});
 }
 
-function seqInternalWithSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
-	return seqInternal(parsers).map(values => values[select]);
+function seqSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
+	return seqAll(parsers).map(values => values[select]);
 }
 
 export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
