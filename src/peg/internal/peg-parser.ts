@@ -110,10 +110,7 @@ const lang = T.createLanguage({
 
 	stringLiteral: r => T.seq([
 		T.str('"'),
-		T.seq([
-			T.notMatch(T.alt([T.str('"'), T.cr, T.lf])),
-			T.char,
-		]).many(0).text(),
+		T.char.many(0, T.alt([T.str('"'), T.cr, T.lf])).text(),
 		T.str('"'),
 	], 1).map(value => {
 		return { type: 'str', value: value } as N.Str;
