@@ -46,26 +46,44 @@ describe('Parser', () => {
 		assert.strictEqual(result.index, 6);
 	});
 
-	it('many()', () => {
-		let input, parser, result;
+	describe('many()', () => {
+		it('basic', () => {
+			let input: string, result: T.Result<string[]>;
 
-		parser = T.str('abc').many(1);
+			const parser = T.str('abc').many(1);
 
-		input = 'abc123';
-		result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, ['abc']);
-		assert.strictEqual(result.index, 3);
+			input = 'abc123';
+			result = parser.parse(input);
+			assert.ok(result.success);
+			assert.deepStrictEqual(result.value, ['abc']);
+			assert.strictEqual(result.index, 3);
 
-		input = 'abcabc123';
-		result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, ['abc', 'abc']);
-		assert.strictEqual(result.index, 6);
+			input = 'abcabc123';
+			result = parser.parse(input);
+			assert.ok(result.success);
+			assert.deepStrictEqual(result.value, ['abc', 'abc']);
+			assert.strictEqual(result.index, 6);
 
-		input = 'ab123';
-		result = parser.parse(input);
-		assert.ok(!result.success);
+			input = 'ab123';
+			result = parser.parse(input);
+			assert.ok(!result.success);
+		});
+
+		it('with terminator', () => {
+			let input: string, result: T.Result<string>;
+
+			const parser = T.seq([
+				T.str('('),
+				T.char.many(1, T.str(')')).text(),
+				T.str(')'),
+			], 1);
+
+			input = '(abc)';
+			result = parser.parse(input);
+			assert.ok(result.success);
+			assert.deepStrictEqual(result.value, 'abc');
+			assert.strictEqual(result.index, 5);
+		});
 	});
 
 	// it('option()', () => {

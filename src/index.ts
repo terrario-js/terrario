@@ -71,24 +71,10 @@ export class Parser<T> {
 		});
 	}
 
-	many(min: number): Parser<T[]> {
-		return new Parser((input, index, state) => {
-			let result;
-			let latestIndex = index;
-			const accum: T[] = [];
-			while (latestIndex < input.length) {
-				result = this.handler(input, latestIndex, state);
-				if (!result.success) {
-					break;
-				}
-				latestIndex = result.index;
-				accum.push(result.value);
-			}
-			if (accum.length < min) {
-				return failure();
-			}
-			return success(latestIndex, accum);
-		});
+	many(min: number): Parser<T[]>
+	many(min: number, terminator: Parser<unknown>): Parser<T[]>
+	many(min: number, terminator?: Parser<unknown>): Parser<T[]> {
+		return (terminator != null) ? manyWithout(this, min, terminator) : many(this, min);
 	}
 
 	option(): Parser<T | null> {
@@ -97,6 +83,33 @@ export class Parser<T> {
 			succeeded(null),
 		]);
 	}
+}
+
+function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
+	return new Parser((input, index, state) => {
+		let result;
+		let latestIndex = index;
+		const accum: T[] = [];
+		while (latestIndex < input.length) {
+			result = parser.handler(input, latestIndex, state);
+			if (!result.success) {
+				break;
+			}
+			latestIndex = result.index;
+			accum.push(result.value);
+		}
+		if (accum.length < min) {
+			return failure();
+		}
+		return success(latestIndex, accum);
+	});
+}
+
+function manyWithout<T>(parser: Parser<T>, min: number, terminator: Parser<unknown>): Parser<T[]> {
+	return many(seq([
+		notMatch(terminator),
+		parser,
+	], 1), min);
 }
 
 export function str<T extends string>(value: T): Parser<T>
