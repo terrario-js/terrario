@@ -99,7 +99,13 @@ export class Parser<T> {
 	}
 }
 
-export function str<T extends string>(value: T): Parser<T> {
+export function str<T extends string>(value: T): Parser<T>
+export function str(pattern: RegExp): Parser<string>
+export function str(value: string | RegExp): Parser<string> {
+	return (typeof value == 'string') ? internalStr(value) : internalRegexp(value);
+}
+
+function internalStr<T extends string>(value: T): Parser<T> {
 	return new Parser((input, index, _state) => {
 		if ((input.length - index) < value.length) {
 			return failure();
@@ -111,7 +117,7 @@ export function str<T extends string>(value: T): Parser<T> {
 	});
 }
 
-export function regexp(pattern: RegExp): Parser<string> {
+function internalRegexp(pattern: RegExp): Parser<string> {
 	const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
 	return new Parser((input, index, _state) => {
 		const text = input.slice(index);

@@ -73,22 +73,24 @@ describe('Parser', () => {
 });
 
 describe('Combinators', () => {
-	it('str()', () => {
-		const input = 'abc';
-		const parser = T.str('abc');
-		const result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, input);
-		assert.strictEqual(result.index, 3);
-	});
+	describe('str()', () => {
+		it('with string value', () => {
+			const input = 'abc';
+			const parser = T.str('abc');
+			const result = parser.parse(input);
+			assert.ok(result.success);
+			assert.deepStrictEqual(result.value, input);
+			assert.strictEqual(result.index, 3);
+		});
 
-	it('regexp()', () => {
-		const input = 'abcDEF';
-		const parser = T.regexp(/[a-z]+/i);
-		const result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, input);
-		assert.strictEqual(result.index, 6);
+		it('with RegExp value', () => {
+			const input = 'abcDEF';
+			const parser = T.str(/[a-z]+/i);
+			const result = parser.parse(input);
+			assert.ok(result.success);
+			assert.deepStrictEqual(result.value, input);
+			assert.strictEqual(result.index, 6);
+		});
 	});
 
 	describe('seq()', () => {

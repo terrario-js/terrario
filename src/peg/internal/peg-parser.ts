@@ -1,7 +1,7 @@
 import * as T from '../../index';
 import * as N from './node';
 
-const space = T.regexp(/[ \t]/);
+const space = T.str(/[ \t]/);
 const spacing = T.alt([space, T.newline]).many(0);
 
 // TODO: [a-z]
@@ -9,8 +9,8 @@ const spacing = T.alt([space, T.newline]).many(0);
 
 const lang = T.createLanguage({
 	identifier: r => T.seq([
-		T.regexp(/[a-z_]/i),
-		T.regexp(/[a-z0-9_]*/i),
+		T.str(/[a-z_]/i),
+		T.str(/[a-z0-9_]*/i),
 	]).text(),
 
 	rules: r => {
