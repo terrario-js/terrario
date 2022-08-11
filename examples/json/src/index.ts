@@ -1,6 +1,6 @@
 import * as T from 'terrario';
 
-const spaces = T.str(/[ \t\r\n]*/);
+const spaces = T.str(/[ \t\r\n]/).many(0);
 
 const lang = T.createLanguage({
 	root: r => T.seq([
