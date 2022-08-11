@@ -10,7 +10,7 @@ export type Failure = {
 };
 
 export type Result<T> = Success<T> | Failure;
-export type ParserHandler<T> = (input: string, index: number, state: any) => Result<T>
+export type ParserHandler<T> = (input: string, index: number, state: any) => Result<T>;
 
 export function success<T>(index: number, value: T): Success<T> {
 	return {
@@ -151,8 +151,8 @@ function strWithRegExp(pattern: RegExp): Parser<string> {
 type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
 type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
 
-export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>;
-export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U];
+export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>
+export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U]
 export function seq(parsers: Parser<any>[], select?: number) {
 	return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
