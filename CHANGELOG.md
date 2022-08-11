@@ -11,6 +11,20 @@
 
 -->
 
+## 0.7.0 (2022/08/11)
+
+### Features
+- Add api: parser.many(min, terminator)
+- Add api: T.sof
+
+### Improvements
+- Improves rules validation for T.createLanguage()
+
+### Changes
+- Change api: T.regexp(RegExp) -> T.str(RegExp)
+- When all input strings could not be consumed, an error is now generated.
+- Now returns index value on match failure.
+
 ## 0.6.0 (2022/08/06)
 
 ### Changes

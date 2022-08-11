@@ -1,16 +1,13 @@
 import * as T from '../../index';
 import * as N from './node';
 
-const space = T.regexp(/[ \t]/);
+const space = T.str(/[ \t]/);
 const spacing = T.alt([space, T.newline]).many(0);
-
-// TODO: [a-z]
-// TODO: { /*action*/ }
 
 const lang = T.createLanguage({
 	identifier: r => T.seq([
-		T.regexp(/[a-z_]/i),
-		T.regexp(/[a-z0-9_]*/i),
+		T.str(/[a-z_]/i),
+		T.str(/[a-z0-9_]*/i),
 	]).text(),
 
 	rules: r => {
@@ -27,101 +24,122 @@ const lang = T.createLanguage({
 
 	rule: r => {
 		return T.seq([
-			r.identifier,
+			r.identifier as T.Parser<string>,
 			spacing,
 			T.str('='),
 			spacing,
-			r.exprLayer1,
+			r.expr as T.Parser<N.PegExpr>,
 		]).map(values => {
 			return { type: 'rule', name: values[0], expr: values[4] } as N.Rule;
 		});
 	},
 
-	// expr1 / expr2
-	exprLayer1: r => {
-		const choiceSep = T.seq([
+	expr: r => r.exprLevel7,
+
+	exprLevel7: r => {
+		// expr1 / expr2
+		const separator = T.seq([
 			spacing,
 			T.str('/'),
 			spacing,
 		]);
-		const choice = T.sep(r.exprLayer2, choiceSep, 2).map(values => {
+		const choice = T.sep((r.exprLevel6 as T.Parser<N.PegExpr>), separator, 2).map(values => {
 			return { type: 'alt', exprs: values } as N.Alt;
 		});
+
 		return T.alt([
 			choice,
-			r.exprLayer2,
+			r.exprLevel6 as T.Parser<N.PegExpr>,
 		]);
 	},
 
-	// expr1 expr2
-	exprLayer2: r => {
+	// TODO: action expr
+	// { /*action*/ }
+	exprLevel6: r => r.exprLevel5,
+
+	exprLevel5: r => {
+		// expr1 expr2
 		const separator = T.alt([space, T.newline]).many(1);
-		const sequence = T.sep(r.exprLayer3, separator, 2).map(values => {
+		const sequence = T.sep((r.exprLevel4 as T.Parser<N.PegExpr>), separator, 2).map(values => {
 			return { type: 'seq', exprs: values } as N.Seq;
 		});
+
 		return T.alt([
 			sequence,
-			r.exprLayer3,
+			r.exprLevel4 as T.Parser<N.PegExpr>,
 		]);
 	},
 
-	// &expr !expr
-	exprLayer3: r => {
-		const exprOp = T.seq([
+	// TODO: @expr label:expr
+	exprLevel4: r => r.exprLevel3,
+
+	exprLevel3: r => {
+		// $expr &expr !expr
+		const op = T.seq([
 			T.alt([
+				T.str('$').map(v => 'text'),
 				T.str('&').map(v => 'match'),
 				T.str('!').map(v => 'notMatch'),
 			]),
 			spacing,
-			r.exprLayer4,
+			r.exprLevel2 as T.Parser<N.PegExpr>,
 		]).map(values => {
-			return { type: values[0], expr: values[2] } as N.Match | N.NotMatch;
+			return { type: values[0], expr: values[2] } as N.Text | N.Match | N.NotMatch;
 		});
+
 		return T.alt([
-			exprOp,
-			r.exprLayer4,
+			op,
+			r.exprLevel2 as T.Parser<N.PegExpr>,
 		]);
 	},
 
-	// expr? expr+ expr*
-	exprLayer4: r => {
-		const exprOp = T.seq([
-			r.exprLayer5,
+	exprLevel2: r => {
+		// expr? expr* expr+
+		const op = T.seq([
+			r.exprLevel1 as T.Parser<N.PegExpr>,
 			spacing,
 			T.alt([
 				T.str('?').map(v => { return { type: 'option' }; }),
-				T.str('+').map(v => { return { type: 'many', min: 1 }; }),
 				T.str('*').map(v => { return { type: 'many', min: 0 }; }),
+				T.str('+').map(v => { return { type: 'many', min: 1 }; }),
 			]),
 		]).map(values => {
 			return { ...values[2], expr: values[0] } as N.Option | N.Many;
 		});
+
 		return T.alt([
-			exprOp,
-			r.exprLayer5,
+			op,
+			r.exprLevel1 as T.Parser<N.PegExpr>,
 		]);
 	},
 
-	exprLayer5: r => T.alt([
-		r.stringLiteral,
-		r.ref,
-		r.group,
+	exprLevel1: r => T.alt([
+		r.stringLiteral as T.Parser<N.Str>,
+		// r.charRange,
+		r.any,
+		r.ref as T.Parser<N.Ref>,
+		r.group as T.Parser<N.PegExpr>,
 	]),
 
 	stringLiteral: r => T.seq([
 		T.str('"'),
-		T.seq([
-			T.notMatch(T.alt([T.str('"'), T.cr, T.lf])),
-			T.char,
-		]).many(0).text(),
+		T.char.many(0, T.alt([T.str('"'), T.cr, T.lf])).text(),
 		T.str('"'),
 	], 1).map(value => {
 		return { type: 'str', value: value } as N.Str;
 	}),
 
+	// TODO: charRange [a-z]
+
+	any: r => {
+		return T.str('.').map(() => {
+			return { type: 'any' };
+		});
+	},
+
 	ref: r => {
 		return T.seq([
-			r.identifier,
+			r.identifier as T.Parser<string>,
 			T.notMatch(T.seq([
 				spacing,
 				T.str('='),
@@ -134,16 +152,12 @@ const lang = T.createLanguage({
 	group: r => T.seq([
 		T.str('('),
 		spacing,
-		r.exprLayer1,
+		r.expr as T.Parser<N.PegExpr>,
 		spacing,
 		T.str(')'),
 	], 2),
 });
 
-export function parse(input: string): N.Rule[] {
-	const result = (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
-	if (!result.success) {
-		throw new Error('parsing error');
-	}
-	return result.value;
+export function parse(input: string): T.Result<N.Rule[]> {
+	return (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
 }

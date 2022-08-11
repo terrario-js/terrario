@@ -1,7 +1,8 @@
 const { performance } = require('perf_hooks');
 const readLine = require('readline');
-const { compile } = require('./built/peg/compiler');
-
+//const { compile } = require('./built/peg/compiler');
+const { parse } = require('./built/peg/internal/peg-parser');
+const { emit } = require('./built/peg/internal/terrario-emitter');
 
 class InputCanceledError extends Error {
 	constructor(message) {
@@ -45,9 +46,14 @@ async function entryPoint() {
 
 		try {
 			const parseTimeStart = performance.now();
-			const result = compile(input);
+			const ast = parse(input);
+			const code = emit(ast);
 			const parseTimeEnd = performance.now();
-			console.log(result);
+			console.log('=== AST ===');
+			console.log(JSON.stringify(ast, null, '  '));
+			console.log('=== Code ===');
+			console.log(code);
+			console.log('============');
 			const parseTime = (parseTimeEnd - parseTimeStart).toFixed(3);
 			console.log(`time: ${parseTime}ms`);
 		}

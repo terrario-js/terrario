@@ -1,14 +1,16 @@
 export type Success<T> = {
 	success: true;
+	index: number;
 	value: T;
+};
+
+export type Failure = {
+	success: false;
 	index: number;
 };
 
-export type Failure = { success: false };
-
 export type Result<T> = Success<T> | Failure;
-
-export type ParserHandler<T> = (input: string, index: number, state: any) => Result<T>
+export type ParserHandler<T> = (input: string, index: number, state: any) => Result<T>;
 
 export function success<T>(index: number, value: T): Success<T> {
 	return {
@@ -18,8 +20,11 @@ export function success<T>(index: number, value: T): Success<T> {
 	};
 }
 
-export function failure(): Failure {
-	return { success: false };
+export function failure(index: number): Failure {
+	return {
+		success: false,
+		index: index,
+	};
 }
 
 export class Parser<T> {
@@ -47,7 +52,8 @@ export class Parser<T> {
 	}
 
 	parse(input: string, state: any = {}): Result<T> {
-		return this.handler(input, 0, state);
+		const parser = seq([this, eof], 0);
+		return parser.handler(input, 0, state);
 	}
 
 	map<U>(fn: (value: T) => U): Parser<U> {
@@ -71,24 +77,10 @@ export class Parser<T> {
 		});
 	}
 
-	many(min: number): Parser<T[]> {
-		return new Parser((input, index, state) => {
-			let result;
-			let latestIndex = index;
-			const accum: T[] = [];
-			while (latestIndex < input.length) {
-				result = this.handler(input, latestIndex, state);
-				if (!result.success) {
-					break;
-				}
-				latestIndex = result.index;
-				accum.push(result.value);
-			}
-			if (accum.length < min) {
-				return failure();
-			}
-			return success(latestIndex, accum);
-		});
+	many(min: number): Parser<T[]>
+	many(min: number, terminator: Parser<unknown>): Parser<T[]>
+	many(min: number, terminator?: Parser<unknown>): Parser<T[]> {
+		return (terminator != null) ? manyWithout(this, min, terminator) : many(this, min);
 	}
 
 	option(): Parser<T | null> {
@@ -99,25 +91,58 @@ export class Parser<T> {
 	}
 }
 
-export function str<T extends string>(value: T): Parser<T> {
+function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
+	return new Parser((input, index, state) => {
+		let result;
+		let latestIndex = index;
+		const accum: T[] = [];
+		while (latestIndex < input.length) {
+			result = parser.handler(input, latestIndex, state);
+			if (!result.success) {
+				break;
+			}
+			latestIndex = result.index;
+			accum.push(result.value);
+		}
+		if (accum.length < min) {
+			return failure(latestIndex);
+		}
+		return success(latestIndex, accum);
+	});
+}
+
+function manyWithout<T>(parser: Parser<T>, min: number, terminator: Parser<unknown>): Parser<T[]> {
+	return many(seq([
+		notMatch(terminator),
+		parser,
+	], 1), min);
+}
+
+export function str<T extends string>(value: T): Parser<T>
+export function str(pattern: RegExp): Parser<string>
+export function str(value: string | RegExp): Parser<string> {
+	return (typeof value == 'string') ? strWithString(value) : strWithRegExp(value);
+}
+
+function strWithString<T extends string>(value: T): Parser<T> {
 	return new Parser((input, index, _state) => {
 		if ((input.length - index) < value.length) {
-			return failure();
+			return failure(index);
 		}
 		if (input.substr(index, value.length) !== value) {
-			return failure();
+			return failure(index);
 		}
 		return success(index + value.length, value);
 	});
 }
 
-export function regexp(pattern: RegExp): Parser<string> {
+function strWithRegExp(pattern: RegExp): Parser<string> {
 	const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
 	return new Parser((input, index, _state) => {
 		const text = input.slice(index);
 		const result = re.exec(text);
 		if (result == null) {
-			return failure();
+			return failure(index);
 		}
 		return success(index + result[0].length, result[0]);
 	});
@@ -125,13 +150,14 @@ export function regexp(pattern: RegExp): Parser<string> {
 
 type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
 type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
-export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>;
-export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U];
+
+export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>
+export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U]
 export function seq(parsers: Parser<any>[], select?: number) {
-	return (select == null) ? seqInternal(parsers) : seqInternalWithSelect(parsers, select);
+	return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
 
-function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
+function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -148,8 +174,8 @@ function seqInternal<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult
 	});
 }
 
-function seqInternalWithSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
-	return seqInternal(parsers).map(values => values[select]);
+function seqSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
+	return seqAll(parsers).map(values => values[select]);
 }
 
 export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
@@ -161,7 +187,7 @@ export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
 				return result;
 			}
 		}
-		return failure();
+		return failure(index);
 	});
 }
 
@@ -197,7 +223,7 @@ export function match<T>(parser: Parser<T>): Parser<T> {
 		const result = parser.handler(input, index, state);
 		return result.success
 			? success(index, result.value)
-			: failure();
+			: failure(index);
 	});
 }
 
@@ -206,7 +232,7 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
 		const result = parser.handler(input, index, state);
 		return !result.success
 			? success(index, null)
-			: failure();
+			: failure(index);
 	});
 }
 
@@ -214,7 +240,7 @@ export function cond(predicate: (state: any) => boolean): Parser<null> {
 	return new Parser((input, index, state) => {
 		return predicate(state)
 			? success(index, null)
-			: failure();
+			: failure(index);
 	});
 }
 
@@ -223,22 +249,28 @@ export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
+export const sof = new Parser((_input, index, _state) => {
+	return index == 0
+		? success(index, null)
+		: failure(index);
+});
+
 export const eof = new Parser((input, index, _state) => {
 	return index >= input.length
 		? success(index, null)
-		: failure();
+		: failure(index);
 });
 
 export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {
-		return failure();
+		return failure(index);
 	}
 	const value = input.charAt(index);
 	return success(index + 1, value);
 });
 
 export const lineBegin = new Parser((input, index, state) => {
-	if (index === 0) {
+	if (sof.handler(input, index, state).success) {
 		return success(index, null);
 	}
 	if (cr.handler(input, index - 1, state).success) {
@@ -247,7 +279,7 @@ export const lineBegin = new Parser((input, index, state) => {
 	if (lf.handler(input, index - 1, state).success) {
 		return success(index, null);
 	}
-	return failure();
+	return failure(index);
 });
 
 export const lineEnd = match(alt([
@@ -266,7 +298,7 @@ export function createLanguage<T>(syntaxes: { [K in keyof T]: (r: Record<string,
 	for (const key of Object.keys(syntaxes)) {
 		rules[key] = lazy(() => {
 			const parser = (syntaxes as any)[key](rules);
-			if (parser == null) {
+			if (parser == null || !(parser instanceof Parser)) {
 				throw new Error('syntax must return a parser.');
 			}
 			parser.name = key;

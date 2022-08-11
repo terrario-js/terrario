@@ -77,6 +77,24 @@ console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
+## parser.many(min: number, terminator: Parser): Parser
+The many() can have a termination condition.
+
+The following example uses many to match strings up to ")".
+The terminating condition ")" is not consumed.
+```ts
+// [Equivalent PEG] "(" (!")" @.)+ ")"
+const parser = T.seq([
+	T.str('('),
+	T.char.many(1, T.str(')')),
+	T.str(')'),
+]);
+
+const result = parser.parse('(abc)');
+console.log(result);
+// => { success: true, value: [ '(', [ 'a', 'b', 'c' ], ')' ], index: 5 }
+```
+
 ## parser.option(): Parser
 Generates a new parser that returns null even if the match fails.
 
@@ -112,12 +130,12 @@ console.log(result);
 // => { success: true, value: 'test', index: 4 }
 ```
 
-## T.regexp(pattern: Regexp): Parser
+## T.str(pattern: Regexp): Parser
 Generates a new parser that consumes the input string using the specified regular expression.
 
 ```ts
 // [Equivalent PEG] [a-z]
-const parser = T.regexp(/[a-z]/);
+const parser = T.str(/[a-z]/);
 
 const result = parser.parse('a');
 console.log(result);
@@ -272,8 +290,11 @@ Matches `\r\n` (CR + LF)
 ## T.newline: Parser
 Matches `\r\n` or `\r` or `\n`
 
+## T.sof: Parser
+Matches start of input string.
+
 ## T.eof: Parser
-Matches end of input string
+Matches end of input string.
 
 ```ts
 // [Equivalent PEG] "a" !.

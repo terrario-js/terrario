@@ -14,7 +14,7 @@ describe('Parser', () => {
 		it('state', () => {
 			const parser = new T.Parser((input, index, state) => {
 				if (state.value !== 1) {
-					return T.failure();
+					return T.failure(index);
 				}
 				return T.success(index, null);
 			});
@@ -46,26 +46,85 @@ describe('Parser', () => {
 		assert.strictEqual(result.index, 6);
 	});
 
-	it('many()', () => {
-		let input, parser, result;
+	describe('many()', () => {
+		describe('min = 0', () => {
+			it('0 item', () => {
+				let input: string, result: T.Result<string[]>;
 
-		parser = T.str('abc').many(1);
+				const parser = T.str('abc').many(0);
 
-		input = 'abc123';
-		result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, ['abc']);
-		assert.strictEqual(result.index, 3);
+				input = '';
+				result = parser.parse(input);
+				assert.ok(result.success);
+				assert.deepStrictEqual(result.value, []);
+				assert.strictEqual(result.index, 0);
+			});
 
-		input = 'abcabc123';
-		result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, ['abc', 'abc']);
-		assert.strictEqual(result.index, 6);
+			it('1 item', () => {
+				let input: string, result: T.Result<string[]>;
 
-		input = 'ab123';
-		result = parser.parse(input);
-		assert.ok(!result.success);
+				const parser = T.str('abc').many(0);
+
+				input = 'abc';
+				result = parser.parse(input);
+				assert.ok(result.success);
+				assert.deepStrictEqual(result.value, ['abc']);
+				assert.strictEqual(result.index, 3);
+			});
+		});
+
+		describe('min = 1', () => {
+			it('0 item', () => {
+				let input: string, result: T.Result<string[]>;
+
+				const parser = T.str('').many(1);
+
+				input = '';
+				result = parser.parse(input);
+				assert.ok(!result.success);
+				assert.strictEqual(result.index, 0);
+			});
+
+			it('1 item', () => {
+				let input: string, result: T.Result<string[]>;
+
+				const parser = T.str('abc').many(1);
+
+				input = 'abc';
+				result = parser.parse(input);
+				assert.ok(result.success);
+				assert.deepStrictEqual(result.value, ['abc']);
+				assert.strictEqual(result.index, 3);
+			});
+
+			it('2 items', () => {
+				let input: string, result: T.Result<string[]>;
+
+				const parser = T.str('abc').many(1);
+
+				input = 'abcabc';
+				result = parser.parse(input);
+				assert.ok(result.success);
+				assert.deepStrictEqual(result.value, ['abc', 'abc']);
+				assert.strictEqual(result.index, 6);
+			});
+		});
+
+		it('with terminator', () => {
+			let input: string, result: T.Result<string>;
+
+			const parser = T.seq([
+				T.str('('),
+				T.char.many(1, T.str(')')).text(),
+				T.str(')'),
+			], 1);
+
+			input = '(abc)';
+			result = parser.parse(input);
+			assert.ok(result.success);
+			assert.deepStrictEqual(result.value, 'abc');
+			assert.strictEqual(result.index, 5);
+		});
 	});
 
 	// it('option()', () => {
@@ -73,35 +132,71 @@ describe('Parser', () => {
 });
 
 describe('Combinators', () => {
-	it('str()', () => {
-		const input = 'abc';
-		const parser = T.str('abc');
-		const result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, input);
-		assert.strictEqual(result.index, 3);
-	});
+	describe('str()', () => {
+		describe('with string value', () => {
+			it('matched', () => {
+				const input = 'abc';
+				const parser = T.str('abc');
+				const result = parser.parse(input);
+				assert.ok(result.success);
+				assert.deepStrictEqual(result.value, input);
+				assert.strictEqual(result.index, 3);
+			});
 
-	it('regexp()', () => {
-		const input = 'abcDEF';
-		const parser = T.regexp(/[a-z]+/i);
-		const result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, input);
-		assert.strictEqual(result.index, 6);
+			it('not matched', () => {
+				const input = 'ab';
+				const parser = T.str('abc');
+				const result = parser.parse(input);
+				assert.ok(!result.success);
+				assert.strictEqual(result.index, 0);
+			});
+		});
+
+		it('with RegExp value', () => {
+			const input = 'abcDEF';
+			const parser = T.str(/[a-z]+/i);
+			const result = parser.parse(input);
+			assert.ok(result.success);
+			assert.deepStrictEqual(result.value, input);
+			assert.strictEqual(result.index, 6);
+		});
 	});
 
 	describe('seq()', () => {
-		it('basic', () => {
-			const input = 'abc123';
-			const parser = T.seq([
-				T.str('abc'),
-				T.str('123'),
-			]);
-			const result = parser.parse(input);
-			assert.ok(result.success);
-			assert.deepStrictEqual(result.value, ['abc', '123']);
-			assert.strictEqual(result.index, 6);
+		describe('all', () => {
+			it('success', () => {
+				const input = 'abc123';
+				const parser = T.seq([
+					T.str('abc'),
+					T.str('123'),
+				]);
+				const result = parser.parse(input);
+				assert.ok(result.success);
+				assert.deepStrictEqual(result.value, ['abc', '123']);
+				assert.strictEqual(result.index, 6);
+			});
+
+			it('partial success', () => {
+				const input = 'abc1';
+				const parser = T.seq([
+					T.str('abc'),
+					T.str('123'),
+				]);
+				const result = parser.parse(input);
+				assert.ok(!result.success);
+				assert.strictEqual(result.index, 3);
+			});
+
+			it('failure', () => {
+				const input = 'a';
+				const parser = T.seq([
+					T.str('abc'),
+					T.str('123'),
+				]);
+				const result = parser.parse(input);
+				assert.ok(!result.success);
+				assert.strictEqual(result.index, 0);
+			});
 		});
 
 		it('with select param', () => {
@@ -129,20 +224,42 @@ describe('Combinators', () => {
 		assert.strictEqual(result.index, 3);
 	});
 
-	it('sep()', () => {
-		let input, parser, result;
+	describe('sep()', () => {
+		describe('min = 2', () => {
+			it('0 item', () => {
+				let input, result;
 
-		parser = T.sep(T.str('abc'), T.str(','), 2);
+				const parser = T.sep(T.str('abc'), T.str(','), 2);
 
-		input = 'abc,abc';
-		result = parser.parse(input);
-		assert.ok(result.success);
-		assert.deepStrictEqual(result.value, ['abc', 'abc']);
-		assert.strictEqual(result.index, 7);
+				input = '';
+				result = parser.parse(input);
+				assert.ok(!result.success);
+				assert.strictEqual(result.index, 0);
+			});
 
-		input = 'abc';
-		result = parser.parse(input);
-		assert.ok(!result.success);
+			it('1 item', () => {
+				let input, result;
+
+				const parser = T.sep(T.str('abc'), T.str(','), 2);
+
+				input = 'abc';
+				result = parser.parse(input);
+				assert.ok(!result.success);
+				assert.strictEqual(result.index, 3);
+			});
+
+			it('2 items', () => {
+				let input, result;
+
+				const parser = T.sep(T.str('abc'), T.str(','), 2);
+
+				input = 'abc,abc';
+				result = parser.parse(input);
+				assert.ok(result.success);
+				assert.deepStrictEqual(result.value, ['abc', 'abc']);
+				assert.strictEqual(result.index, 7);
+			});
+		});
 	});
 
 	// it('lazy()', () => {
@@ -164,9 +281,11 @@ describe('Combinators', () => {
 
 		result = parser.parse('a', { enabled: true });
 		assert.ok(result.success);
+		assert.strictEqual(result.index, 1);
 
 		result = parser.parse('a', { enabled: false });
 		assert.ok(!result.success);
+		assert.strictEqual(result.index, 0);
 	});
 
 	it('eof', () => {
@@ -176,13 +295,15 @@ describe('Combinators', () => {
 
 		result = parser.parse('');
 		assert.ok(result.success);
+		assert.strictEqual(result.index, 0);
 
 		result = parser.parse('a');
 		assert.ok(!result.success);
+		assert.strictEqual(result.index, 0);
 	});
 
 	it('char', () => {
-		const input = 'ab';
+		const input = 'a';
 		const parser = T.char;
 		const result = parser.parse(input);
 		assert.ok(result.success);

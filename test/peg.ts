@@ -38,6 +38,18 @@ describe('rule', () => {
 		parseNoError('test = "abc"\n\n"123"');
 	});
 
+	it('$', () => {
+		parseNoError('test = $"abc"');
+	});
+
+	it('&', () => {
+		parseNoError('test = &"abc"');
+	});
+
+	it('!', () => {
+		parseNoError('test = !"abc"');
+	});
+
 	it('*', () => {
 		parseNoError('test = "abc"*');
 		parseNoError('test = "abc"* "123"*');
@@ -51,6 +63,10 @@ describe('rule', () => {
 	it('?', () => {
 		parseNoError('test = "abc"?');
 		parseNoError('test = "abc"? "123"?');
+	});
+
+	it('.', () => {
+		parseNoError('test = .+');
 	});
 });
 
