@@ -18,7 +18,7 @@
 - Add api: T.sof
 
 ### Improvements
-- improves rules validation for T.createLanguage()
+- Improves rules validation for T.createLanguage()
 
 ### Changes
 - Change api: T.regexp(RegExp) -> T.str(RegExp)
