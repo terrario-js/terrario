@@ -56,14 +56,14 @@ function emitRules(rules: N.Rule[], state: State) {
 function emitRule(rule: N.Rule, state: State) {
 	state.writeIndent(); state.write(`${rule.name}: r => {`);
 
-	state.downIndent();
 	state.write('\r\n');
+	state.downIndent();
 	state.writeIndent(); state.write('return ');
 
 	emitExpr(rule.expr, state);
 
-	state.write(';\r\n');
 	state.upIndent();
+	state.write(';\r\n');
 
 	state.writeIndent(); state.write('},');
 }
