@@ -1,13 +1,15 @@
 export type Success<T> = {
 	success: true;
+	index: number;
 	value: T;
+};
+
+export type Failure = {
+	success: false;
 	index: number;
 };
 
-export type Failure = { success: false };
-
 export type Result<T> = Success<T> | Failure;
-
 export type ParserHandler<T> = (input: string, index: number, state: any) => Result<T>
 
 export function success<T>(index: number, value: T): Success<T> {
@@ -18,8 +20,11 @@ export function success<T>(index: number, value: T): Success<T> {
 	};
 }
 
-export function failure(): Failure {
-	return { success: false };
+export function failure(index: number): Failure {
+	return {
+		success: false,
+		index: index,
+	};
 }
 
 export class Parser<T> {
@@ -100,7 +105,7 @@ function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
 			accum.push(result.value);
 		}
 		if (accum.length < min) {
-			return failure();
+			return failure(latestIndex);
 		}
 		return success(latestIndex, accum);
 	});
@@ -122,10 +127,10 @@ export function str(value: string | RegExp): Parser<string> {
 function strWithString<T extends string>(value: T): Parser<T> {
 	return new Parser((input, index, _state) => {
 		if ((input.length - index) < value.length) {
-			return failure();
+			return failure(index);
 		}
 		if (input.substr(index, value.length) !== value) {
-			return failure();
+			return failure(index);
 		}
 		return success(index + value.length, value);
 	});
@@ -137,7 +142,7 @@ function strWithRegExp(pattern: RegExp): Parser<string> {
 		const text = input.slice(index);
 		const result = re.exec(text);
 		if (result == null) {
-			return failure();
+			return failure(index);
 		}
 		return success(index + result[0].length, result[0]);
 	});
@@ -182,7 +187,7 @@ export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
 				return result;
 			}
 		}
-		return failure();
+		return failure(index);
 	});
 }
 
@@ -218,7 +223,7 @@ export function match<T>(parser: Parser<T>): Parser<T> {
 		const result = parser.handler(input, index, state);
 		return result.success
 			? success(index, result.value)
-			: failure();
+			: failure(index);
 	});
 }
 
@@ -227,7 +232,7 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
 		const result = parser.handler(input, index, state);
 		return !result.success
 			? success(index, null)
-			: failure();
+			: failure(index);
 	});
 }
 
@@ -235,7 +240,7 @@ export function cond(predicate: (state: any) => boolean): Parser<null> {
 	return new Parser((input, index, state) => {
 		return predicate(state)
 			? success(index, null)
-			: failure();
+			: failure(index);
 	});
 }
 
@@ -247,18 +252,18 @@ export const newline = alt([crlf, cr, lf]);
 export const sof = new Parser((_input, index, _state) => {
 	return index == 0
 		? success(index, null)
-		: failure();
+		: failure(index);
 });
 
 export const eof = new Parser((input, index, _state) => {
 	return index >= input.length
 		? success(index, null)
-		: failure();
+		: failure(index);
 });
 
 export const char = new Parser((input, index, _state) => {
 	if ((input.length - index) < 1) {
-		return failure();
+		return failure(index);
 	}
 	const value = input.charAt(index);
 	return success(index + 1, value);
@@ -274,7 +279,7 @@ export const lineBegin = new Parser((input, index, state) => {
 	if (lf.handler(input, index - 1, state).success) {
 		return success(index, null);
 	}
-	return failure();
+	return failure(index);
 });
 
 export const lineEnd = match(alt([
