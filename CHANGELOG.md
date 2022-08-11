@@ -11,7 +11,7 @@
 
 -->
 
-## 0.x.x (unreleased)
+## 0.7.0 (unreleased)
 
 ### Features
 - Add api: parser.many(min, terminator)
@@ -21,6 +21,7 @@
 
 ### Changes
 - Change api: T.regexp(RegExp) -> T.str(RegExp)
+- When all input strings could not be consumed, an error is now generated. (https://github.com/marihachi/terrario/commit/5d99b0671033d2ea7765f28e7e066cc5f3977d14)
 
 ## 0.6.0 (2022/08/06)
 
