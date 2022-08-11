@@ -25,7 +25,7 @@ function emitRule(rule: N.Rule, state: State) {
 	emitExpr(rule.expr, state);
 }
 
-function emitExpr(expr: N.Expr, state: State) {
+function emitExpr(expr: N.PegExpr, state: State) {
 	switch (expr.type) {
 		case 'alt': {
 			emitAlt(expr, state);
@@ -35,9 +35,10 @@ function emitExpr(expr: N.Expr, state: State) {
 			emitSeq(expr, state);
 			return;
 		}
+		case 'text':
 		case 'match':
 		case 'notMatch': {
-			emitMatchOrNotMatch(expr, state);
+			emitPrefixExpr(expr, state);
 			return;
 		}
 		case 'option': {
@@ -52,6 +53,10 @@ function emitExpr(expr: N.Expr, state: State) {
 			emitStr(expr, state);
 			return;
 		}
+		case 'any': {
+			emitAny(state);
+			return;
+		}
 		case 'ref': {
 			emitRef(expr, state);
 			return;
@@ -60,7 +65,7 @@ function emitExpr(expr: N.Expr, state: State) {
 	console.log('skipped unknown expr', expr);
 }
 
-function emitExprIfNeededGroup(node: N.Expr, state: State) {
+function emitExprIfNeededGroup(node: N.PegExpr, state: State) {
 	const needGroup = ((node.type === 'alt' || node.type === 'seq') && node.exprs.length > 1);
 	if (needGroup) {
 		state.code += '(';
@@ -93,8 +98,11 @@ function emitSeq(node: N.Seq, state: State) {
 	}
 }
 
-function emitMatchOrNotMatch(node: N.Match | N.NotMatch, state: State) {
-	if (node.type === 'match') {
+function emitPrefixExpr(node: N.Text | N.Match | N.NotMatch, state: State) {
+	if (node.type === 'text') {
+		state.code += '$';
+	}
+	else if (node.type === 'match') {
 		state.code += '&';
 	} else {
 		state.code += '!';
@@ -123,6 +131,10 @@ function emitStr(node: N.Str, state: State) {
 	state.code += '"';
 	state.code += node.value;
 	state.code += '"';
+}
+
+function emitAny(state: State) {
+	state.code += '.';
 }
 
 function emitRef(node: N.Ref, state: State) {

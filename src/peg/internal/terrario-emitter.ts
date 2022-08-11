@@ -35,7 +35,7 @@ function emitRule(rule: N.Rule, state: State) {
 	state.code += '; },\r\n';
 }
 
-function emitExpr(expr: N.Expr, state: State) {
+function emitExpr(expr: N.PegExpr, state: State) {
 	switch (expr.type) {
 		case 'alt': {
 			emitAlt(expr, state);
