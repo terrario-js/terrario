@@ -95,8 +95,8 @@ const lang = T.createLanguage({
 
 export function parse(input: string) {
 	const result = lang.root.parse(input);
-	if (!result.success || result.index < input.length) {
-		throw new Error('failed to parse JSON.');
+	if (!result.success) {
+		throw new Error(`failed to parse JSON. (index=${result.index})`);
 	}
 	return result.value;
 }
