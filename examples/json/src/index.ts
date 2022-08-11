@@ -32,8 +32,14 @@ const lang = T.createLanguage({
 	], 1),
 
 	number: r => T.alt([
-		T.str(/[+-]?[0-9]+\.[0-9]+/),
-		T.str(/[+-]?[0-9]+/),
+		T.seq([
+			T.str(/[+-]/).option(),
+			T.str(/[0-9]/).many(1),
+			T.seq([
+				T.str('.'),
+				T.str(/[0-9]/).many(1),
+			]).option(),
+		]).text(),
 	]).map(value => Number(value)),
 
 	object: r => {
