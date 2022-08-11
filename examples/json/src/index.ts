@@ -1,6 +1,6 @@
 import * as T from 'terrario';
 
-const spaces = T.regexp(/[ \t\r\n]*/);
+const spaces = T.str(/[ \t\r\n]*/);
 
 const lang = T.createLanguage({
 	value: r => T.alt([
@@ -17,7 +17,7 @@ const lang = T.createLanguage({
 	bool: r => T.alt([
 		T.str('true'),
 		T.str('false'),
-	]).map((value: 'true' | 'false') => {
+	]).map(value => {
 		return (value === 'true');
 	}),
 
@@ -31,20 +31,18 @@ const lang = T.createLanguage({
 	], 1),
 
 	number: r => T.alt([
-		T.regexp(/[+-]?[0-9]+\.[0-9]+/),
-		T.regexp(/[+-]?[0-9]+/),
-	]).map((value: string) => {
-		return parseFloat(value);
-	}),
+		T.str(/[+-]?[0-9]+\.[0-9]+/),
+		T.str(/[+-]?[0-9]+/),
+	]).map(value => Number(value)),
 
 	object: r => {
 		const entry = T.seq([
-			r.string,
+			r.string as T.Parser<string>,
 			spaces,
 			T.str(':'),
 			spaces,
-			r.value,
-		]).map((value: unknown[]) => {
+			r.value as T.Parser<unknown>,
+		]).map((value) => {
 			return { key: value[0], value: value[4] };
 		});
 		const separator = T.seq([
@@ -58,7 +56,7 @@ const lang = T.createLanguage({
 			T.sep(entry, separator, 1).option(),
 			spaces,
 			T.str('}'),
-		], 2).map((value: { key: string, value: unknown }[] | null) => {
+		], 2).map(value => {
 			if (value == null) {
 				return {};
 			}
@@ -79,10 +77,10 @@ const lang = T.createLanguage({
 		return T.seq([
 			T.str('['),
 			spaces,
-			T.sep(r.value, separator, 1).option(),
+			T.sep(r.value as T.Parser<unknown>, separator, 1).option(),
 			spaces,
 			T.str(']'),
-		], 2).map((value: unknown[] | null) => {
+		], 2).map((value) => {
 			return (value != null ? value : []);
 		});
 	},

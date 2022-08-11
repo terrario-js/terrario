@@ -12,6 +12,9 @@ export type Failure = {
 export type Result<T> = Success<T> | Failure;
 export type ParserHandler<T> = (input: string, index: number, state: any) => Result<T>;
 
+type ParserResult<T> = T extends Parser<infer R> ? R : never;
+type ParserResults<T> = T extends [infer Head, ...infer Tail] ? [ParserResult<Head>, ...ParserResults<Tail>] : [];
+
 export function success<T>(index: number, value: T): Success<T> {
 	return {
 		success: true,
@@ -148,16 +151,13 @@ function strWithRegExp(pattern: RegExp): Parser<string> {
 	});
 }
 
-type SeqResultItem<T> = T extends Parser<infer R> ? R : never;
-type SeqResult<T> = T extends [infer Head, ...infer Tail] ? [SeqResultItem<Head>, ...SeqResult<Tail>] : [];
-
-export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>>
+export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<ParserResults<[...T]>>
 export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U]
 export function seq(parsers: Parser<any>[], select?: number) {
 	return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
 
-function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...T]>> {
+function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<ParserResults<[...T]>> {
 	return new Parser((input, index, state) => {
 		let result;
 		let latestIndex = index;
@@ -170,7 +170,7 @@ function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<SeqResult<[...
 			latestIndex = result.index;
 			accum.push(result.value);
 		}
-		return success(latestIndex, (accum as SeqResult<[...T]>));
+		return success(latestIndex, (accum as ParserResults<[...T]>));
 	});
 }
 
@@ -178,11 +178,11 @@ function seqSelect<T extends Parser<any>[], U extends number>(parsers: [...T], s
 	return seqAll(parsers).map(values => values[select]);
 }
 
-export function alt<T extends Parser<unknown>[]>(parsers: T): T[number] {
+export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<ParserResults<T>[number]> {
 	return new Parser((input, index, state) => {
 		let result;
 		for (let i = 0; i < parsers.length; i++) {
-			result = parsers[i].handler(input, index, state);
+			result = parsers[i].handler(input, index, state) as Result<ParserResults<T>[number]>;
 			if (result.success) {
 				return result;
 			}
