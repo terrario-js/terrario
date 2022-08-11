@@ -11,7 +11,7 @@
 
 -->
 
-## 0.7.0 (unreleased)
+## 0.7.0 (2022/08/11)
 
 ### Features
 - Add api: parser.many(min, terminator)
