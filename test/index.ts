@@ -52,17 +52,21 @@ describe('Parser', () => {
 
 			const parser = T.str('abc').many(1);
 
-			input = 'abc123';
+			input = 'abc';
 			result = parser.parse(input);
 			assert.ok(result.success);
 			assert.deepStrictEqual(result.value, ['abc']);
 			assert.strictEqual(result.index, 3);
 
-			input = 'abcabc123';
+			input = 'abcabc';
 			result = parser.parse(input);
 			assert.ok(result.success);
 			assert.deepStrictEqual(result.value, ['abc', 'abc']);
 			assert.strictEqual(result.index, 6);
+
+			input = '';
+			result = parser.parse(input);
+			assert.ok(!result.success);
 
 			input = 'ab123';
 			result = parser.parse(input);
@@ -202,7 +206,7 @@ describe('Combinators', () => {
 	});
 
 	it('char', () => {
-		const input = 'ab';
+		const input = 'a';
 		const parser = T.char;
 		const result = parser.parse(input);
 		assert.ok(result.success);
