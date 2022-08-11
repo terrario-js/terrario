@@ -42,7 +42,7 @@ const lang = T.createLanguage({
 			T.str(':'),
 			spaces,
 			r.value as T.Parser<unknown>,
-		]).map((value) => {
+		]).map(value => {
 			return { key: value[0], value: value[4] };
 		});
 		const separator = T.seq([
@@ -80,7 +80,7 @@ const lang = T.createLanguage({
 			T.sep(r.value as T.Parser<unknown>, separator, 1).option(),
 			spaces,
 			T.str(']'),
-		], 2).map((value) => {
+		], 2).map(value => {
 			return (value != null ? value : []);
 		});
 	},
