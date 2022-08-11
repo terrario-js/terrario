@@ -10,6 +10,10 @@
 ### Bugfixes
 
 -->
+## 0.7.1 (2022/08/11)
+
+### Bugfixes
+- (#12) Inference of type in parser.map() fails caused by T.alt not returning a Parser type.
 
 ## 0.7.0 (2022/08/11)
 
