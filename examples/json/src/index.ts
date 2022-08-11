@@ -3,6 +3,12 @@ import * as T from 'terrario';
 const spaces = T.str(/[ \t\r\n]*/);
 
 const lang = T.createLanguage({
+	root: r => T.seq([
+		spaces,
+		r.value,
+		spaces,
+	], 1),
+
 	value: r => T.alt([
 		r.null,
 		r.bool,
@@ -12,14 +18,12 @@ const lang = T.createLanguage({
 		r.number,
 	]),
 
-	null: r => T.str('null'),
+	null: r => T.str('null').map(() => null),
 
 	bool: r => T.alt([
 		T.str('true'),
 		T.str('false'),
-	]).map(value => {
-		return (value === 'true');
-	}),
+	]).map(value => (value === 'true')),
 
 	string: r => T.seq([
 		T.str('"'),
@@ -83,14 +87,8 @@ const lang = T.createLanguage({
 	},
 });
 
-const json = T.seq([
-	spaces,
-	lang.value,
-	spaces,
-], 1);
-
 export function parse(input: string) {
-	const result = json.parse(input);
+	const result = lang.root.parse(input);
 	if (!result.success || result.index < input.length) {
 		throw new Error('failed to parse JSON.');
 	}

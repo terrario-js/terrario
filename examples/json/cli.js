@@ -2,7 +2,6 @@ const { performance } = require('perf_hooks');
 const readLine = require('readline');
 const { parse } = require('./built/index');
 
-
 class InputCanceledError extends Error {
 	constructor(message) {
 		super(message);
