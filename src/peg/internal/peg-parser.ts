@@ -158,10 +158,6 @@ const lang = T.createLanguage({
 	], 2),
 });
 
-export function parse(input: string): N.Rule[] {
-	const result = (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
-	if (!result.success) {
-		throw new Error('parsing error');
-	}
-	return result.value;
+export function parse(input: string): T.Result<N.Rule[]> {
+	return (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
 }
