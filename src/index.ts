@@ -244,6 +244,12 @@ export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
+export const sof = new Parser((_input, index, _state) => {
+	return index == 0
+		? success(index, null)
+		: failure();
+});
+
 export const eof = new Parser((input, index, _state) => {
 	return index >= input.length
 		? success(index, null)
@@ -259,7 +265,7 @@ export const char = new Parser((input, index, _state) => {
 });
 
 export const lineBegin = new Parser((input, index, state) => {
-	if (index === 0) {
+	if (sof.handler(input, index, state).success) {
 		return success(index, null);
 	}
 	if (cr.handler(input, index - 1, state).success) {

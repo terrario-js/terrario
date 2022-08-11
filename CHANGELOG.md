@@ -15,6 +15,7 @@
 
 ### Features
 - Add api: parser.many(min, terminator)
+- Add api: T.sof
 
 ### Improvements
 - improves rules validation for T.createLanguage()

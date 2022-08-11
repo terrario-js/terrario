@@ -290,8 +290,11 @@ Matches `\r\n` (CR + LF)
 ## T.newline: Parser
 Matches `\r\n` or `\r` or `\n`
 
+## T.sof: Parser
+Matches start of input string.
+
 ## T.eof: Parser
-Matches end of input string
+Matches end of input string.
 
 ```ts
 // [Equivalent PEG] "a" !.
