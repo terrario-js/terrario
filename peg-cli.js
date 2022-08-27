@@ -45,17 +45,13 @@ async function entryPoint() {
 			.replace(/\\u00a0/g, '\u00a0');
 
 		try {
-			const parseTimeStart = performance.now();
-			const ast = parse(input);
-			const code = emit(ast);
-			const parseTimeEnd = performance.now();
 			console.log('=== AST ===');
+			const ast = parse(input);
 			console.log(JSON.stringify(ast, null, '  '));
 			console.log('=== Code ===');
+			const code = emit(ast);
 			console.log(code);
 			console.log('============');
-			const parseTime = (parseTimeEnd - parseTimeStart).toFixed(3);
-			console.log(`time: ${parseTime}ms`);
 		}
 		catch (err) {
 			console.log('error:');

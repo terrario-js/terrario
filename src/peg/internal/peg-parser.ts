@@ -28,52 +28,52 @@ const lang = T.createLanguage({
 			spacing,
 			T.str('='),
 			spacing,
-			r.expr as T.Parser<N.PegExpr>,
+			r.expr as T.Parser<N.Expr>,
 		]).map(values => {
 			return { type: 'rule', name: values[0], expr: values[4] } as N.Rule;
 		});
 	},
 
-	expr: r => r.exprLevel7,
+	expr: r => r.expr7,
 
-	exprLevel7: r => {
+	expr7: r => {
 		// expr1 / expr2
 		const separator = T.seq([
 			spacing,
 			T.str('/'),
 			spacing,
 		]);
-		const choice = T.sep((r.exprLevel6 as T.Parser<N.PegExpr>), separator, 2).map(values => {
+		const choice = T.sep((r.expr6 as T.Parser<N.Expr>), separator, 2).map(values => {
 			return { type: 'alt', exprs: values } as N.Alt;
 		});
 
 		return T.alt([
 			choice,
-			r.exprLevel6 as T.Parser<N.PegExpr>,
+			r.expr6 as T.Parser<N.Expr>,
 		]);
 	},
 
 	// TODO: action expr
 	// { /*action*/ }
-	exprLevel6: r => r.exprLevel5,
+	expr6: r => r.expr5,
 
-	exprLevel5: r => {
+	expr5: r => {
 		// expr1 expr2
 		const separator = T.alt([space, T.newline]).many(1);
-		const sequence = T.sep((r.exprLevel4 as T.Parser<N.PegExpr>), separator, 2).map(values => {
+		const sequence = T.sep((r.expr4 as T.Parser<N.Expr>), separator, 2).map(values => {
 			return { type: 'seq', exprs: values } as N.Seq;
 		});
 
 		return T.alt([
 			sequence,
-			r.exprLevel4 as T.Parser<N.PegExpr>,
+			r.expr4 as T.Parser<N.Expr>,
 		]);
 	},
 
 	// TODO: @expr label:expr
-	exprLevel4: r => r.exprLevel3,
+	expr4: r => r.expr3,
 
-	exprLevel3: r => {
+	expr3: r => {
 		// $expr &expr !expr
 		const op = T.seq([
 			T.alt([
@@ -82,21 +82,21 @@ const lang = T.createLanguage({
 				T.str('!').map(v => 'notMatch'),
 			]),
 			spacing,
-			r.exprLevel2 as T.Parser<N.PegExpr>,
+			r.expr2 as T.Parser<N.Expr>,
 		]).map(values => {
 			return { type: values[0], expr: values[2] } as N.Text | N.Match | N.NotMatch;
 		});
 
 		return T.alt([
 			op,
-			r.exprLevel2 as T.Parser<N.PegExpr>,
+			r.expr2 as T.Parser<N.Expr>,
 		]);
 	},
 
-	exprLevel2: r => {
+	expr2: r => {
 		// expr? expr* expr+
 		const op = T.seq([
-			r.exprLevel1 as T.Parser<N.PegExpr>,
+			r.expr1 as T.Parser<N.Expr>,
 			spacing,
 			T.alt([
 				T.str('?').map(v => { return { type: 'option' }; }),
@@ -109,16 +109,16 @@ const lang = T.createLanguage({
 
 		return T.alt([
 			op,
-			r.exprLevel1 as T.Parser<N.PegExpr>,
+			r.expr1 as T.Parser<N.Expr>,
 		]);
 	},
 
-	exprLevel1: r => T.alt([
+	expr1: r => T.alt([
 		r.stringLiteral as T.Parser<N.Str>,
 		// r.charRange,
 		r.any,
 		r.ref as T.Parser<N.Ref>,
-		r.group as T.Parser<N.PegExpr>,
+		r.group as T.Parser<N.Expr>,
 	]),
 
 	stringLiteral: r => T.seq([
@@ -152,12 +152,17 @@ const lang = T.createLanguage({
 	group: r => T.seq([
 		T.str('('),
 		spacing,
-		r.expr as T.Parser<N.PegExpr>,
+		r.expr as T.Parser<N.Expr>,
 		spacing,
 		T.str(')'),
 	], 2),
 });
 
-export function parse(input: string): T.Result<N.Rule[]> {
-	return (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
+export function parse(input: string): N.Rule[] {
+	const result = (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
+	if (!result.success) {
+		console.log(JSON.stringify(result));
+		throw new Error('Parsing error');
+	}
+	return result.value;
 }

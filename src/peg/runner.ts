@@ -5,12 +5,7 @@ import * as T from '..';
 // TODO
 
 export function run(input: string): T.Result<any> {
-	const parseResult = Parser.parse(input);
-	if (!parseResult.success) {
-		console.log(JSON.stringify(parseResult));
-		throw new Error('parsing error');
-	}
-	const rules = parseResult.value;
+	const rules = Parser.parse(input);
 	const result = T.str('aaa').parse(input);
 	return result;
 }

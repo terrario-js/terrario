@@ -25,7 +25,7 @@ function emitRule(rule: N.Rule, state: State) {
 	emitExpr(rule.expr, state);
 }
 
-function emitExpr(expr: N.PegExpr, state: State) {
+function emitExpr(expr: N.Expr, state: State) {
 	switch (expr.type) {
 		case 'alt': {
 			emitAlt(expr, state);
@@ -65,7 +65,7 @@ function emitExpr(expr: N.PegExpr, state: State) {
 	console.log('skipped unknown expr', expr);
 }
 
-function emitExprIfNeededGroup(node: N.PegExpr, state: State) {
+function emitExprIfNeededGroup(node: N.Expr, state: State) {
 	const needGroup = ((node.type === 'alt' || node.type === 'seq') && node.exprs.length > 1);
 	if (needGroup) {
 		state.code += '(';

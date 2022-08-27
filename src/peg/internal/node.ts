@@ -1,43 +1,43 @@
 export type Rule = {
 	type: 'rule';
 	name: string;
-	expr: PegExpr;
+	expr: Expr;
 };
 
 export type Alt = {
 	type: 'alt';
-	exprs: PegExpr[];
+	exprs: Expr[];
 };
 
 export type Seq = {
 	type: 'seq';
-	exprs: PegExpr[];
+	exprs: Expr[];
 };
 
 export type Text = {
 	type: 'text';
-	expr: PegExpr;
+	expr: Expr;
 };
 
 export type Match = {
 	type: 'match';
-	expr: PegExpr;
+	expr: Expr;
 };
 
 export type NotMatch = {
 	type: 'notMatch';
-	expr: PegExpr;
+	expr: Expr;
 };
 
 export type Option = {
 	type: 'option';
-	expr: PegExpr;
+	expr: Expr;
 };
 
 export type Many = {
 	type: 'many';
 	min: number;
-	expr: PegExpr;
+	expr: Expr;
 };
 
 export type Str = {
@@ -54,4 +54,4 @@ export type Ref = {
 	name: string;
 };
 
-export type PegExpr = Alt | Seq | Text | Match | NotMatch | Option | Many | Str | Any | Ref;
+export type Expr = Alt | Seq | Text | Match | NotMatch | Option | Many | Str | Any | Ref;
