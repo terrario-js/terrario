@@ -2,17 +2,14 @@ WIP!
 
 ## Get started
 
-Terrarioはnpmを使って簡単に導入できます。
-
+Terrarioはnpmを使って簡単に導入できます。  
 以下のコマンドで現在のディレクトリにTerrarioをインストールします。
 ```
 $ npm i terrario
 ```
 
-早速、Node.jsで動作する基本的なパーサーを作成してみましょう。
-
-TerrarioはTypeScriptとJavaScriptの両方をサポートしていますが、今回はJavaScriptでプログラムを作成します。
-
+早速、Node.jsで動作する基本的なパーサーを作成してみましょう。  
+TerrarioはTypeScriptとJavaScriptの両方をサポートしていますが、今回はJavaScriptでプログラムを作成します。  
 以下の内容を記述してindex.jsという名前で保存します。
 ```js
 const T = require('terrario');
@@ -42,8 +39,7 @@ $ node index.js
 { success: false, index: 0 }
 ```
 
-コンマ区切りの数字が入った文字列を受け取って数値の配列に変換するパーサーが作成できました。
-
+コンマ区切りの数字が入った文字列を受け取って数値の配列に変換するパーサーが作成できました。  
 無効な入力に対しては失敗することも確認できます。
 
 ## Language parsing
