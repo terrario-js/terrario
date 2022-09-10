@@ -18,10 +18,10 @@ TerrarioはTypeScriptとJavaScriptの両方をサポートしていますが、�
 const T = require('terrario');
 
 const number = T.seq([
-	T.str(/[1-9]/),
-	T.str(/[0-9]/).many(0),
+  T.str(/[1-9]/),
+  T.str(/[0-9]/).many(0),
 ]).text().map(x => {
-	return parseInt(x);
+  return parseInt(x);
 });
 const parser = T.sep(number, T.str(','));
 
