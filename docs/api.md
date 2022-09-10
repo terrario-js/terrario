@@ -349,11 +349,11 @@ const lang = T.createLanguage({
   },
 
   rule1: rules => {
-    return T.regexp('a');
+    return T.str('a');
   },
 
   rule2: rules => {
-    return T.regexp('b');
+    return T.str('b');
   },
 });
 
