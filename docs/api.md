@@ -1,58 +1,92 @@
 # Index of contents
-- [Parsing result](#parsing-result)
-- [Combinators](#combinators)
+- [Basic APIs](#basic-apis)
+  - T.createLanguage()
+  - parser.parse()
   - T.str()
   - T.seq()
   - T.alt()
   - T.sep()
-  - T.lazy()
   - T.match()
   - T.notMatch()
-  - T.cond()
-- [Parser class APIs](#parser-class-apis)
-  - parser.parse()
   - parser.map()
   - parser.text()
   - parser.many()
   - parser.option()
-- [Parsers](#parsers)
-  - T.cr
-  - T.lf
-  - T.crlf
   - T.newline
   - T.sof
   - T.eof
   - T.char
   - T.lineBegin
   - T.lineEnd
-- [Other APIs](#other-apis)
-  - T.createLanguage()
+- [Parsing result](#parsing-result)
+- [Control with states](#control-with-states)
+  - T.cond()
+- [Custom parsers](#custom-parsers)
   - new T.Parser()
   - T.success()
   - T.failure()
+- [Minor APIs](#minor-apis)
+  - T.lazy()
+  - T.succeeded()
+  - T.cr
+  - T.lf
+  - T.crlf
 
-# Parsing result
-Stability: Experimental
+# Basic APIs
 
-Definition:
+## T.createLanguage()
+```
+T.createLanguage(syntaxes: Record<string, (rules: Language) => Parser>): Language
+```
+Stability: Stable
+
+We can define some syntax rules to build a language.  
+Each rule is lazy evaluated.
+
 ```ts
-type Success = {
-	success: true;
-	index: number;
-	value: any;
-};
-type Failure = {
-	success: false;
-	index: number;
-};
-type Result = Success | Failure;
+const lang = T.createLanguage({
+  root: rules => {
+    return T.alt([
+      rules.rule1,
+      rules.rule2,
+    ]);
+  },
+
+  rule1: rules => {
+    return T.str('a');
+  },
+
+  rule2: rules => {
+    return T.str('b');
+  },
+});
+
+const result = lang.root.parse('a');
+console.log(result);
+// => { success: true, value: 'a', index: 1 }
 ```
 
-Result structure is unstable yet.
+## parser.parse()
+```
+parser.parse(input: string, state?: any): Result
+```
+Stability: Stable
 
-# Combinators
+Parses with the parser.
 
-## T.str(value: string): Parser
+```ts
+const parser = T.str('a');
+
+parser.parse('a');
+
+// specify states
+parser.parse('a', { flag: true, count: 0 });
+```
+
+## T.str()
+```
+T.str(value: string): Parser
+```
 Stability: Stable
 
 Generates a parser that consumes the specified string.
@@ -66,7 +100,10 @@ console.log(result);
 // => { success: true, value: 'test', index: 4 }
 ```
 
-## T.str(pattern: Regexp): Parser
+### with regular expression
+```
+T.str(pattern: Regexp): Parser
+```
 Stability: Stable
 
 Generates a parser that consumes the specified regular expression.
@@ -80,7 +117,10 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## T.seq(parsers: Parser[], select?: boolean): Parser
+## T.seq()
+```
+T.seq(parsers: Parser[]): Parser
+```
 Stability: Stable
 
 Generates a parser that applies parsers in sequence.
@@ -97,6 +137,12 @@ console.log(result);
 // => { success: true, value: [ 'a', '1' ], index: 2 }
 ```
 
+### select a return value
+```
+T.seq(parsers: Parser[], select: boolean): Parser
+```
+Stability: Experimental
+
 You can also select a result to be returned from all of them:
 ```ts
 // [Equivalent PEG] value0:"a" value1:"1" { return value1; }
@@ -110,7 +156,10 @@ console.log(result);
 // => { success: true, value: '1', index: 2 }
 ```
 
-## T.alt(parsers: Parser[]): Parser
+## T.alt()
+```
+T.alt(parsers: Parser[]): Parser
+```
 Stability: Stable
 
 Generates a parser that tries to match one of the parsers.  
@@ -134,7 +183,10 @@ console.log(result);
 // => { success: true, value: '1', index: 1 }
 ```
 
-## T.sep(item: Parser, separator: Parser, min: number): Parser
+## T.sep()
+```
+T.sep(item: Parser, separator: Parser, min: number): Parser
+```
 Stability: Experimental
 
 Generates a parser that splits a string and extracts multiple items.  
@@ -173,25 +225,10 @@ console.log(result);
 // => { success: true, value: [ 'abc', 'xyz' ], index: 8 }
 ```
 
-## T.lazy(fn: () => Parser): Parser
-Stability: Stable
-
-Generates a new parser that is lazy-evaluated.  
-Normally there is no need to use this API. Use T.createLanguage() instead.
-
-## T.succeeded(value: any): Parser
-Stability: Stable
-
-Generates a parser that succeeds with the specified value.
-
-```ts
-const parser = T.succeeded('abc');
-const result = parser.parse('');
-console.log(result);
-// => { success: true, value: "abc", index: 0 }
+## T.match()
 ```
-
-## T.match(parser: Parser): Parser
+T.match(parser: Parser): Parser
+```
 Stability: Stable
 
 Generates a new parser to continue if the match is successful. (Positive lookahead)  
@@ -208,7 +245,10 @@ console.log(result);
 // => { success: true, value: [ 'a', 'abc' ], index: 3 }
 ```
 
-## T.notMatch(parser: Parser): Parser
+## T.notMatch()
+```
+T.notMatch(parser: Parser): Parser
+```
 Stability: Stable
 
 Generates a new parser to continue if the match fails. (Negative lookahead)  
@@ -225,39 +265,10 @@ console.log(result);
 // => { success: true, value: [ null, 'abc' ], index: 3 }
 ```
 
-## T.cond(predicate: (state: any) => boolean): Parser
-Stability: Experimental
-
-Conditional branching can be performed using the state.
-
-```ts
-const parser = T.seq([
-  T.cond(state => state.enabled),
-  T.char,
-]);
-
-const result = parser.parse('a', { enabled: true });
-console.log(result);
-// => { success: true, value: [ null, 'a' ], index: 1 }
+## parser.map()
 ```
-
-# Parser class APIs
-
-## parser.parse(input: string, state?: any): Result
-Stability: Stable
-
-Parses with the parser.
-
-```ts
-const parser = T.str('a');
-
-parser.parse('a');
-
-// specify states
-parser.parse('a', { flag: true, count: 0 });
+parser.map(fn: (value) => any): Parser
 ```
-
-## parser.map(fn: (value) => any): Parser
 Stability: Stable
 
 Maps the parsed results using the specified function.
@@ -277,7 +288,10 @@ console.log(result);
 // => { success: true, value: [ 'a', 'c' ], index: 3 }
 ```
 
-## parser.text(): Parser
+## parser.text()
+```
+parser.text(): Parser
+```
 Stability: Stable
 
 The parser maps the consumed portion as a string.
@@ -295,7 +309,10 @@ console.log(result);
 // => { success: true, value: 'abc', index: 3 }
 ```
 
-## parser.many(min: number): Parser
+## parser.many()
+```
+parser.many(min: number): Parser
+```
 Stability: Stable
 
 Repeatedly applies the parser.  
@@ -333,7 +350,10 @@ console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
-## parser.many(min: number, terminator: Parser): Parser
+### with terminator
+```
+parser.many(min: number, terminator: Parser): Parser
+```
 Stability: Experimental
 
 The parser.many() can have a termination condition.
@@ -353,7 +373,10 @@ console.log(result);
 // => { success: true, value: [ '(', [ 'a', 'b', 'c' ], ')' ], index: 5 }
 ```
 
-## parser.option(): Parser
+## parser.option()
+```
+parser.option(): Parser
+```
 Stability: Stable
 
 Generates a new parser that returns null even if the match fails.  
@@ -377,24 +400,10 @@ console.log(result);
 // => { success: true, value: [ 'a', null ], index: 1 }
 ```
 
-# Parsers
-
-## T.cr: Parser
-Stability: Experimental
-
-Matches `\r` (CR)
-
-## T.lf: Parser
-Stability: Experimental
-
-Matches `\n` (LF)
-
-## T.crlf: Parser
-Stability: Experimental
-
-Matches `\r\n` (CR + LF)
-
-## T.newline: Parser
+## T.newline
+```
+T.newline: Parser
+```
 Stability: Experimental
 
 Matches `\r\n` or `\r` or `\n`
@@ -404,7 +413,10 @@ Stability: Experimental
 
 Matches start of input string.
 
-## T.eof: Parser
+## T.eof
+```
+T.eof: Parser
+```
 Stability: Experimental
 
 Matches end of input string.
@@ -421,7 +433,10 @@ console.log(result);
 // => { success: true, value: [ 'a', null ], index: 1 }
 ```
 
-## T.char: Parser
+## T.char
+```
+T.char: Parser
+```
 Stability: Stable
 
 A parser that consumes any single character.
@@ -435,52 +450,70 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## T.lineBegin: Parser
+## T.lineBegin
+```
+T.lineBegin: Parser
+```
 Stability: Experimental
 
 ```ts
 //TODO
 ```
 
-## T.lineEnd: Parser
+## T.lineEnd
+```
+T.lineEnd: Parser
+```
 Stability: Experimental
 
 ```ts
 //TODO
 ```
 
-# Other APIs
+# Parsing result
+```ts
+type Success = {
+	success: true;
+	index: number;
+	value: any;
+};
+type Failure = {
+	success: false;
+	index: number;
+};
+type Result = Success | Failure;
+```
+Stability: Experimental
 
-## T.createLanguage(syntaxes: Record<string, (rules: Language) => Parser>): Language
-Stability: Stable
+Result structure is unstable yet.
 
-We can define some syntax rules to build a language.  
-Each rule is lazy evaluated.
+# Control with states
+
+## T.cond()
+```
+T.cond(predicate: (state: any) => boolean): Parser
+```
+Stability: Experimental
+
+Conditional branching can be performed using the state.
 
 ```ts
-const lang = T.createLanguage({
-  root: rules => {
-    return T.alt([
-      rules.rule1,
-      rules.rule2,
-    ]);
-  },
+const parser = T.seq([
+  T.cond(state => state.enabled),
+  T.char,
+]);
 
-  rule1: rules => {
-    return T.str('a');
-  },
-
-  rule2: rules => {
-    return T.str('b');
-  },
-});
-
-const result = lang.root.parse('a');
+const result = parser.parse('a', { enabled: true });
 console.log(result);
-// => { success: true, value: 'a', index: 1 }
+// => { success: true, value: [ null, 'a' ], index: 1 }
 ```
 
-## new T.Parser(handler: (input: string, index: number, state: any) => Result)
+# Custom parsers
+
+## new T.Parser()
+```
+new T.Parser(handler: (input: string, index: number, state: any) => Result)
+```
 Stability: Stable
 
 Makes a new custom parser.
@@ -494,12 +527,68 @@ const parser = new T.Parser((input, index, state) => {
 });
 ```
 
-### T.success(index: number, value: any): Success
+### T.success()
+```
+T.success(index: number, value: any): Success
+```
 Stability: Experimental
 
 Generates a result indicating the success of a parser.
 
-### T.failure(index: number): Failure
+### T.failure()
+```
+T.failure(index: number): Failure
+```
 Stability: Experimental
 
 Generates a result indicating the failure of a parser.
+
+# Minor APIs
+
+## T.lazy()
+```
+T.lazy(fn: () => Parser): Parser
+```
+Stability: Stable
+
+Generates a new parser that is lazy-evaluated.  
+Normally there is no need to use this API. Use T.createLanguage() instead.
+
+## T.succeeded()
+```
+T.succeeded(value: any): Parser
+```
+Stability: Stable
+
+Generates a parser that succeeds with the specified value.
+
+```ts
+const parser = T.succeeded('abc');
+const result = parser.parse('');
+console.log(result);
+// => { success: true, value: "abc", index: 0 }
+```
+
+## T.cr
+```
+T.cr: Parser
+```
+Stability: Experimental
+
+Matches `\r` (CR)
+
+## T.lf
+```
+T.lf: Parser
+```
+Stability: Experimental
+
+Matches `\n` (LF)
+
+## T.crlf
+```
+T.crlf: Parser
+```
+Stability: Experimental
+
+Matches `\r\n` (CR + LF)
