@@ -4,7 +4,7 @@ WIP!
 # Parser APIs
 
 ## parser.parse(input: string, state?: any): Result
-Stability: Stable
+Stability: Experimental
 
 ```ts
 const parser = T.str('a');
@@ -14,6 +14,8 @@ parser.parse('a');
 // specify states
 parser.parse('a', { flag: true, count: 0 });
 ```
+
+NOTE: Result structure is unstable yet.
 
 ## parser.map(fn: (value) => any): Parser
 Stability: Stable
