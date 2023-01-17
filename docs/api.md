@@ -408,7 +408,10 @@ Stability: Experimental
 
 Matches `\r\n` or `\r` or `\n`
 
-## T.sof: Parser
+## T.sof
+```
+T.sof: Parser
+```
 Stability: Experimental
 
 Matches start of input string.
