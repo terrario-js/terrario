@@ -6,16 +6,16 @@ Stability: Experimental
 
 Definition:
 ```ts
-type Success<T> = {
+type Success = {
 	success: true;
 	index: number;
-	value: T;
+	value: any;
 };
 type Failure = {
 	success: false;
 	index: number;
 };
-type Result<T> = Success<T> | Failure;
+type Result = Success | Failure;
 ```
 
 Result structure is unstable yet.
@@ -450,7 +450,7 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## (constractor) T.Parser(handler: (input: string, index: number, state: any) => Result)
+## new T.Parser(handler: (input: string, index: number, state: any) => Result)
 Stability: Stable
 
 Makes a new custom parser.
@@ -458,18 +458,18 @@ Makes a new custom parser.
 ```ts
 const parser = new T.Parser((input, index, state) => {
   if (index >= input.length) {
-    return T.failure();
+    return T.failure(index);
   }
   return T.success(index, 'result value');
 });
 ```
 
-### T.success()
+### T.success(index: number, value: any)
 Stability: Experimental
 
 for custom parser.
 
-### T.failure()
+### T.failure(index: number)
 Stability: Experimental
 
 for custom parser.
