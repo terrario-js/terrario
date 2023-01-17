@@ -25,6 +25,8 @@ Result structure is unstable yet.
 ## parser.parse(input: string, state?: any): Result
 Stability: Stable
 
+Parses with the parser.
+
 ```ts
 const parser = T.str('a');
 
@@ -36,6 +38,8 @@ parser.parse('a', { flag: true, count: 0 });
 
 ## parser.map(fn: (value) => any): Parser
 Stability: Stable
+
+Maps the parsed results using the specified function.
 
 ```ts
 // [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
@@ -55,6 +59,8 @@ console.log(result);
 ## parser.text(): Parser
 Stability: Stable
 
+The parser maps the consumed portion as a string.
+
 ```ts
 // [Equivalent PEG] "a" "b" "c" { return text(); }
 const parser = T.seq([
@@ -70,6 +76,9 @@ console.log(result);
 
 ## parser.many(min: number): Parser
 Stability: Stable
+
+Repeatedly applies the parser.  
+The argument min specifies the minimum number of times it will be applied.
 
 Matches 0 or more items:
 ```ts
@@ -106,7 +115,7 @@ console.log(result);
 ## parser.many(min: number, terminator: Parser): Parser
 Stability: Experimental
 
-The many() can have a termination condition.
+The parser.many() can have a termination condition.
 
 The following example uses many to match strings up to ")".
 The terminating condition ")" is not consumed.
@@ -126,7 +135,8 @@ console.log(result);
 ## parser.option(): Parser
 Stability: Stable
 
-Generates a new parser that returns null even if the match fails.
+Generates a new parser that returns null even if the match fails.  
+Make the parser consumption optional.
 
 ```ts
 // [Equivalent PEG] "a" "b"?
@@ -151,7 +161,7 @@ console.log(result);
 ## T.str(value: string): Parser
 Stability: Stable
 
-Generates a new parser that consumes the input string using the specified string.
+Generates a parser that consumes the specified string.
 
 ```ts
 // [Equivalent PEG] "test"
@@ -165,7 +175,7 @@ console.log(result);
 ## T.str(pattern: Regexp): Parser
 Stability: Stable
 
-Generates a new parser that consumes the input string using the specified regular expression.
+Generates a parser that consumes the specified regular expression.
 
 ```ts
 // [Equivalent PEG] [a-z]
@@ -178,6 +188,8 @@ console.log(result);
 
 ## T.seq(parsers: Parser[], select?: boolean): Parser
 Stability: Stable
+
+Generates a parser that applies parsers in sequence.
 
 ```ts
 // [Equivalent PEG] "a" "1"
@@ -206,6 +218,9 @@ console.log(result);
 
 ## T.alt(parsers: Parser[]): Parser
 Stability: Stable
+
+Generates a parser that tries to match one of the parsers.  
+The parsers are used in order of precedence.
 
 ```ts
 // [Equivalent PEG] "a" / "1"
@@ -261,8 +276,7 @@ console.log(result);
 ## T.lazy(fn: () => Parser): Parser
 Stability: Stable
 
-Generates a new parser that is lazy-evaluated.
-
+Generates a new parser that is lazy-evaluated.  
 Normally there is no need to use this API. Use T.createLanguage() instead.
 
 ## T.succeeded(value: any): Parser
@@ -275,7 +289,7 @@ Stability: Stable
 ## T.match(parser: Parser): Parser
 Stability: Stable
 
-Generates a new parser to continue if the match is successful.
+Generates a new parser to continue if the match is successful. (Positive lookahead)  
 The generated parser does not consume input.
 
 ```ts
@@ -292,7 +306,7 @@ console.log(result);
 ## T.notMatch(parser: Parser): Parser
 Stability: Stable
 
-Generates a new parser to continue if the match fails.
+Generates a new parser to continue if the match fails. (Negative lookahead)  
 The generated parser does not consume input.
 
 ```ts
@@ -369,7 +383,7 @@ console.log(result);
 ## T.char: Parser
 Stability: Stable
 
-Matches any character.
+A parser that consumes any single character.
 
 ```ts
 // [Equivalent PEG] .
@@ -399,8 +413,7 @@ Stability: Experimental
 ## T.createLanguage(syntaxes: Record<string, (rules: Language) => Parser>): Language
 Stability: Stable
 
-You can use createLanguage to create a set of syntax.
-
+We can define some syntax rules to build a language.  
 Each rule is lazy evaluated.
 
 ```ts
