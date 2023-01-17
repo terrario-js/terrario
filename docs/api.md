@@ -1,11 +1,5 @@
 # Index of contents
 - [Parsing result](#parsing-result)
-- [Parser class APIs](#parser-class-apis)
-  - parser.parse()
-  - parser.map()
-  - parser.text()
-  - parser.many()
-  - parser.option()
 - [Combinators](#combinators)
   - T.str()
   - T.seq()
@@ -15,6 +9,12 @@
   - T.match()
   - T.notMatch()
   - T.cond()
+- [Parser class APIs](#parser-class-apis)
+  - parser.parse()
+  - parser.map()
+  - parser.text()
+  - parser.many()
+  - parser.option()
 - [Parsers](#parsers)
   - T.cr
   - T.lf
@@ -49,142 +49,6 @@ type Result = Success | Failure;
 ```
 
 Result structure is unstable yet.
-
-# Parser class APIs
-
-## parser.parse(input: string, state?: any): Result
-Stability: Stable
-
-Parses with the parser.
-
-```ts
-const parser = T.str('a');
-
-parser.parse('a');
-
-// specify states
-parser.parse('a', { flag: true, count: 0 });
-```
-
-## parser.map(fn: (value) => any): Parser
-Stability: Stable
-
-Maps the parsed results using the specified function.
-
-```ts
-// [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
-const parser = T.seq([
-  T.str('a'),
-  T.str('b'),
-  T.str('c'),
-]).map(value => {
-  return [value[0], value[2]];
-});
-
-const result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: [ 'a', 'c' ], index: 3 }
-```
-
-## parser.text(): Parser
-Stability: Stable
-
-The parser maps the consumed portion as a string.
-
-```ts
-// [Equivalent PEG] "a" "b" "c" { return text(); }
-const parser = T.seq([
-  T.str('a'),
-  T.str('b'),
-  T.str('c'),
-]).text();
-
-const result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: 'abc', index: 3 }
-```
-
-## parser.many(min: number): Parser
-Stability: Stable
-
-Repeatedly applies the parser.  
-The argument min specifies the minimum number of times it will be applied.
-
-Matches 0 or more items:
-```ts
-// [Equivalent PEG] "abc"*
-const parser = T.str('abc').many(0);
-
-let result;
-
-result = parser.parse('');
-console.log(result);
-// => { success: true, value: [], index: 0 }
-
-result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: [ 'abc' ], index: 3 }
-```
-
-Matches 1 or more items:
-```ts
-// [Equivalent PEG] "abc"+
-const parser = T.str('abc').many(1);
-
-let result;
-
-result = parser.parse('abc');
-console.log(result);
-// => { success: true, value: [ 'abc' ], index: 3 }
-
-result = parser.parse('abcabc');
-console.log(result);
-// => { success: true, value: [ 'abc', 'abc' ], index: 6 }
-```
-
-## parser.many(min: number, terminator: Parser): Parser
-Stability: Experimental
-
-The parser.many() can have a termination condition.
-
-The following example uses many to match strings up to ")".
-The terminating condition ")" is not consumed.
-```ts
-// [Equivalent PEG] "(" (!")" @.)+ ")"
-const parser = T.seq([
-	T.str('('),
-	T.char.many(1, T.str(')')),
-	T.str(')'),
-]);
-
-const result = parser.parse('(abc)');
-console.log(result);
-// => { success: true, value: [ '(', [ 'a', 'b', 'c' ], ')' ], index: 5 }
-```
-
-## parser.option(): Parser
-Stability: Stable
-
-Generates a new parser that returns null even if the match fails.  
-Make the parser consumption optional.
-
-```ts
-// [Equivalent PEG] "a" "b"?
-const parser = T.seq([
-  T.str('a'),
-  T.str('b').option(),
-]);
-
-let result;
-
-result = parser.parse('ab');
-console.log(result);
-// => { success: true, value: [ 'a', 'b' ], index: 2 }
-
-result = parser.parse('a');
-console.log(result);
-// => { success: true, value: [ 'a', null ], index: 1 }
-```
 
 # Combinators
 
@@ -375,6 +239,142 @@ const parser = T.seq([
 const result = parser.parse('a', { enabled: true });
 console.log(result);
 // => { success: true, value: [ null, 'a' ], index: 1 }
+```
+
+# Parser class APIs
+
+## parser.parse(input: string, state?: any): Result
+Stability: Stable
+
+Parses with the parser.
+
+```ts
+const parser = T.str('a');
+
+parser.parse('a');
+
+// specify states
+parser.parse('a', { flag: true, count: 0 });
+```
+
+## parser.map(fn: (value) => any): Parser
+Stability: Stable
+
+Maps the parsed results using the specified function.
+
+```ts
+// [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
+const parser = T.seq([
+  T.str('a'),
+  T.str('b'),
+  T.str('c'),
+]).map(value => {
+  return [value[0], value[2]];
+});
+
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'a', 'c' ], index: 3 }
+```
+
+## parser.text(): Parser
+Stability: Stable
+
+The parser maps the consumed portion as a string.
+
+```ts
+// [Equivalent PEG] "a" "b" "c" { return text(); }
+const parser = T.seq([
+  T.str('a'),
+  T.str('b'),
+  T.str('c'),
+]).text();
+
+const result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: 'abc', index: 3 }
+```
+
+## parser.many(min: number): Parser
+Stability: Stable
+
+Repeatedly applies the parser.  
+The argument min specifies the minimum number of times it will be applied.
+
+Matches 0 or more items:
+```ts
+// [Equivalent PEG] "abc"*
+const parser = T.str('abc').many(0);
+
+let result;
+
+result = parser.parse('');
+console.log(result);
+// => { success: true, value: [], index: 0 }
+
+result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'abc' ], index: 3 }
+```
+
+Matches 1 or more items:
+```ts
+// [Equivalent PEG] "abc"+
+const parser = T.str('abc').many(1);
+
+let result;
+
+result = parser.parse('abc');
+console.log(result);
+// => { success: true, value: [ 'abc' ], index: 3 }
+
+result = parser.parse('abcabc');
+console.log(result);
+// => { success: true, value: [ 'abc', 'abc' ], index: 6 }
+```
+
+## parser.many(min: number, terminator: Parser): Parser
+Stability: Experimental
+
+The parser.many() can have a termination condition.
+
+The following example uses many to match strings up to ")".
+The terminating condition ")" is not consumed.
+```ts
+// [Equivalent PEG] "(" (!")" @.)+ ")"
+const parser = T.seq([
+	T.str('('),
+	T.char.many(1, T.str(')')),
+	T.str(')'),
+]);
+
+const result = parser.parse('(abc)');
+console.log(result);
+// => { success: true, value: [ '(', [ 'a', 'b', 'c' ], ')' ], index: 5 }
+```
+
+## parser.option(): Parser
+Stability: Stable
+
+Generates a new parser that returns null even if the match fails.  
+Make the parser consumption optional.
+
+```ts
+// [Equivalent PEG] "a" "b"?
+const parser = T.seq([
+  T.str('a'),
+  T.str('b').option(),
+]);
+
+let result;
+
+result = parser.parse('ab');
+console.log(result);
+// => { success: true, value: [ 'a', 'b' ], index: 2 }
+
+result = parser.parse('a');
+console.log(result);
+// => { success: true, value: [ 'a', null ], index: 1 }
 ```
 
 # Parsers
