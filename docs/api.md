@@ -1,9 +1,9 @@
 # Index of contents
-- [Parsing result](#parsing-result)
-- Parser APIs
-- Combinators
-- Parsers
-- Other APIs
+- [Parsing result]
+- [Parser APIs]
+- [Combinators]
+- [Parsers]
+- [Other APIs]
 
 # Parsing result
 Stability: Experimental
