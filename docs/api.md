@@ -282,8 +282,13 @@ Normally there is no need to use this API. Use T.createLanguage() instead.
 ## T.succeeded(value: any): Parser
 Stability: Stable
 
+Generates a parser that succeeds with the specified value.
+
 ```ts
-//TODO
+const parser = T.succeeded('abc');
+const result = parser.parse('');
+console.log(result);
+// => { success: true, value: "abc", index: 0 }
 ```
 
 ## T.match(parser: Parser): Parser
@@ -439,11 +444,13 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## custom parser (constructor of Parser class)
+## new T.Parser() 
 Stability: Stable
 
+Makes a new custom parser.
+
 ```ts
-const parser = new Parser((input, index, state) => {
+const parser = new T.Parser((input, index, state) => {
   if (index >= input.length) {
     return T.failure();
   }
