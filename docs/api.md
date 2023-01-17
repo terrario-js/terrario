@@ -1,6 +1,6 @@
 # Index of contents
 - [Parsing result](#parsing-result)
-- [Parser APIs](#parser-apis)
+- [Parser class APIs](#parser-class-apis)
 - [Combinators](#combinators)
 - [Parsers](#parsers)
 - [Other APIs](#other-apis)
@@ -24,7 +24,7 @@ type Result = Success | Failure;
 
 Result structure is unstable yet.
 
-# Parser APIs
+# Parser class APIs
 
 ## parser.parse(input: string, state?: any): Result
 Stability: Stable
