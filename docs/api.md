@@ -468,12 +468,12 @@ const parser = new T.Parser((input, index, state) => {
 });
 ```
 
-### T.success(index: number, value: any)
+### T.success(index: number, value: any): Success
 Stability: Experimental
 
-for custom parser.
+Generates a result indicating the success of a parser.
 
-### T.failure(index: number)
+### T.failure(index: number): Failure
 Stability: Experimental
 
-for custom parser.
+Generates a result indicating the failure of a parser.
