@@ -4,6 +4,8 @@ WIP!
 # Parser APIs
 
 ## parser.parse(input: string, state?: any): Result
+Stability: Stable
+
 ```ts
 const parser = T.str('a');
 
@@ -14,6 +16,8 @@ parser.parse('a', { flag: true, count: 0 });
 ```
 
 ## parser.map(fn: (value) => any): Parser
+Stability: Stable
+
 ```ts
 // [Equivalent PEG] value0:"a" value1:"b" value2:"c" { return [value0, value2]; }
 const parser = T.seq([
@@ -30,6 +34,8 @@ console.log(result);
 ```
 
 ## parser.text(): Parser
+Stability: Stable
+
 ```ts
 // [Equivalent PEG] "a" "b" "c" { return text(); }
 const parser = T.seq([
@@ -44,6 +50,7 @@ console.log(result);
 ```
 
 ## parser.many(min: number): Parser
+Stability: Experimental
 
 Matches 0 or more items:
 ```ts
@@ -78,6 +85,8 @@ console.log(result);
 ```
 
 ## parser.many(min: number, terminator: Parser): Parser
+Stability: Experimental
+
 The many() can have a termination condition.
 
 The following example uses many to match strings up to ")".
@@ -96,6 +105,8 @@ console.log(result);
 ```
 
 ## parser.option(): Parser
+Stability: Stable
+
 Generates a new parser that returns null even if the match fails.
 
 ```ts
@@ -119,6 +130,8 @@ console.log(result);
 # Combinators
 
 ## T.str(value: string): Parser
+Stability: Stable
+
 Generates a new parser that consumes the input string using the specified string.
 
 ```ts
@@ -131,6 +144,8 @@ console.log(result);
 ```
 
 ## T.str(pattern: Regexp): Parser
+Stability: Stable
+
 Generates a new parser that consumes the input string using the specified regular expression.
 
 ```ts
@@ -143,6 +158,7 @@ console.log(result);
 ```
 
 ## T.seq(parsers: Parser[], select?: boolean): Parser
+Stability: Stable
 
 ```ts
 // [Equivalent PEG] "a" "1"
@@ -170,6 +186,7 @@ console.log(result);
 ```
 
 ## T.alt(parsers: Parser[]): Parser
+Stability: Stable
 
 ```ts
 // [Equivalent PEG] "a" / "1"
@@ -190,6 +207,7 @@ console.log(result);
 ```
 
 ## T.sep(item: Parser, separator: Parser, min: number): Parser
+Stability: Experimental
 
 ```ts
 let parser, result;
@@ -222,17 +240,22 @@ console.log(result);
 ```
 
 ## T.lazy(fn: () => Parser): Parser
+Stability: Stable
+
 Generates a new parser that is lazy-evaluated.
 
 Normally there is no need to use this API. Use T.createLanguage() instead.
 
 ## T.succeeded(value: any): Parser
+Stability: Stable
 
 ```ts
 //TODO
 ```
 
 ## T.match(parser: Parser): Parser
+Stability: Stable
+
 Generates a new parser to continue if the match is successful.
 The generated parser does not consume input.
 
@@ -248,6 +271,8 @@ console.log(result);
 ```
 
 ## T.notMatch(parser: Parser): Parser
+Stability: Stable
+
 Generates a new parser to continue if the match fails.
 The generated parser does not consume input.
 
@@ -263,6 +288,8 @@ console.log(result);
 ```
 
 ## T.cond(predicate: (state: any) => boolean): Parser
+Stability: Experimental
+
 Conditional branching can be performed using the state.
 
 ```ts
@@ -279,21 +306,33 @@ console.log(result);
 # Parsers
 
 ## T.cr: Parser
+Stability: Experimental
+
 Matches `\r` (CR)
 
 ## T.lf: Parser
+Stability: Experimental
+
 Matches `\n` (LF)
 
 ## T.crlf: Parser
+Stability: Experimental
+
 Matches `\r\n` (CR + LF)
 
 ## T.newline: Parser
+Stability: Experimental
+
 Matches `\r\n` or `\r` or `\n`
 
 ## T.sof: Parser
+Stability: Experimental
+
 Matches start of input string.
 
 ## T.eof: Parser
+Stability: Experimental
+
 Matches end of input string.
 
 ```ts
@@ -309,6 +348,8 @@ console.log(result);
 ```
 
 ## T.char: Parser
+Stability: Stable
+
 Matches any character.
 
 ```ts
@@ -321,12 +362,14 @@ console.log(result);
 ```
 
 ## T.lineBegin: Parser
+Stability: Experimental
 
 ```ts
 //TODO
 ```
 
 ## T.lineEnd: Parser
+Stability: Experimental
 
 ```ts
 //TODO
@@ -335,6 +378,8 @@ console.log(result);
 # Other APIs
 
 ## T.createLanguage(syntaxes: Record<string, (rules: Language) => Parser>): Language
+Stability: Stable
+
 You can use createLanguage to create a set of syntax.
 
 Each rule is lazy evaluated.
@@ -363,6 +408,7 @@ console.log(result);
 ```
 
 ## custom parser (constructor of Parser class)
+Stability: Experimental
 
 ```ts
 const parser = new Parser((input, index, state) => {
@@ -374,7 +420,11 @@ const parser = new Parser((input, index, state) => {
 ```
 
 ### T.success()
+Stability: Experimental
+
 for custom parser.
 
 ### T.failure()
+Stability: Experimental
+
 for custom parser.
