@@ -1,9 +1,35 @@
 # Index of contents
 - [Parsing result](#parsing-result)
 - [Parser class APIs](#parser-class-apis)
+  - parser.parse()
+  - parser.map()
+  - parser.text()
+  - parser.many()
+  - parser.option()
 - [Combinators](#combinators)
+  - T.str()
+  - T.seq()
+  - T.alt()
+  - T.sep()
+  - T.lazy()
+  - T.match()
+  - T.notMatch()
+  - T.cond()
 - [Parsers](#parsers)
+  - T.cr
+  - T.lf
+  - T.crlf
+  - T.newline
+  - T.sof
+  - T.eof
+  - T.char
+  - T.lineBegin
+  - T.lineEnd
 - [Other APIs](#other-apis)
+  - T.createLanguage()
+  - new T.Parser()
+  - T.success()
+  - T.failure()
 
 # Parsing result
 Stability: Experimental
