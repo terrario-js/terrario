@@ -1,6 +1,6 @@
 # Index of contents
 - [Parsing result](#parsing-result)
-- [Parser APIs](#parser-api)
+- [Parser APIs](#parser-apis)
 - [Combinators](#combinators)
 - [Parsers](#parsers)
 - [Other APIs](#other-apis)
