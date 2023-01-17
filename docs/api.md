@@ -1,5 +1,5 @@
 # Index of contents
-- Parsing result
+- [Parsing result](#parsing-result)
 - Parser APIs
 - Combinators
 - Parsers
