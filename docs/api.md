@@ -100,7 +100,7 @@ console.log(result);
 // => { success: true, value: 'test', index: 4 }
 ```
 
-### with regular expression
+### With regular expression
 ```
 T.str(pattern: Regexp): Parser
 ```
@@ -137,7 +137,7 @@ console.log(result);
 // => { success: true, value: [ 'a', '1' ], index: 2 }
 ```
 
-### select a return value
+### Select a return value
 ```
 T.seq(parsers: Parser[], select: boolean): Parser
 ```
@@ -350,7 +350,7 @@ console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
-### with terminator
+### With terminator
 ```
 parser.many(min: number, terminator: Parser): Parser
 ```
