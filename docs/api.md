@@ -243,6 +243,12 @@ console.log(result);
 ## T.sep(item: Parser, separator: Parser, min: number): Parser
 Stability: Experimental
 
+Generates a parser that splits a string and extracts multiple items.  
+The `separator` parser is used to split the string, and the `item` parser is used to consume each item.
+
+The `min` argument specifies the minimum number of times it will be applied.  
+This argument must be greater than or equal to 1.
+
 ```ts
 let parser, result;
 
