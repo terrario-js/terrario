@@ -450,7 +450,7 @@ console.log(result);
 // => { success: true, value: 'a', index: 1 }
 ```
 
-## new T.Parser() 
+## (constractor) T.Parser(handler: (input: string, index: number, state: any) => Result)
 Stability: Stable
 
 Makes a new custom parser.
