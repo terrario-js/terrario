@@ -1,10 +1,29 @@
 WIP!
 
 
+# Parsing result
+Stability: Experimental
+
+Definition:
+```ts
+type Success<T> = {
+	success: true;
+	index: number;
+	value: T;
+};
+type Failure = {
+	success: false;
+	index: number;
+};
+type Result<T> = Success<T> | Failure;
+```
+
+Result structure is unstable yet.
+
 # Parser APIs
 
 ## parser.parse(input: string, state?: any): Result
-Stability: Experimental
+Stability: Stable
 
 ```ts
 const parser = T.str('a');
@@ -14,8 +33,6 @@ parser.parse('a');
 // specify states
 parser.parse('a', { flag: true, count: 0 });
 ```
-
-NOTE: Result structure is unstable yet.
 
 ## parser.map(fn: (value) => any): Parser
 Stability: Stable
@@ -52,7 +69,7 @@ console.log(result);
 ```
 
 ## parser.many(min: number): Parser
-Stability: Experimental
+Stability: Stable
 
 Matches 0 or more items:
 ```ts
@@ -410,7 +427,7 @@ console.log(result);
 ```
 
 ## custom parser (constructor of Parser class)
-Stability: Experimental
+Stability: Stable
 
 ```ts
 const parser = new Parser((input, index, state) => {
