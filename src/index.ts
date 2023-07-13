@@ -10,10 +10,10 @@ export type Failure = {
 };
 
 export type Result<T> = Success<T> | Failure;
-export type ParserHandler<T> = (input: string, index: number, state: any) => Result<T>;
+export type PatternHandler<T> = (input: string, index: number, state: any) => Result<T>;
 
-type ParserResult<T> = T extends Parser<infer R> ? R : never;
-type ParserResults<T> = T extends [infer Head, ...infer Tail] ? [ParserResult<Head>, ...ParserResults<Tail>] : [];
+type PatternResult<T> = T extends Pattern<infer R> ? R : never;
+type PatternResults<T> = T extends [infer Head, ...infer Tail] ? [PatternResult<Head>, ...PatternResults<Tail>] : [];
 
 export function success<T>(index: number, value: T): Success<T> {
   return {
@@ -30,11 +30,11 @@ export function failure(index: number): Failure {
   };
 }
 
-export class Parser<T> {
+export class Pattern<T> {
   public name?: string;
-  public handler: ParserHandler<T>;
+  public handler: PatternHandler<T>;
 
-  constructor(handler: ParserHandler<T>, name?: string) {
+  constructor(handler: PatternHandler<T>, name?: string) {
     this.handler = (input, index, state) => {
       if (state.trace && this.name != null) {
         const pos = `${index}`;
@@ -55,14 +55,14 @@ export class Parser<T> {
   }
 
   parse(input: string, state: any = {}): Result<T> {
-    const parser = seq([this, eof], 0);
-    return parser.handler(input, 0, state);
+    const pattern = seq([this, eof], 0);
+    return pattern.handler(input, 0, state);
   }
 
   /**
    * Experimental API
   */
-  find(input: string, state: any = {}) {
+  match(input: string, state: any = {}) {
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
       const result = this.handler(input, i, innerState);
@@ -76,7 +76,7 @@ export class Parser<T> {
   /**
    * Experimental API
   */
-  findAll(input: string, state: any = {}) {
+  matchAll(input: string, state: any = {}) {
     const results = [];
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
@@ -88,8 +88,8 @@ export class Parser<T> {
     return results;
   }
 
-  map<U>(fn: (value: T) => U): Parser<U> {
-    return new Parser((input, index, state) => {
+  map<U>(fn: (value: T) => U): Pattern<U> {
+    return new Pattern((input, index, state) => {
       const result = this.handler(input, index, state);
       if (!result.success) {
         return result;
@@ -98,8 +98,8 @@ export class Parser<T> {
     });
   }
 
-  text(): Parser<string> {
-    return new Parser((input, index, state) => {
+  text(): Pattern<string> {
+    return new Pattern((input, index, state) => {
       const result = this.handler(input, index, state);
       if (!result.success) {
         return result;
@@ -109,13 +109,13 @@ export class Parser<T> {
     });
   }
 
-  many(min: number): Parser<T[]>
-  many(min: number, terminator: Parser<unknown>): Parser<T[]>
-  many(min: number, terminator?: Parser<unknown>): Parser<T[]> {
+  many(min: number): Pattern<T[]>
+  many(min: number, terminator: Pattern<unknown>): Pattern<T[]>
+  many(min: number, terminator?: Pattern<unknown>): Pattern<T[]> {
     return (terminator != null) ? manyWithout(this, min, terminator) : many(this, min);
   }
 
-  option(): Parser<T | null> {
+  option(): Pattern<T | null> {
     return alt([
       this,
       succeeded(null),
@@ -123,8 +123,8 @@ export class Parser<T> {
   }
 }
 
-function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
-  return new Parser((input, index, state) => {
+function many<T>(parser: Pattern<T>, min: number): Pattern<T[]> {
+  return new Pattern((input, index, state) => {
     let result;
     let latestIndex = index;
     const accum: T[] = [];
@@ -143,21 +143,21 @@ function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
   });
 }
 
-function manyWithout<T>(parser: Parser<T>, min: number, terminator: Parser<unknown>): Parser<T[]> {
+function manyWithout<T>(parser: Pattern<T>, min: number, terminator: Pattern<unknown>): Pattern<T[]> {
   return many(seq([
     notMatch(terminator),
     parser,
   ], 1), min);
 }
 
-export function str<T extends string>(value: T): Parser<T>
-export function str(pattern: RegExp): Parser<string>
-export function str(value: string | RegExp): Parser<string> {
+export function str<T extends string>(value: T): Pattern<T>
+export function str(pattern: RegExp): Pattern<string>
+export function str(value: string | RegExp): Pattern<string> {
   return (typeof value == 'string') ? strWithString(value) : strWithRegExp(value);
 }
 
-function strWithString<T extends string>(value: T): Parser<T> {
-  return new Parser((input, index, _state) => {
+function strWithString<T extends string>(value: T): Pattern<T> {
+  return new Pattern((input, index, _state) => {
     if ((input.length - index) < value.length) {
       return failure(index);
     }
@@ -168,9 +168,9 @@ function strWithString<T extends string>(value: T): Parser<T> {
   });
 }
 
-function strWithRegExp(pattern: RegExp): Parser<string> {
+function strWithRegExp(pattern: RegExp): Pattern<string> {
   const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
-  return new Parser((input, index, _state) => {
+  return new Pattern((input, index, _state) => {
     const text = input.slice(index);
     const result = re.exec(text);
     if (result == null) {
@@ -180,14 +180,14 @@ function strWithRegExp(pattern: RegExp): Parser<string> {
   });
 }
 
-export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<ParserResults<[...T]>>
-export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U]
-export function seq(parsers: Parser<any>[], select?: number) {
+export function seq<T extends Pattern<any>[]>(parsers: [...T]): Pattern<PatternResults<[...T]>>
+export function seq<T extends Pattern<any>[], U extends number>(parsers: [...T], select: U): T[U]
+export function seq(parsers: Pattern<any>[], select?: number) {
   return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
 
-function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<ParserResults<[...T]>> {
-  return new Parser((input, index, state) => {
+function seqAll<T extends Pattern<any>[]>(parsers: [...T]): Pattern<PatternResults<[...T]>> {
+  return new Pattern((input, index, state) => {
     let result;
     let latestIndex = index;
     const accum = [];
@@ -199,19 +199,19 @@ function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<ParserResults<
       latestIndex = result.index;
       accum.push(result.value);
     }
-    return success(latestIndex, (accum as ParserResults<[...T]>));
+    return success(latestIndex, (accum as PatternResults<[...T]>));
   });
 }
 
-function seqSelect<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U] {
+function seqSelect<T extends Pattern<any>[], U extends number>(parsers: [...T], select: U): T[U] {
   return seqAll(parsers).map(values => values[select]);
 }
 
-export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<ParserResults<T>[number]> {
-  return new Parser((input, index, state) => {
+export function alt<T extends Pattern<unknown>[]>(parsers: [...T]): Pattern<PatternResults<T>[number]> {
+  return new Pattern((input, index, state) => {
     let result;
     for (let i = 0; i < parsers.length; i++) {
-      result = parsers[i].handler(input, index, state) as Result<ParserResults<T>[number]>;
+      result = parsers[i].handler(input, index, state) as Result<PatternResults<T>[number]>;
       if (result.success) {
         return result;
       }
@@ -220,7 +220,7 @@ export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<Parser
   });
 }
 
-export function sep<T>(item: Parser<T>, separator: Parser<unknown>, min: number): Parser<T[]> {
+export function sep<T>(item: Pattern<T>, separator: Pattern<unknown>, min: number): Pattern<T[]> {
   if (min < 1) {
     throw new Error('"min" must be a value greater than or equal to 1.');
   }
@@ -233,22 +233,22 @@ export function sep<T>(item: Parser<T>, separator: Parser<unknown>, min: number)
   ]).map(result => [result[0], ...result[1]]);
 }
 
-export function lazy<T>(fn: () => Parser<T>): Parser<T> {
-  const parser: Parser<T> = new Parser((input, index, state) => {
+export function lazy<T>(fn: () => Pattern<T>): Pattern<T> {
+  const parser: Pattern<T> = new Pattern((input, index, state) => {
     parser.handler = fn().handler;
     return parser.handler(input, index, state);
   });
   return parser;
 }
 
-export function succeeded<T>(value: T): Parser<T> {
-  return new Parser((_input, index, _state) => {
+export function succeeded<T>(value: T): Pattern<T> {
+  return new Pattern((_input, index, _state) => {
     return success(index, value);
   });
 }
 
-export function match<T>(parser: Parser<T>): Parser<T> {
-  return new Parser((input, index, state) => {
+export function match<T>(parser: Pattern<T>): Pattern<T> {
+  return new Pattern((input, index, state) => {
     const result = parser.handler(input, index, state);
     return result.success
       ? success(index, result.value)
@@ -256,8 +256,8 @@ export function match<T>(parser: Parser<T>): Parser<T> {
   });
 }
 
-export function notMatch(parser: Parser<unknown>): Parser<null> {
-  return new Parser((input, index, state) => {
+export function notMatch(parser: Pattern<unknown>): Pattern<null> {
+  return new Pattern((input, index, state) => {
     const result = parser.handler(input, index, state);
     return !result.success
       ? success(index, null)
@@ -265,8 +265,8 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
   });
 }
 
-export function cond(predicate: (state: any) => boolean): Parser<null> {
-  return new Parser((input, index, state) => {
+export function cond(predicate: (state: any) => boolean): Pattern<null> {
+  return new Pattern((input, index, state) => {
     return predicate(state)
       ? success(index, null)
       : failure(index);
@@ -278,19 +278,19 @@ export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
-export const sof = new Parser((_input, index, _state) => {
+export const sof = new Pattern((_input, index, _state) => {
   return index == 0
     ? success(index, null)
     : failure(index);
 });
 
-export const eof = new Parser((input, index, _state) => {
+export const eof = new Pattern((input, index, _state) => {
   return index >= input.length
     ? success(index, null)
     : failure(index);
 });
 
-export const char = new Parser((input, index, _state) => {
+export const char = new Pattern((input, index, _state) => {
   if ((input.length - index) < 1) {
     return failure(index);
   }
@@ -298,7 +298,7 @@ export const char = new Parser((input, index, _state) => {
   return success(index + 1, value);
 });
 
-export const lineBegin = new Parser((input, index, state) => {
+export const lineBegin = new Pattern((input, index, state) => {
   if (sof.handler(input, index, state).success) {
     return success(index, null);
   }
@@ -322,12 +322,12 @@ export const lineEnd = match(alt([
 //export function createLanguage2<T extends Record<string, Syntax<any>>>(syntaxes: T): { [K in keyof T]: SyntaxReturn<T[K]> } {
 
 // TODO: 関数の型宣言をいい感じにしたい
-export function createLanguage<T>(syntaxes: { [K in keyof T]: (r: Record<string, Parser<any>>) => T[K] }): T {
-  const rules: Record<string, Parser<any>> = {};
+export function createLanguage<T>(syntaxes: { [K in keyof T]: (r: Record<string, Pattern<any>>) => T[K] }): T {
+  const rules: Record<string, Pattern<any>> = {};
   for (const key of Object.keys(syntaxes)) {
     rules[key] = lazy(() => {
       const parser = (syntaxes as any)[key](rules);
-      if (parser == null || !(parser instanceof Parser)) {
+      if (parser == null || !(parser instanceof Pattern)) {
         throw new Error('syntax must return a parser.');
       }
       parser.name = key;
