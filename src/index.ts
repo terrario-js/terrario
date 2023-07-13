@@ -54,12 +54,9 @@ export class Parser<T> {
     this.name = name;
   }
 
-  parse(input: string): Result<T>
-  parse(input: string, state: any): Result<T>
-  parse(input: string, state: any, offset: number): Result<T>
-  parse(input: string, state: any = {}, offset: number = 0): Result<T> {
+  parse(input: string, state: any = {}): Result<T> {
     const parser = seq([this, eof], 0);
-    return parser.handler(input, offset, state);
+    return parser.handler(input, 0, state);
   }
 
   /**
