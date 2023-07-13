@@ -59,6 +59,35 @@ export class Parser<T> {
     return parser.handler(input, 0, state);
   }
 
+  /**
+   * Experimental API
+  */
+  find(input: string, state: any = {}) {
+    for (let i = 0; i < input.length; i++) {
+      const innerState = Object.assign({}, state);
+      const result = this.handler(input, i, innerState);
+      if (result.success) {
+        return { index: i, input, result };
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Experimental API
+  */
+  findAll(input: string, state: any = {}) {
+    const results = [];
+    for (let i = 0; i < input.length; i++) {
+      const innerState = Object.assign({}, state);
+      const result = this.handler(input, i, innerState);
+      if (result.success) {
+        results.push({ index: i, input, result });
+      }
+    }
+    return results;
+  }
+
   map<U>(fn: (value: T) => U): Parser<U> {
     return new Parser((input, index, state) => {
       const result = this.handler(input, index, state);
