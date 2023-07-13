@@ -132,7 +132,7 @@ function strWithString<T extends string>(value: T): Parser<T> {
     if ((input.length - index) < value.length) {
       return failure(index);
     }
-    if (input.substr(index, value.length) !== value) {
+    if (input.slice(index, index + value.length) !== value) {
       return failure(index);
     }
     return success(index + value.length, value);
