@@ -5,7 +5,7 @@ import * as T from '..';
 // TODO
 
 export function run(input: string): T.Result<any> {
-	const rules = Parser.parse(input);
-	const result = T.str('aaa').parse(input);
-	return result;
+  const rules = Parser.parse(input);
+  const result = T.str('aaa').parse(input);
+  return result;
 }
