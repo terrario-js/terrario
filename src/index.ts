@@ -119,7 +119,7 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
   /**
    * Experimental API
   */
-  match(input: string, state: any = {}) {
+  find(input: string, state: any = {}) {
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
       const result = this.handle(input, i, innerState);
@@ -133,7 +133,7 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
   /**
    * Experimental API
   */
-  matchAll(input: string, state: any = {}) {
+  findAll(input: string, state: any = {}) {
     const results = [];
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
