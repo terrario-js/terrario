@@ -178,7 +178,7 @@ function wrapByTraceHandler<T, U extends Pattern<any>[] = any>(handler: PatternH
   };
 }
 
-function many<T>(parser: Pattern<T>, min: number): Pattern<T[]> {
+function many<T>(pattern: Pattern<T>, min: number): Pattern<T[]> {
   return new Pattern((input, index, children, state) => {
     let result;
     let latestIndex = index;
@@ -195,13 +195,13 @@ function many<T>(parser: Pattern<T>, min: number): Pattern<T[]> {
       return failure(latestIndex);
     }
     return success(latestIndex, accum);
-  }, [parser]);
+  }, [pattern]);
 }
 
-function manyWithout<T>(parser: Pattern<T>, min: number, terminator: Pattern<unknown>): Pattern<T[]> {
+function manyWithout<T>(pattern: Pattern<T>, min: number, terminator: Pattern<unknown>): Pattern<T[]> {
   return many(seq([
     notMatch(terminator),
-    parser,
+    pattern,
   ], 1), min);
 }
 
@@ -235,13 +235,13 @@ function strWithRegExp(pattern: RegExp): Pattern<string> {
   }, []);
 }
 
-export function seq<T extends Pattern<any>[]>(parsers: [...T]): Pattern<ResultTypes<[...T]>>
-export function seq<T extends Pattern<any>[], U extends number>(parsers: [...T], select: U): T[U]
-export function seq(parsers: Pattern<any>[], select?: number) {
-  return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
+export function seq<T extends Pattern<any>[]>(patterns: [...T]): Pattern<ResultTypes<[...T]>>
+export function seq<T extends Pattern<any>[], U extends number>(patterns: [...T], select: U): T[U]
+export function seq(patterns: Pattern<any>[], select?: number) {
+  return (select == null) ? seqAll(patterns) : seqSelect(patterns, select);
 }
 
-function seqAll<T extends Pattern<any>[]>(parsers: [...T]): Pattern<ResultTypes<[...T]>> {
+function seqAll<T extends Pattern<any>[]>(patterns: [...T]): Pattern<ResultTypes<[...T]>> {
   return new Pattern((input, index, children, state) => {
     let result;
     let latestIndex = index;
@@ -255,14 +255,14 @@ function seqAll<T extends Pattern<any>[]>(parsers: [...T]): Pattern<ResultTypes<
       accum.push(result.value);
     }
     return success(latestIndex, (accum as ResultTypes<[...T]>));
-  }, parsers);
+  }, patterns);
 }
 
-function seqSelect<T extends Pattern<any>[], U extends number>(parsers: [...T], select: U): T[U] {
-  return seqAll(parsers).map(values => values[select]);
+function seqSelect<T extends Pattern<any>[], U extends number>(patterns: [...T], select: U): T[U] {
+  return seqAll(patterns).map(values => values[select]);
 }
 
-export function alt<T extends Pattern<unknown>[]>(parsers: [...T]): Pattern<ResultTypes<T>[number]> {
+export function alt<T extends Pattern<unknown>[]>(patterns: [...T]): Pattern<ResultTypes<T>[number]> {
   return new Pattern((input, index, children, state) => {
     let result;
     for (let i = 0; i < children.length; i++) {
@@ -272,7 +272,7 @@ export function alt<T extends Pattern<unknown>[]>(parsers: [...T]): Pattern<Resu
       }
     }
     return failure(index);
-  }, parsers);
+  }, patterns);
 }
 
 export function sep<T>(item: Pattern<T>, separator: Pattern<unknown>, min: number): Pattern<T[]> {
@@ -298,22 +298,22 @@ export function succeeded<T>(value: T): Pattern<T> {
   }, []);
 }
 
-export function match<T>(parser: Pattern<T>): Pattern<T> {
+export function match<T>(pattern: Pattern<T>): Pattern<T> {
   return new Pattern((input, index, children, state) => {
     const result = children[0].exec(input, index, state);
     return result.success
       ? success(index, result.value)
       : failure(index);
-  }, [parser]);
+  }, [pattern]);
 }
 
-export function notMatch(parser: Pattern<unknown>): Pattern<null> {
+export function notMatch(pattern: Pattern<unknown>): Pattern<null> {
   return new Pattern((input, index, children, state) => {
     const result = children[0].exec(input, index, state);
     return !result.success
       ? success(index, null)
       : failure(index);
-  }, [parser]);
+  }, [pattern]);
 }
 
 export function cond(predicate: (state: any) => boolean): Pattern<null> {
@@ -368,8 +368,8 @@ export const lineEnd = match(alt([
   lf,
 ])).map(() => null);
 
-//type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
-//type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;
+//type Syntax<T> = (rules: Record<string, Pattern<T>>) => Pattern<T>;
+//type SyntaxReturn<T> = T extends (rules: Record<string, Pattern<any>>) => infer R ? R : never;
 //export function createLanguage2<T extends Record<string, Syntax<any>>>(syntaxes: T): { [K in keyof T]: SyntaxReturn<T[K]> } {
 
 // TODO: 関数の型宣言をいい感じにしたい
@@ -377,12 +377,12 @@ export function createLanguage<T>(syntaxes: { [K in keyof T]: (r: Record<string,
   const rules: Record<string, Pattern<any>> = {};
   for (const key of Object.keys(syntaxes)) {
     rules[key] = lazy(() => {
-      const parser = (syntaxes as any)[key](rules);
-      if (parser == null || !(parser instanceof Pattern)) {
-        throw new Error('syntax must return a parser.');
+      const pattern = (syntaxes as any)[key](rules);
+      if (pattern == null || !(pattern instanceof Pattern)) {
+        throw new Error('syntax must return a Pattern.');
       }
-      parser.name = key;
-      return parser;
+      pattern.name = key;
+      return pattern;
     });
   }
   return rules as any;
