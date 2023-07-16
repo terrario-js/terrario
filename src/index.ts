@@ -72,14 +72,14 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
   /**
    * Experimental API
   */
-  exec(input: string, offset: number, state: any): Result<T> {
+  exec(input: string, state: any = {}, offset: number = 0): Result<T> {
     const ctx = this.evalContext();
     return ctx.handler(input, offset, ctx.children, state);
   }
 
   parse(input: string, state: any = {}): Result<T> {
     const pattern = seq([this, eof], 0);
-    return pattern.exec(input, 0, state);
+    return pattern.exec(input, state, 0);
   }
 
   /**
@@ -88,7 +88,7 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
   find(input: string, state: any = {}): { index: number, input: string, result: Result<T> } | undefined {
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
-      const result = this.exec(input, i, innerState);
+      const result = this.exec(input, innerState, i);
       if (result.success) {
         return { index: i, input, result };
       }
@@ -103,7 +103,7 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
     const results = [];
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
-      const result = this.exec(input, i, innerState);
+      const result = this.exec(input, innerState, i);
       if (result.success) {
         results.push({ index: i, input, result });
       }
@@ -112,8 +112,8 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
   }
 
   map<U>(fn: (value: T) => U): Pattern<U> {
-    return new Pattern((input, index, children, state) => {
-      const result = children[0].exec(input, index, state);
+    return new Pattern((input, index, [child], state) => {
+      const result = child.exec(input, state, index);
       if (!result.success) {
         return result;
       }
@@ -122,8 +122,8 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
   }
 
   text(): Pattern<string> {
-    return new Pattern((input, index, children, state) => {
-      const result = children[0].exec(input, index, state);
+    return new Pattern((input, index, [child], state) => {
+      const result = child.exec(input, state, index);
       if (!result.success) {
         return result;
       }
@@ -179,12 +179,12 @@ function wrapByTraceHandler<T, U extends Pattern<any>[] = any>(handler: PatternH
 }
 
 function many<T>(pattern: Pattern<T>, min: number): Pattern<T[]> {
-  return new Pattern((input, index, children, state) => {
+  return new Pattern((input, index, [child], state) => {
     let result;
     let latestIndex = index;
     const accum: T[] = [];
     while (latestIndex < input.length) {
-      result = children[0].exec(input, latestIndex, state);
+      result = child.exec(input, state, latestIndex);
       if (!result.success) {
         break;
       }
@@ -212,7 +212,7 @@ export function str(value: string | RegExp): Pattern<string> {
 }
 
 function strWithString<T extends string>(value: T): Pattern<T> {
-  return new Pattern((input, index, _children, _state) => {
+  return new Pattern((input, index, [], _state) => {
     if ((input.length - index) < value.length) {
       return failure(index);
     }
@@ -225,7 +225,7 @@ function strWithString<T extends string>(value: T): Pattern<T> {
 
 function strWithRegExp(pattern: RegExp): Pattern<string> {
   const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
-  return new Pattern((input, index, _children, _state) => {
+  return new Pattern((input, index, [], _state) => {
     const text = input.slice(index);
     const result = re.exec(text);
     if (result == null) {
@@ -247,7 +247,7 @@ function seqAll<T extends Pattern<any>[]>(patterns: [...T]): Pattern<ResultTypes
     let latestIndex = index;
     const accum = [];
     for (let i = 0; i < children.length; i++) {
-      result = children[i].exec(input, latestIndex, state);
+      result = children[i].exec(input, state, latestIndex);
       if (!result.success) {
         return result;
       }
@@ -266,7 +266,7 @@ export function alt<T extends Pattern<unknown>[]>(patterns: [...T]): Pattern<Res
   return new Pattern((input, index, children, state) => {
     let result;
     for (let i = 0; i < children.length; i++) {
-      result = children[i].exec(input, index, state) as Result<ResultTypes<T>[number]>;
+      result = children[i].exec(input, state, index) as Result<ResultTypes<T>[number]>;
       if (result.success) {
         return result;
       }
@@ -293,14 +293,14 @@ export function lazy<T>(fn: () => Pattern<T>): Pattern<T> {
 }
 
 export function succeeded<T>(value: T): Pattern<T> {
-  return new Pattern((_input, index, _children, _state) => {
+  return new Pattern((_input, index, [], _state) => {
     return success(index, value);
   }, []);
 }
 
 export function match<T>(pattern: Pattern<T>): Pattern<T> {
-  return new Pattern((input, index, children, state) => {
-    const result = children[0].exec(input, index, state);
+  return new Pattern((input, index, [child], state) => {
+    const result = child.exec(input, state, index);
     return result.success
       ? success(index, result.value)
       : failure(index);
@@ -308,8 +308,8 @@ export function match<T>(pattern: Pattern<T>): Pattern<T> {
 }
 
 export function notMatch(pattern: Pattern<unknown>): Pattern<null> {
-  return new Pattern((input, index, children, state) => {
-    const result = children[0].exec(input, index, state);
+  return new Pattern((input, index, [child], state) => {
+    const result = child.exec(input, state, index);
     return !result.success
       ? success(index, null)
       : failure(index);
@@ -317,7 +317,7 @@ export function notMatch(pattern: Pattern<unknown>): Pattern<null> {
 }
 
 export function cond(predicate: (state: any) => boolean): Pattern<null> {
-  return new Pattern((input, index, _children, state) => {
+  return new Pattern((_input, index, [], state) => {
     return predicate(state)
       ? success(index, null)
       : failure(index);
@@ -329,19 +329,19 @@ export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
-export const sof = new Pattern((_input, index, _children, _state) => {
+export const sof = new Pattern((_input, index, [], _state) => {
   return index == 0
     ? success(index, null)
     : failure(index);
 }, []);
 
-export const eof = new Pattern((input, index, _children, _state) => {
+export const eof = new Pattern((input, index, [], _state) => {
   return index >= input.length
     ? success(index, null)
     : failure(index);
 }, []);
 
-export const char = new Pattern((input, index, _children, _state) => {
+export const char = new Pattern((input, index, [], _state) => {
   if ((input.length - index) < 1) {
     return failure(index);
   }
@@ -349,14 +349,14 @@ export const char = new Pattern((input, index, _children, _state) => {
   return success(index + 1, value);
 }, []);
 
-export const lineBegin = new Pattern((input, index, _children, state) => {
-  if (sof.exec(input, index, state).success) {
+export const lineBegin = new Pattern((input, index, [], state) => {
+  if (sof.exec(input, state, index).success) {
     return success(index, null);
   }
-  if (cr.exec(input, index - 1, state).success) {
+  if (cr.exec(input, state, index - 1).success) {
     return success(index, null);
   }
-  if (lf.exec(input, index - 1, state).success) {
+  if (lf.exec(input, state, index - 1).success) {
     return success(index, null);
   }
   return failure(index);
