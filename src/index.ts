@@ -4,25 +4,6 @@ export type Success<T> = {
   value: T;
 };
 
-export type Failure = {
-  success: false;
-  index: number;
-};
-
-export type Result<T> = Success<T> | Failure;
-export type PatternHandler<T, U extends Pattern<any>[]> = (input: string, index: number, children: [...U], state: any) => Result<T>;
-
-type ResultType<T> = T extends Pattern<infer R> ? R : never;
-type ResultTypes<T> = T extends [infer Head, ...infer Tail] ? [ResultType<Head>, ...ResultTypes<Tail>] : [];
-
-export type PatternContext<T, U extends Pattern<any>[] = any> = {
-  handler: PatternHandler<T, U>;
-  children: [...U];
-};
-
-export type LazyContext<T, U extends Pattern<any>[] = any> =
-  () => Pattern<T, U>;
-
 export function success<T>(index: number, value: T): Success<T> {
   return {
     success: true,
@@ -31,6 +12,11 @@ export function success<T>(index: number, value: T): Success<T> {
   };
 }
 
+export type Failure = {
+  success: false;
+  index: number;
+};
+
 export function failure(index: number): Failure {
   return {
     success: false,
@@ -38,24 +24,7 @@ export function failure(index: number): Failure {
   };
 }
 
-function wrapByTraceHandler<T, U extends Pattern<any>[] = any>(handler: PatternHandler<T, U>, name?: string): PatternHandler<T, U> {
-  return (input, index, children, state) => {
-    if (state.trace && name != null) {
-      const pos = `${index}`;
-      console.log(`${pos.padEnd(6, ' ')}enter ${name}`);
-      const result = handler(input, index, children, state);
-      if (result.success) {
-        const pos = `${index}:${result.index}`;
-        console.log(`${pos.padEnd(6, ' ')}match ${name}`);
-      } else {
-        const pos = `${index}`;
-        console.log(`${pos.padEnd(6, ' ')}fail ${name}`);
-      }
-      return result;
-    }
-    return handler(input, index, children, state);
-  };
-}
+export type Result<T> = Success<T> | Failure;
 
 export class Pattern<T, U extends Pattern<any>[] = any> {
   name?: string;
@@ -175,6 +144,38 @@ export class Pattern<T, U extends Pattern<any>[] = any> {
       succeeded(null),
     ]);
   }
+}
+
+export type PatternHandler<T, U extends Pattern<any>[]> = (input: string, index: number, children: [...U], state: any) => Result<T>;
+
+export type PatternContext<T, U extends Pattern<any>[] = any> = {
+  handler: PatternHandler<T, U>;
+  children: [...U];
+};
+
+export type LazyContext<T, U extends Pattern<any>[] = any> =
+  () => Pattern<T, U>;
+
+type ResultType<T> = T extends Pattern<infer R> ? R : never;
+type ResultTypes<T> = T extends [infer Head, ...infer Tail] ? [ResultType<Head>, ...ResultTypes<Tail>] : [];
+
+function wrapByTraceHandler<T, U extends Pattern<any>[] = any>(handler: PatternHandler<T, U>, name?: string): PatternHandler<T, U> {
+  return (input, index, children, state) => {
+    if (state.trace && name != null) {
+      const pos = `${index}`;
+      console.log(`${pos.padEnd(6, ' ')}enter ${name}`);
+      const result = handler(input, index, children, state);
+      if (result.success) {
+        const pos = `${index}:${result.index}`;
+        console.log(`${pos.padEnd(6, ' ')}match ${name}`);
+      } else {
+        const pos = `${index}`;
+        console.log(`${pos.padEnd(6, ' ')}fail ${name}`);
+      }
+      return result;
+    }
+    return handler(input, index, children, state);
+  };
 }
 
 function many<T>(parser: Pattern<T>, min: number): Pattern<T[]> {
