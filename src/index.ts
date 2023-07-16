@@ -10,10 +10,18 @@ export type Failure = {
 };
 
 export type Result<T> = Success<T> | Failure;
-export type PatternHandler<T, U extends (Pattern<any> | (() => Pattern<any>))[]> = (input: string, index: number, children: [...U], state: any) => Result<T>;
+export type PatternHandler<T, U extends Pattern<any>[]> = (input: string, index: number, children: [...U], state: any) => Result<T>;
 
 type PatternResult<T> = T extends Pattern<infer R> ? R : never;
 type PatternResults<T> = T extends [infer Head, ...infer Tail] ? [PatternResult<Head>, ...PatternResults<Tail>] : [];
+
+export type PatternContext<T, U extends Pattern<any>[] = any> = {
+  handler: PatternHandler<T, U>;
+  children: [...U];
+};
+
+export type LazyContext<T, U extends Pattern<any>[] = any> =
+  () => Pattern<T, U>;
 
 export function success<T>(index: number, value: T): Success<T> {
   return {
@@ -30,13 +38,62 @@ export function failure(index: number): Failure {
   };
 }
 
-export class Pattern<T, U extends (Pattern<any> | (() => Pattern<any>))[] = any> {
-  public name?: string;
-  private handler: PatternHandler<T, U>;
-  public children: [...U];
+export class Pattern<T, U extends Pattern<any>[] = any> {
+  name?: string;
+  ctx: PatternContext<T, U> | LazyContext<T, U>;
 
-  constructor(handler: PatternHandler<T, U>, children: [...U], name?: string) {
-    this.handler = (input, index, children, state) => {
+  /** constructor */
+  constructor(handler: PatternHandler<T, U>, children: [...U], name?: string)
+  /** constructor (lazy) */
+  constructor(ctx: LazyContext<T, U>, name?: string)
+  constructor(arg1: PatternHandler<T, U> | LazyContext<T, U>, arg2?: [...U] | string, arg3?: string) {
+    if (arg2 == null || typeof arg2 == 'string') {
+      // lazy
+      const ctx = arg1 as LazyContext<T, U>;
+      const name = arg2;
+      this.ctx = ctx;
+      this.name = name;
+    } else {
+      const handler = arg1 as PatternHandler<T, U>;
+      const children = arg2;
+      const name = arg3;
+      this.ctx = {
+        handler: Pattern.wrapOuterHandler(handler),
+        children,
+      };
+      this.name = name;
+    }
+  }
+
+  /**
+   * internal method
+  */
+  eval(): PatternContext<T, U> {
+    // if not evaluated yet
+    if (typeof this.ctx == 'function') {
+      const pattern = this.ctx();
+      const ctx = pattern.eval();
+      this.ctx = {
+        handler: Pattern.wrapOuterHandler(ctx.handler),
+        children: ctx.children,
+      };
+    }
+    return this.ctx;
+  }
+
+  /**
+   * internal method
+  */
+  handle(input: string, index: number, state: any): Result<T> {
+    const ctx = this.eval();
+    return ctx.handler(input, index, ctx.children, state);
+  }
+
+  /**
+   * internal method
+  */
+  private static wrapOuterHandler<T, U extends Pattern<any>[] = any>(handler: PatternHandler<T, U>): PatternHandler<T, U> {
+    return (input, index, children, state) => {
       if (state.trace && this.name != null) {
         const pos = `${index}`;
         console.log(`${pos.padEnd(6, ' ')}enter ${this.name}`);
@@ -52,16 +109,6 @@ export class Pattern<T, U extends (Pattern<any> | (() => Pattern<any>))[] = any>
       }
       return handler(input, index, children, state);
     };
-    this.children = children;
-    this.name = name;
-  }
-
-  handle(input: string, index: number, state: any) {
-    return this.handler(input, index, this.children, state);
-  }
-
-  replaceHandler(parser: Pattern<T, U>) {
-    this.handler = parser.handler;
   }
 
   parse(input: string, state: any = {}): Result<T> {
@@ -244,13 +291,7 @@ export function sep<T>(item: Pattern<T>, separator: Pattern<unknown>, min: numbe
 }
 
 export function lazy<T>(fn: () => Pattern<T>): Pattern<T> {
-  const parser: Pattern<T> = new Pattern((input, index, children, state) => {
-    const inner = children[0]();
-    parser.replaceHandler(inner);
-    parser.children = inner.children;
-    return parser.handle(input, index, state);
-  }, [fn]);
-  return parser;
+  return new Pattern(fn);
 }
 
 export function succeeded<T>(value: T): Pattern<T> {
