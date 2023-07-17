@@ -2,6 +2,7 @@
   "name": "terrario",
   "version": "0.7.1",
   "description": "A simple parser combinator library with TypeScript.",
+  "type": "module",
   "main": "./built/index.js",
   "types": "./built/index.d.ts",
   "scripts": {

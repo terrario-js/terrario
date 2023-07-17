@@ -1,5 +1,5 @@
 import assert from 'assert';
-import * as T from '../src/index';
+import * as T from '../src/index.js';
 
 describe('Parser', () => {
   describe('parse()', () => {
