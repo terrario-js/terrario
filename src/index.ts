@@ -206,7 +206,7 @@ function manyWithout<T>(parser: Parser<T>, min: number, terminator: Parser<unkno
 }
 
 export function str<T extends string>(value: T): Parser<T>
-export function str(parser: RegExp): Parser<string>
+export function str(pattern: RegExp): Parser<string>
 export function str(value: string | RegExp): Parser<string> {
   return (typeof value == 'string') ? strWithString(value) : strWithRegExp(value);
 }
