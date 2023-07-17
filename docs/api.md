@@ -504,7 +504,7 @@ parser.state(key: string, value: (state: any) => any): Parser
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 parser.state() creates a parser that sets a value to a specified key in a state object.  
-When this parser finishes executing, the modified contents of the state object are restored.
+When this parser finishes executing, the contents of the state object are restored.
 
 ## T.cond()
 ```
