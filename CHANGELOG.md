@@ -11,7 +11,7 @@
 
 -->
 
-## 1.0.0 (unreleased)
+## 0.8.0 (unreleased)
 
 - Lazy parser implementation was changed.
 - Supported child parsers.
