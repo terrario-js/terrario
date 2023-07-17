@@ -13,6 +13,7 @@
 
 ## 0.8.0 (unreleased)
 
+- The module system was migrated to ES Module.
 - Lazy parser implementation was changed.
 - Supported child parsers.
   - Change: Parser constructor
