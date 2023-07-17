@@ -144,6 +144,19 @@ export class Parser<T, U extends Parser<any>[] = any> {
       succeeded(null),
     ]);
   }
+
+  /**
+   * Experimental API
+  */
+  state(key: string, value: (state: any) => any): Parser<T> {
+    return new Parser((input, index, [child], state) => {
+      const storedValue = state[key];
+      state[key] = value(state);
+      const result = child.exec(input, state, index);
+      state[key] = storedValue;
+      return result;
+    }, [this]);
+  }
 }
 
 export type ParserHandler<T, U extends Parser<any>[]> = (input: string, index: number, children: [...U], state: any) => Result<T>;
@@ -314,16 +327,6 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
       ? success(index, null)
       : failure(index);
   }, [parser]);
-}
-
-/**
- * Experimental API
-*/
-export function state(fn: (state: any) => void): Parser<null> {
-  return new Parser((_input, index, [], state) => {
-    fn(state);
-    return success(index, null);
-  }, []);
 }
 
 /**

@@ -275,20 +275,18 @@ describe('Combinators', () => {
     let input, parser, result;
 
     parser = T.seq([
-      T.state(state => { state.enabled = true; }),
       T.cond(state => state.enabled),
       T.char,
-    ]);
+    ]).state('enabled', () => true);
 
     result = parser.parse('a');
     assert.ok(result.success);
     assert.strictEqual(result.index, 1);
 
     parser = T.seq([
-      T.state(state => { state.enabled = false; }),
       T.cond(state => state.enabled),
       T.char,
-    ]);
+    ]).state('enabled', () => false);
 
     result = parser.parse('a');
     assert.ok(!result.success);
