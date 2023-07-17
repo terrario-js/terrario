@@ -6,7 +6,10 @@
   "main": "./built/index.js",
   "types": "./built/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc",
+    "build:cjs": "npx tsc --outdir built/cjs --module CommonJS && npm run build:cjs:rename",
+    "build:cjs:rename": "node -e \"require('fs').renameSync('./built/cjs/index.js', './built/cjs/index.cjs')\"",
     "test": "jest --verbose"
   },
   "repository": {
@@ -17,6 +20,11 @@
   "contributors": [
     "ThinaticSystem <git@thinaticsystem.com> (https://thinaticsystem.com/)"
   ],
+  "exports": {
+    "import": "./built/index.js",
+    "require": "./built/cjs/index.cjs",
+    "default": "./built/index.js"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "29.0.3",

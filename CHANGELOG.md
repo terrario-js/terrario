@@ -11,6 +11,10 @@
 
 -->
 
+## 0.8.1 (unreleased)
+
+- Dual package support (ES Modules and CommonJS)
+
 ## 0.8.0 (2023/07/17)
 
 - The module system was migrated to ES Module.
