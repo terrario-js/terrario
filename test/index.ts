@@ -271,7 +271,7 @@ describe('Combinators', () => {
   // it('notMatch()', () => {
   // });
 
-  it('state(), cond()', () => {
+  it('state api', () => {
     let input, parser, result;
 
     parser = T.seq([
