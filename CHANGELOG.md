@@ -21,6 +21,7 @@
   - parser.exec()
   - parser.find()
   - parser.findAll()
+  - parser.state()
 
 ## 0.7.1 (2022/08/11)
 
