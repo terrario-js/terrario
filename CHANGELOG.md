@@ -10,6 +10,18 @@
 ### Bugfixes
 
 -->
+
+## 1.0.0 (unreleased)
+
+- Lazy parser implementation was changed.
+- Supported child parsers.
+  - Change: Parser constructor
+  - Change: parameter of parser handlers
+- Added APIs:
+  - parser.exec()
+  - parser.find()
+  - parser.findAll()
+
 ## 0.7.1 (2022/08/11)
 
 ### Bugfixes
