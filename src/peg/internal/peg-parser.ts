@@ -17,18 +17,18 @@ const lang = T.createLanguage({
       spacing,
     ]);
     return T.seq([
-      T.sep(r.rule as T.Pattern<N.Rule>, separator, 1),
+      T.sep(r.rule as T.Parser<N.Rule>, separator, 1),
       separator.option(),
     ], 0);
   },
 
   rule: r => {
     return T.seq([
-      r.identifier as T.Pattern<string>,
+      r.identifier as T.Parser<string>,
       spacing,
       T.str('='),
       spacing,
-      r.expr as T.Pattern<N.Expr>,
+      r.expr as T.Parser<N.Expr>,
     ]).map(values => {
       return { type: 'rule', name: values[0], expr: values[4] } as N.Rule;
     });
@@ -43,13 +43,13 @@ const lang = T.createLanguage({
       T.str('/'),
       spacing,
     ]);
-    const choice = T.sep((r.expr6 as T.Pattern<N.Expr>), separator, 2).map(values => {
+    const choice = T.sep((r.expr6 as T.Parser<N.Expr>), separator, 2).map(values => {
       return { type: 'alt', exprs: values } as N.Alt;
     });
 
     return T.alt([
       choice,
-      r.expr6 as T.Pattern<N.Expr>,
+      r.expr6 as T.Parser<N.Expr>,
     ]);
   },
 
@@ -60,13 +60,13 @@ const lang = T.createLanguage({
   expr5: r => {
     // expr1 expr2
     const separator = T.alt([space, T.newline]).many(1);
-    const sequence = T.sep((r.expr4 as T.Pattern<N.Expr>), separator, 2).map(values => {
+    const sequence = T.sep((r.expr4 as T.Parser<N.Expr>), separator, 2).map(values => {
       return { type: 'seq', exprs: values } as N.Seq;
     });
 
     return T.alt([
       sequence,
-      r.expr4 as T.Pattern<N.Expr>,
+      r.expr4 as T.Parser<N.Expr>,
     ]);
   },
 
@@ -82,21 +82,21 @@ const lang = T.createLanguage({
         T.str('!').map(v => 'notMatch'),
       ]),
       spacing,
-      r.expr2 as T.Pattern<N.Expr>,
+      r.expr2 as T.Parser<N.Expr>,
     ]).map(values => {
       return { type: values[0], expr: values[2] } as N.Text | N.Match | N.NotMatch;
     });
 
     return T.alt([
       op,
-      r.expr2 as T.Pattern<N.Expr>,
+      r.expr2 as T.Parser<N.Expr>,
     ]);
   },
 
   expr2: r => {
     // expr? expr* expr+
     const op = T.seq([
-      r.expr1 as T.Pattern<N.Expr>,
+      r.expr1 as T.Parser<N.Expr>,
       spacing,
       T.alt([
         T.str('?').map(v => { return { type: 'option' }; }),
@@ -109,16 +109,16 @@ const lang = T.createLanguage({
 
     return T.alt([
       op,
-      r.expr1 as T.Pattern<N.Expr>,
+      r.expr1 as T.Parser<N.Expr>,
     ]);
   },
 
   expr1: r => T.alt([
-    r.stringLiteral as T.Pattern<N.Str>,
+    r.stringLiteral as T.Parser<N.Str>,
     // r.charRange,
     r.any,
-    r.ref as T.Pattern<N.Ref>,
-    r.group as T.Pattern<N.Expr>,
+    r.ref as T.Parser<N.Ref>,
+    r.group as T.Parser<N.Expr>,
   ]),
 
   stringLiteral: r => T.seq([
@@ -139,7 +139,7 @@ const lang = T.createLanguage({
 
   ref: r => {
     return T.seq([
-      r.identifier as T.Pattern<string>,
+      r.identifier as T.Parser<string>,
       T.notMatch(T.seq([
         spacing,
         T.str('='),
@@ -152,14 +152,14 @@ const lang = T.createLanguage({
   group: r => T.seq([
     T.str('('),
     spacing,
-    r.expr as T.Pattern<N.Expr>,
+    r.expr as T.Parser<N.Expr>,
     spacing,
     T.str(')'),
   ], 2),
 });
 
 export function parse(input: string): N.Rule[] {
-  const result = (lang.rules as T.Pattern<N.Rule[]>).parse(input, {});
+  const result = (lang.rules as T.Parser<N.Rule[]>).parse(input, {});
   if (!result.success) {
     console.log(JSON.stringify(result));
     throw new Error('Parsing error');

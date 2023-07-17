@@ -1,46 +1,46 @@
 import assert from 'assert';
 import * as T from '../src/index';
 
-describe('Pattern', () => {
+describe('Parser', () => {
   describe('parse()', () => {
     it('input', () => {
-      const pattern = new T.Pattern((input, index, children, state) => {
+      const parser = new T.Parser((input, index, children, state) => {
         return T.success(index, null);
       }, []);
-      const result = pattern.parse('');
+      const result = parser.parse('');
       assert.ok(result.success);
     });
 
     it('state', () => {
-      const pattern = new T.Pattern((input, index, children, state) => {
+      const parser = new T.Parser((input, index, children, state) => {
         if (state.value !== 1) {
           return T.failure(index);
         }
         return T.success(index, null);
       }, []);
-      const result = pattern.parse('', { value: 1 });
+      const result = parser.parse('', { value: 1 });
       assert.ok(result.success);
     });
   });
 
   it('map()', () => {
-    const pattern = new T.Pattern((input, index, children, state) => {
+    const parser = new T.Parser((input, index, children, state) => {
       return T.success(index, 1);
     }, []).map(value => {
       return value === 1 ? 2 : 3;
     });
-    const result = pattern.parse('');
+    const result = parser.parse('');
     assert.ok(result.success);
     assert.deepStrictEqual(result.value, 2);
   });
 
   it('text()', () => {
     const input = 'abc123';
-    const pattern = T.seq([
+    const parser = T.seq([
       T.str('abc'),
       T.str('123'),
     ]).text();
-    const result = pattern.parse(input);
+    const result = parser.parse(input);
     assert.ok(result.success);
     assert.deepStrictEqual(result.value, input);
     assert.strictEqual(result.index, 6);
@@ -51,10 +51,10 @@ describe('Pattern', () => {
       it('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const pattern = T.str('abc').many(0);
+        const parser = T.str('abc').many(0);
 
         input = '';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, []);
         assert.strictEqual(result.index, 0);
@@ -63,10 +63,10 @@ describe('Pattern', () => {
       it('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const pattern = T.str('abc').many(0);
+        const parser = T.str('abc').many(0);
 
         input = 'abc';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, ['abc']);
         assert.strictEqual(result.index, 3);
@@ -77,10 +77,10 @@ describe('Pattern', () => {
       it('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const pattern = T.str('').many(1);
+        const parser = T.str('').many(1);
 
         input = '';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 0);
       });
@@ -88,10 +88,10 @@ describe('Pattern', () => {
       it('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const pattern = T.str('abc').many(1);
+        const parser = T.str('abc').many(1);
 
         input = 'abc';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, ['abc']);
         assert.strictEqual(result.index, 3);
@@ -100,10 +100,10 @@ describe('Pattern', () => {
       it('2 items', () => {
         let input: string, result: T.Result<string[]>;
 
-        const pattern = T.str('abc').many(1);
+        const parser = T.str('abc').many(1);
 
         input = 'abcabc';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, ['abc', 'abc']);
         assert.strictEqual(result.index, 6);
@@ -113,14 +113,14 @@ describe('Pattern', () => {
     it('with terminator', () => {
       let input: string, result: T.Result<string>;
 
-      const pattern = T.seq([
+      const parser = T.seq([
         T.str('('),
         T.char.many(1, T.str(')')).text(),
         T.str(')'),
       ], 1);
 
       input = '(abc)';
-      result = pattern.parse(input);
+      result = parser.parse(input);
       assert.ok(result.success);
       assert.deepStrictEqual(result.value, 'abc');
       assert.strictEqual(result.index, 5);
@@ -136,8 +136,8 @@ describe('Combinators', () => {
     describe('with string value', () => {
       it('matched', () => {
         const input = 'abc';
-        const pattern = T.str('abc');
-        const result = pattern.parse(input);
+        const parser = T.str('abc');
+        const result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, input);
         assert.strictEqual(result.index, 3);
@@ -145,8 +145,8 @@ describe('Combinators', () => {
 
       it('not matched', () => {
         const input = 'ab';
-        const pattern = T.str('abc');
-        const result = pattern.parse(input);
+        const parser = T.str('abc');
+        const result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 0);
       });
@@ -154,8 +154,8 @@ describe('Combinators', () => {
 
     it('with RegExp value', () => {
       const input = 'abcDEF';
-      const pattern = T.str(/[a-z]+/i);
-      const result = pattern.parse(input);
+      const parser = T.str(/[a-z]+/i);
+      const result = parser.parse(input);
       assert.ok(result.success);
       assert.deepStrictEqual(result.value, input);
       assert.strictEqual(result.index, 6);
@@ -166,11 +166,11 @@ describe('Combinators', () => {
     describe('all', () => {
       it('success', () => {
         const input = 'abc123';
-        const pattern = T.seq([
+        const parser = T.seq([
           T.str('abc'),
           T.str('123'),
         ]);
-        const result = pattern.parse(input);
+        const result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, ['abc', '123']);
         assert.strictEqual(result.index, 6);
@@ -178,22 +178,22 @@ describe('Combinators', () => {
 
       it('partial success', () => {
         const input = 'abc1';
-        const pattern = T.seq([
+        const parser = T.seq([
           T.str('abc'),
           T.str('123'),
         ]);
-        const result = pattern.parse(input);
+        const result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 3);
       });
 
       it('failure', () => {
         const input = 'a';
-        const pattern = T.seq([
+        const parser = T.seq([
           T.str('abc'),
           T.str('123'),
         ]);
-        const result = pattern.parse(input);
+        const result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 0);
       });
@@ -201,11 +201,11 @@ describe('Combinators', () => {
 
     it('with select param', () => {
       const input = 'abc123';
-      const pattern = T.seq([
+      const parser = T.seq([
         T.str('abc'),
         T.str('123'),
       ], 0);
-      const result = pattern.parse(input);
+      const result = parser.parse(input);
       assert.ok(result.success);
       assert.deepStrictEqual(result.value, 'abc');
       assert.strictEqual(result.index, 6);
@@ -214,11 +214,11 @@ describe('Combinators', () => {
 
   it('alt()', () => {
     const input = '123';
-    const pattern = T.alt([
+    const parser = T.alt([
       T.str('abc'),
       T.str('123'),
     ]);
-    const result = pattern.parse(input);
+    const result = parser.parse(input);
     assert.ok(result.success);
     assert.deepStrictEqual(result.value, input);
     assert.strictEqual(result.index, 3);
@@ -229,10 +229,10 @@ describe('Combinators', () => {
       it('0 item', () => {
         let input, result;
 
-        const pattern = T.sep(T.str('abc'), T.str(','), 2);
+        const parser = T.sep(T.str('abc'), T.str(','), 2);
 
         input = '';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 0);
       });
@@ -240,10 +240,10 @@ describe('Combinators', () => {
       it('1 item', () => {
         let input, result;
 
-        const pattern = T.sep(T.str('abc'), T.str(','), 2);
+        const parser = T.sep(T.str('abc'), T.str(','), 2);
 
         input = 'abc';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 3);
       });
@@ -251,10 +251,10 @@ describe('Combinators', () => {
       it('2 items', () => {
         let input, result;
 
-        const pattern = T.sep(T.str('abc'), T.str(','), 2);
+        const parser = T.sep(T.str('abc'), T.str(','), 2);
 
         input = 'abc,abc';
-        result = pattern.parse(input);
+        result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, ['abc', 'abc']);
         assert.strictEqual(result.index, 7);
@@ -272,40 +272,40 @@ describe('Combinators', () => {
   // });
 
   it('cond()', () => {
-    let input, pattern, result;
+    let input, parser, result;
 
-    pattern = T.seq([
+    parser = T.seq([
       T.cond(state => state.enabled),
       T.char,
     ]);
 
-    result = pattern.parse('a', { enabled: true });
+    result = parser.parse('a', { enabled: true });
     assert.ok(result.success);
     assert.strictEqual(result.index, 1);
 
-    result = pattern.parse('a', { enabled: false });
+    result = parser.parse('a', { enabled: false });
     assert.ok(!result.success);
     assert.strictEqual(result.index, 0);
   });
 
   it('eof', () => {
-    let input, pattern, result;
+    let input, parser, result;
 
-    pattern = T.eof;
+    parser = T.eof;
 
-    result = pattern.parse('');
+    result = parser.parse('');
     assert.ok(result.success);
     assert.strictEqual(result.index, 0);
 
-    result = pattern.parse('a');
+    result = parser.parse('a');
     assert.ok(!result.success);
     assert.strictEqual(result.index, 0);
   });
 
   it('char', () => {
     const input = 'a';
-    const pattern = T.char;
-    const result = pattern.parse(input);
+    const parser = T.char;
+    const result = parser.parse(input);
     assert.ok(result.success);
     assert.deepStrictEqual(result.value, 'a');
     assert.strictEqual(result.index, 1);
