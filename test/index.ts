@@ -271,19 +271,26 @@ describe('Combinators', () => {
   // it('notMatch()', () => {
   // });
 
-  it('cond()', () => {
+  it('state(), cond()', () => {
     let input, parser, result;
 
     parser = T.seq([
+      T.state(state => { state.enabled = true; }),
       T.cond(state => state.enabled),
       T.char,
     ]);
 
-    result = parser.parse('a', { enabled: true });
+    result = parser.parse('a');
     assert.ok(result.success);
     assert.strictEqual(result.index, 1);
 
-    result = parser.parse('a', { enabled: false });
+    parser = T.seq([
+      T.state(state => { state.enabled = false; }),
+      T.cond(state => state.enabled),
+      T.char,
+    ]);
+
+    result = parser.parse('a');
     assert.ok(!result.success);
     assert.strictEqual(result.index, 0);
   });

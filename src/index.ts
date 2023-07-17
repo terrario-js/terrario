@@ -316,6 +316,19 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
   }, [parser]);
 }
 
+/**
+ * Experimental API
+*/
+export function state(fn: (state: any) => void): Parser<null> {
+  return new Parser((_input, index, [], state) => {
+    fn(state);
+    return success(index, null);
+  }, []);
+}
+
+/**
+ * Experimental API
+*/
 export function cond(predicate: (state: any) => boolean): Parser<null> {
   return new Parser((_input, index, [], state) => {
     return predicate(state)
