@@ -4,29 +4,29 @@ import * as T from '../src/index';
 describe('Parser', () => {
   describe('parse()', () => {
     it('input', () => {
-      const parser = new T.Parser((input, index, state) => {
+      const parser = new T.Parser((input, index, children, state) => {
         return T.success(index, null);
-      });
+      }, []);
       const result = parser.parse('');
       assert.ok(result.success);
     });
 
     it('state', () => {
-      const parser = new T.Parser((input, index, state) => {
+      const parser = new T.Parser((input, index, children, state) => {
         if (state.value !== 1) {
           return T.failure(index);
         }
         return T.success(index, null);
-      });
+      }, []);
       const result = parser.parse('', { value: 1 });
       assert.ok(result.success);
     });
   });
 
   it('map()', () => {
-    const parser = new T.Parser((input, index, state) => {
+    const parser = new T.Parser((input, index, children, state) => {
       return T.success(index, 1);
-    }).map(value => {
+    }, []).map(value => {
       return value === 1 ? 2 : 3;
     });
     const result = parser.parse('');
