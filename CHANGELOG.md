@@ -11,7 +11,7 @@
 
 -->
 
-## 0.8.0 (unreleased)
+## 0.8.0 (2023/07/17)
 
 - The module system was migrated to ES Module.
 - Lazy parser implementation was changed.
