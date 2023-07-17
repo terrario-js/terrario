@@ -20,11 +20,16 @@
   - T.lineEnd
 - [Parsing result](#parsing-result)
 - [Control with states](#control-with-states)
+  - parser.state()
   - T.cond()
+- [Find pattern APIs](#find-pattern-apis)
+  - parser.find()
+  - parser.findAll()
 - [Custom parsers](#custom-parsers)
   - new T.Parser()
   - T.success()
   - T.failure()
+  - parser.exec()
 - [Minor APIs](#minor-apis)
   - T.lazy()
   - T.succeeded()
@@ -492,6 +497,15 @@ Result structure is unstable yet.
 
 # Control with states
 
+## parser.state()
+```
+parser.state(key: string, value: (state: any) => any): Parser
+```
+![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
+
+parser.state() creates a parser that sets a value to a specified key in a state object.  
+When this parser finishes executing, the modified contents of the state object are restored.
+
 ## T.cond()
 ```
 T.cond(predicate: (state: any) => boolean): Parser
@@ -504,12 +518,28 @@ Conditional branching can be performed using the state.
 const parser = T.seq([
   T.cond(state => state.enabled),
   T.char,
-]);
+]).state('enabled', () => true);
 
-const result = parser.parse('a', { enabled: true });
+const result = parser.parse('a', { enabled: false });
 console.log(result);
 // => { success: true, value: [ null, 'a' ], index: 1 }
 ```
+
+# Find pattern APIs
+
+## parser.find()
+```
+parser.find(input: string, state?: any): { index: number, input: string, result: Result<T> } | undefined
+```
+![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
+
+Find the matches to the pattern, starting from the front
+
+## parser.findAll()
+```
+parser.findAll(input: string, state?: any): { index: number, input: string, result: Result<T> }[]
+```
+![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 # Custom parsers
 
@@ -545,6 +575,14 @@ T.failure(index: number): Failure
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Generates a result indicating the failure of a parser.
+
+### parser.exec()
+```
+parser.exec(input: string, state?: any, offset?: number): Result<T>
+```
+![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
+
+Perform other parsers within the custom parser.
 
 # Minor APIs
 
