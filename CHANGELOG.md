@@ -11,7 +11,7 @@
 
 -->
 
-## 0.8.1 (unreleased)
+## 0.8.1 (2023/07/17)
 
 - Dual package support (ES Modules and CommonJS)
 
