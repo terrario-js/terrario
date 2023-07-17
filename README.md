@@ -13,10 +13,6 @@ A simple parser combinator library with TypeScript.
 
 The Terrario is inspired by PEG.js, Parsimmon, etc.
 
-**Notice:**  
-**This library is under development.**  
-**The API may change without notice, and the behavior may be unstable.**  
-
 ## Installation
 ```
 npm i terrario

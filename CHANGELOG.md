@@ -10,6 +10,20 @@
 ### Bugfixes
 
 -->
+
+## 0.8.0 (2023/07/17)
+
+- The module system was migrated to ES Module.
+- Lazy parser implementation was changed.
+- Supported child parsers.
+  - Change: Parser constructor
+  - Change: parameter of parser handlers
+- Added APIs:
+  - parser.exec()
+  - parser.find()
+  - parser.findAll()
+  - parser.state()
+
 ## 0.7.1 (2022/08/11)
 
 ### Bugfixes
