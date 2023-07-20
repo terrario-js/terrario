@@ -274,6 +274,7 @@ describe('Combinators', () => {
   it('state api', () => {
     let input, parser, result;
 
+    // 1
     parser = T.seq([
       T.cond(state => state.enabled),
       T.char,
@@ -283,6 +284,7 @@ describe('Combinators', () => {
     assert.ok(result.success);
     assert.strictEqual(result.index, 1);
 
+    // 2
     parser = T.seq([
       T.cond(state => state.enabled),
       T.char,
@@ -291,6 +293,18 @@ describe('Combinators', () => {
     result = parser.parse('a');
     assert.ok(!result.success);
     assert.strictEqual(result.index, 0);
+
+    // 3
+    parser = T.seq([
+      T.succeeded(null).state('enabled', () => true),
+      T.cond(state => !state.enabled),
+      T.str('a'),
+    ], 2)
+
+    result = parser.parse('a');
+    assert.ok(result.success);
+    assert.strictEqual(result.index, 1);
+
   });
 
   it('eof', () => {
