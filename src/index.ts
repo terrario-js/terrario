@@ -91,7 +91,7 @@ export class Parser<T> {
   }
 
   map<U>(fn: (value: T) => U): Parser<U> {
-    return Parser.create((input, index, children, state) => {
+    return createParser((input, index, children, state) => {
       const result = children[0].exec(input, state, index);
       if (!result.success) {
         return result;
@@ -101,7 +101,7 @@ export class Parser<T> {
   }
 
   text(): Parser<string> {
-    return Parser.create((input, index, [child], state) => {
+    return createParser((input, index, [child], state) => {
       const result = child.exec(input, state, index);
       if (!result.success) {
         return result;
@@ -125,21 +125,13 @@ export class Parser<T> {
   }
 
   state(key: string, value: (state: any) => any): Parser<T> {
-    return Parser.create((input, index, [child], state) => {
+    return createParser((input, index, [child], state) => {
       const storedValue = state[key];
       state[key] = value(state);
       const result = child.exec(input, state, index);
       state[key] = storedValue;
       return result;
     }, [this]);
-  }
-
-  static create<T>(handler: ParserHandler<T>, children?: Parser<any>[], name?: string): Parser<T> {
-    return new Parser({ handler, children, name });
-  }
-
-  static createLazy<T>(lazy: LazyContext<T>, name?: string): Parser<T> {
-    return new Parser({ lazy, name });
   }
 }
 
@@ -190,7 +182,7 @@ function wrapByTraceHandler<T>(handler: ParserHandler<T>, name?: string): Parser
 }
 
 function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
-  return Parser.create((input, index, [child], state) => {
+  return createParser((input, index, [child], state) => {
     let result;
     let latestIndex = index;
     const accum: T[] = [];
@@ -223,7 +215,7 @@ export function str(value: string | RegExp): Parser<string> {
 }
 
 function strWithString<T extends string>(value: T): Parser<T> {
-  return Parser.create((input, index, [], _state) => {
+  return createParser((input, index, [], _state) => {
     if ((input.length - index) < value.length) {
       return failure(index);
     }
@@ -236,7 +228,7 @@ function strWithString<T extends string>(value: T): Parser<T> {
 
 function strWithRegExp(pattern: RegExp): Parser<string> {
   const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
-  return Parser.create((input, index, [], _state) => {
+  return createParser((input, index, [], _state) => {
     const text = input.slice(index);
     const result = re.exec(text);
     if (result == null) {
@@ -253,7 +245,7 @@ export function seq(parsers: Parser<any>[], select?: number) {
 }
 
 function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<ResultTypes<[...T]>> {
-  return Parser.create((input, index, children, state) => {
+  return createParser((input, index, children, state) => {
     let result;
     let latestIndex = index;
     const accum = [];
@@ -274,7 +266,7 @@ function seqSelect<T extends Parser<any>[], U extends number>(parsers: [...T], s
 }
 
 export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<ResultTypes<T>[number]> {
-  return Parser.create((input, index, children, state) => {
+  return createParser((input, index, children, state) => {
     let result;
     for (let i = 0; i < children.length; i++) {
       result = children[i].exec(input, state, index) as Result<ResultTypes<T>[number]>;
@@ -299,18 +291,23 @@ export function sep<T>(item: Parser<T>, separator: Parser<unknown>, min: number)
   ]).map(result => [result[0], ...result[1]]);
 }
 
-export function lazy<T>(fn: () => Parser<T>): Parser<T> {
-  return Parser.createLazy(fn);
+function createParser<T>(handler: ParserHandler<T>, children?: Parser<any>[], name?: string): Parser<T> {
+  return new Parser({ handler, children, name });
+}
+export { createParser as parser };
+
+export function lazy<T>(fn: () => Parser<T>, name?: string): Parser<T> {
+  return new Parser({ lazy: fn, name });
 }
 
 export function succeeded<T>(value: T): Parser<T> {
-  return Parser.create((_input, index, [], _state) => {
+  return createParser((_input, index, [], _state) => {
     return success(index, value);
   });
 }
 
 export function match<T>(parser: Parser<T>): Parser<T> {
-  return Parser.create((input, index, [child], state) => {
+  return createParser((input, index, [child], state) => {
     const result = child.exec(input, state, index);
     return result.success
       ? success(index, result.value)
@@ -319,7 +316,7 @@ export function match<T>(parser: Parser<T>): Parser<T> {
 }
 
 export function notMatch(parser: Parser<unknown>): Parser<null> {
-  return Parser.create((input, index, [child], state) => {
+  return createParser((input, index, [child], state) => {
     const result = child.exec(input, state, index);
     return !result.success
       ? success(index, null)
@@ -328,7 +325,7 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
 }
 
 export function cond(predicate: (state: any) => boolean): Parser<null> {
-  return Parser.create((_input, index, [], state) => {
+  return createParser((_input, index, [], state) => {
     return predicate(state)
       ? success(index, null)
       : failure(index);
@@ -340,19 +337,19 @@ export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
-export const sof = Parser.create((_input, index, [], _state) => {
+export const sof = createParser((_input, index, [], _state) => {
   return index == 0
     ? success(index, null)
     : failure(index);
 });
 
-export const eof = Parser.create((input, index, [], _state) => {
+export const eof = createParser((input, index, [], _state) => {
   return index >= input.length
     ? success(index, null)
     : failure(index);
 });
 
-export const char = Parser.create((input, index, [], _state) => {
+export const char = createParser((input, index, [], _state) => {
   if ((input.length - index) < 1) {
     return failure(index);
   }
@@ -360,7 +357,7 @@ export const char = Parser.create((input, index, [], _state) => {
   return success(index + 1, value);
 });
 
-export const lineBegin = Parser.create((input, index, [], state) => {
+export const lineBegin = createParser((input, index, [], state) => {
   if (sof.exec(input, state, index).success) {
     return success(index, null);
   }

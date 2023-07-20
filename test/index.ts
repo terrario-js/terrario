@@ -4,7 +4,7 @@ import * as T from '../src/index.js';
 describe('Parser', () => {
   describe('parse()', () => {
     it('input', () => {
-      const parser = new T.Parser((input, index, children, state) => {
+      const parser = T.parser((input, index, children, state) => {
         return T.success(index, null);
       }, []);
       const result = parser.parse('');
@@ -12,7 +12,7 @@ describe('Parser', () => {
     });
 
     it('state', () => {
-      const parser = new T.Parser((input, index, children, state) => {
+      const parser = T.parser((input, index, children, state) => {
         if (state.value !== 1) {
           return T.failure(index);
         }
@@ -24,7 +24,7 @@ describe('Parser', () => {
   });
 
   it('map()', () => {
-    const parser = new T.Parser((input, index, children, state) => {
+    const parser = T.parser((input, index, children, state) => {
       return T.success(index, 1);
     }, []).map(value => {
       return value === 1 ? 2 : 3;
