@@ -45,10 +45,10 @@ export class Parser<T> {
   }
 
   /** internal method */
-  evalContext(): ParserContext<T> {
+  _evalContext(): ParserContext<T> {
     if (typeof this.ctx == 'function') {
       const parser = this.ctx();
-      const ctx = parser.evalContext();
+      const ctx = parser._evalContext();
       this.ctx = {
         handler: wrapByTraceHandler(ctx.handler, this.name),
         children: ctx.children,
@@ -58,7 +58,7 @@ export class Parser<T> {
   }
 
   exec(input: string, state: any = {}, offset: number = 0): Result<T> {
-    const ctx = this.evalContext();
+    const ctx = this._evalContext();
     return ctx.handler(input, offset, ctx.children, state);
   }
 

@@ -26,7 +26,7 @@
   - parser.find()
   - parser.findAll()
 - [Custom parsers](#custom-parsers)
-  - new T.Parser()
+  - T.parser()
   - T.success()
   - T.failure()
   - parser.exec()
@@ -124,7 +124,7 @@ console.log(result);
 
 ## T.seq()
 ```
-T.seq(parsers: Parser[]): Parser
+T.seq(parsers: Parser[], select?: boolean): Parser
 ```
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
@@ -143,10 +143,6 @@ console.log(result);
 ```
 
 ### Select a return value
-```
-T.seq(parsers: Parser[], select: boolean): Parser
-```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 You can also select a result to be returned from all of them:
 ```ts
@@ -316,7 +312,7 @@ console.log(result);
 
 ## parser.many()
 ```
-parser.many(min: number): Parser
+parser.many(min: number, terminator?: Parser): Parser
 ```
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
@@ -356,11 +352,6 @@ console.log(result);
 ```
 
 ### With terminator
-```
-parser.many(min: number, terminator: Parser): Parser
-```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
-
 The parser.many() can have a termination condition.
 
 The following example uses many to match strings up to ")".
@@ -529,7 +520,7 @@ console.log(result);
 
 ## parser.find()
 ```
-parser.find(input: string, state?: any): { index: number, input: string, result: Result<T> } | undefined
+parser.find(input: string, state?: any): { index: number, input: string, result: Result } | undefined
 ```
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
@@ -537,22 +528,22 @@ Find the matches to the pattern, starting from the front
 
 ## parser.findAll()
 ```
-parser.findAll(input: string, state?: any): { index: number, input: string, result: Result<T> }[]
+parser.findAll(input: string, state?: any): { index: number, input: string, result: Result }[]
 ```
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 # Custom parsers
 
-## new T.Parser()
+## T.parser()
 ```
-new T.Parser(handler: (input: string, index: number, state: any) => Result)
+T.parser(handler: (input: string, index: number, children: Parser[], state: any) => Result, children?: Parser[], name?: string): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
+![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Makes a new custom parser.
 
 ```ts
-const parser = new T.Parser((input, index, state) => {
+const parser = T.parser((input, index, children, state) => {
   if (index >= input.length) {
     return T.failure(index);
   }
@@ -578,7 +569,7 @@ Generates a result indicating the failure of a parser.
 
 ### parser.exec()
 ```
-parser.exec(input: string, state?: any, offset?: number): Result<T>
+parser.exec(input: string, state?: any, offset?: number): Result
 ```
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
@@ -588,7 +579,7 @@ Perform other parsers within the custom parser.
 
 ## T.lazy()
 ```
-T.lazy(fn: () => Parser): Parser
+T.lazy(fn: () => Parser, name?: string): Parser
 ```
 ![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 

@@ -11,6 +11,12 @@
 
 -->
 
+## 0.8.2 (unreleased)
+
+- Change: params of T.Parser constructor
+- Add: T.parser() API
+- 軽微な変更
+
 ## 0.8.1 (2023/07/17)
 
 - Dual package support (ES Modules and CommonJS)
