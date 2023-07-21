@@ -47,11 +47,11 @@ describe('Parser', () => {
   });
 
   describe('many()', () => {
-    describe('min = 0', () => {
+    describe('basic', () => {
       it('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many(0);
+        const parser = T.str('abc').many();
 
         input = '';
         result = parser.parse(input);
@@ -63,7 +63,7 @@ describe('Parser', () => {
       it('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many(0);
+        const parser = T.str('abc').many();
 
         input = 'abc';
         result = parser.parse(input);
@@ -115,7 +115,7 @@ describe('Parser', () => {
 
       const parser = T.seq([
         T.str('('),
-        T.char.many(1, T.str(')')).text(),
+        T.char.many({ min: 1, notMatch: T.str(')') }).text(),
         T.str(')'),
       ], 1);
 
@@ -224,44 +224,6 @@ describe('Combinators', () => {
     assert.strictEqual(result.index, 3);
   });
 
-  describe('sep()', () => {
-    describe('min = 2', () => {
-      it('0 item', () => {
-        let input, result;
-
-        const parser = T.sep(T.str('abc'), T.str(','), 2);
-
-        input = '';
-        result = parser.parse(input);
-        assert.ok(!result.success);
-        assert.strictEqual(result.index, 0);
-      });
-
-      it('1 item', () => {
-        let input, result;
-
-        const parser = T.sep(T.str('abc'), T.str(','), 2);
-
-        input = 'abc';
-        result = parser.parse(input);
-        assert.ok(!result.success);
-        assert.strictEqual(result.index, 3);
-      });
-
-      it('2 items', () => {
-        let input, result;
-
-        const parser = T.sep(T.str('abc'), T.str(','), 2);
-
-        input = 'abc,abc';
-        result = parser.parse(input);
-        assert.ok(result.success);
-        assert.deepStrictEqual(result.value, ['abc', 'abc']);
-        assert.strictEqual(result.index, 7);
-      });
-    });
-  });
-
   // it('lazy()', () => {
   // });
 
@@ -337,5 +299,5 @@ describe('Combinators', () => {
   // });
 });
 
-// it('createLanguage()', () => {
+// it('language()', () => {
 // });

@@ -1,6 +1,6 @@
 # Index of contents
 - [Basic APIs](#basic-apis)
-  - T.createLanguage()
+  - T.language()
   - parser.parse()
   - T.str()
   - T.seq()
@@ -39,16 +39,16 @@
 
 # Basic APIs
 
-## T.createLanguage()
+## T.language()
 ```
-T.createLanguage(syntaxes: Record<string, (rules: Language) => Parser>): Language
+T.language(syntaxes: Record<string, (rules: Language) => Parser>): Language
 ```
 
 We can define some syntax rules to build a language.  
 Each rule is lazy evaluated.
 
 ```ts
-const lang = T.createLanguage({
+const lang = T.language({
   root: rules => {
     return T.alt([
       rules.rule1,
@@ -183,6 +183,8 @@ console.log(result);
 T.sep(item: Parser, separator: Parser, min: number): Parser
 ```
 
+**NOTE: This API has removed.**
+
 Generates a parser that splits a string and extracts multiple items.  
 The `separator` parser is used to split the string, and the `item` parser is used to consume each item.
 
@@ -301,7 +303,8 @@ console.log(result);
 
 ## parser.many()
 ```
-parser.many(min: number, terminator?: Parser): Parser
+parser.many(min?: number, max?: number): Parser
+parser.many(opts: { min?: number, max?: number, notMatch?: Parser }): Parser
 ```
 
 Repeatedly applies the parser.  
@@ -339,7 +342,7 @@ console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
-### With terminator
+### With termination condition
 The parser.many() can have a termination condition.
 
 The following example uses many to match strings up to ")".
@@ -348,7 +351,7 @@ The terminating condition ")" is not consumed.
 // [Equivalent PEG] "(" (!")" @.)+ ")"
 const parser = T.seq([
 	T.str('('),
-	T.char.many(1, T.str(')')),
+	T.char.many({ min: 1, notMatch: T.str(')') }),
 	T.str(')'),
 ]);
 
@@ -555,7 +558,7 @@ T.lazy(fn: () => Parser, name?: string): Parser
 ```
 
 Generates a new parser that is lazy-evaluated.  
-Normally there is no need to use this API. Use T.createLanguage() instead.
+Normally there is no need to use this API. Use T.language() instead.
 
 ## T.succeeded()
 ```

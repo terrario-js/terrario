@@ -111,10 +111,16 @@ export class Parser<T> {
     }, [this]);
   }
 
-  many(min: number): Parser<T[]>
-  many(min: number, terminator: Parser<unknown>): Parser<T[]>
-  many(min: number, terminator?: Parser<unknown>): Parser<T[]> {
-    return (terminator != null) ? manyWithout(this, min, terminator) : many(this, min);
+  many(min?: number, max?: number): Parser<T[]>
+  many(opts: { min?: number, max?: number, notMatch?: Parser<unknown> }): Parser<T[]>
+  many(arg1?: number | { min?: number, max?: number, notMatch?: Parser<unknown> }, arg2?: number): Parser<T[]> {
+    if (typeof arg1 == 'number') {
+      // with min, max
+      return many(this, { min: arg1, max: arg2 });
+    } else {
+      // with opts
+      return many(this, arg1);
+    }
   }
 
   option(): Parser<T | null> {
@@ -181,7 +187,13 @@ function wrapByTraceHandler<T>(handler: ParserHandler<T>, name?: string): Parser
   };
 }
 
-function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
+function many<T>(parser: Parser<T>, opts: { min?: number, max?: number, notMatch?: Parser<unknown> } = {}): Parser<T[]> {
+  if (opts.notMatch != null) {
+    return many(seq([
+      notMatch(opts.notMatch),
+      parser,
+    ], 1), { min: opts.min, max: opts.max });
+  }
   return createParser((input, index, [child], state) => {
     let result;
     let latestIndex = index;
@@ -194,18 +206,14 @@ function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
       latestIndex = result.index;
       accum.push(result.value);
     }
-    if (accum.length < min) {
+    if (opts.min != null && accum.length < opts.min) {
+      return failure(latestIndex);
+    }
+    if (opts.max != null && accum.length > opts.max) {
       return failure(latestIndex);
     }
     return success(latestIndex, accum);
   }, [parser]);
-}
-
-function manyWithout<T>(parser: Parser<T>, min: number, terminator: Parser<unknown>): Parser<T[]> {
-  return many(seq([
-    notMatch(terminator),
-    parser,
-  ], 1), min);
 }
 
 export function str<T extends string>(value: T): Parser<T>
@@ -276,19 +284,6 @@ export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<Result
     }
     return failure(index);
   }, parsers);
-}
-
-export function sep<T>(item: Parser<T>, separator: Parser<unknown>, min: number): Parser<T[]> {
-  if (min < 1) {
-    throw new Error('"min" must be a value greater than or equal to 1.');
-  }
-  return seq([
-    item,
-    seq([
-      separator,
-      item,
-    ], 1).many(min - 1),
-  ]).map(result => [result[0], ...result[1]]);
 }
 
 function createParser<T>(handler: ParserHandler<T>, children?: Parser<any>[], name?: string): Parser<T> {
@@ -377,7 +372,7 @@ export const lineEnd = match(alt([
 ])).map(() => null);
 
 // TODO: 関数の型宣言をいい感じにしたい
-export function createLanguage<T>(syntaxes: { [K in keyof T]: (r: Record<string, Parser<any>>) => T[K] }): T {
+export function language<T>(syntaxes: { [K in keyof T]: (r: Record<string, Parser<any>>) => T[K] }): T {
   const rules: Record<string, Parser<any>> = {};
   for (const key of Object.keys(syntaxes)) {
     rules[key] = lazy(() => {
