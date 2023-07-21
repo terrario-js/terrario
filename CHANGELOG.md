@@ -11,14 +11,13 @@
 
 -->
 
-## 0.x.x (unreleased)
+## 0.9.0 (2023/07/21)
 
 - Change: params of T.Parser constructor
 - Add: T.parser() API
 - Change: parser.many() API
 - Change: T.sep() has removed
 - Change: T.createLanguage() has renamed to T.language()
-- 軽微な変更
 
 ## 0.8.1 (2023/07/17)
 
