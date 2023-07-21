@@ -1,12 +1,12 @@
-<h1><img src="https://github.com/marihachi/terrario/blob/develop/assets/terrario-logo.svg?raw=true" alt="Terrario" width="230px" /></h1>
+<h1><img src="https://github.com/marihachi/terrario/blob/875bcc5ae47e351419d2c0f7d30b739b4c72840f/assets/terrario-logo.svg?raw=true" alt="Terrario" width="230px" /></h1>
 
 [![Test](https://github.com/marihachi/terrario/actions/workflows/test.yml/badge.svg)](https://github.com/marihachi/terrario/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A simple parser combinator library with TypeScript.
+A simple, expressive parser combinator library with TypeScript.
 [Try it out!](https://npm.runkit.com/terrario)
 
-- 📍 Simple APIs
+- 📍 Minimal yet powerful APIs
 - 🖨 Scannerless parsing
 - ⚙ Supports conditional branching by state
 - ✨ Zero dependency
@@ -30,7 +30,7 @@ const parser = T.alt([
   T.str('hello'),
   T.str('world'),
   T.str(' '),
-]).many(0);
+]).many();
 
 // parse the input string
 const input = 'hello world';
