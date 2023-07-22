@@ -1,11 +1,28 @@
 {
   "name": "terrario",
   "version": "0.9.0",
-  "description": "A simple parser combinator library with TypeScript.",
+  "description": "A refined, expressive parser combinator library.",
+  "license": "MIT",
+  "author": "Marihachi",
   "type": "module",
   "module": "./built/index.js",
   "main": "./built/cjs/index.cjs",
   "types": "./built/index.d.ts",
+  "contributors": [
+    "ThinaticSystem <git@thinaticsystem.com> (https://thinaticsystem.com/)"
+  ],
+  "keywords": [
+    "parser",
+    "parser-combinators",
+    "parsing",
+    "javascript",
+    "typescript",
+    "esm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marihachi/terrario.git"
+  },
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
     "build:esm": "tsc",
@@ -13,20 +30,11 @@
     "build:cjs:rename": "node -e \"require('fs').renameSync('./built/cjs/index.js', './built/cjs/index.cjs')\"",
     "test": "jest --verbose"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/marihachi/terrario.git"
-  },
-  "author": "Marihachi",
-  "contributors": [
-    "ThinaticSystem <git@thinaticsystem.com> (https://thinaticsystem.com/)"
-  ],
   "exports": {
     "import": "./built/index.js",
     "require": "./built/cjs/index.cjs",
     "default": "./built/index.js"
   },
-  "license": "MIT",
   "devDependencies": {
     "@types/jest": "29.5.3",
     "@types/node": "20.4.2",
