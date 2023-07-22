@@ -1,8 +1,8 @@
 import * as T from 'terrario';
 
-const spaces = T.str(/[ \t\r\n]/).many(0);
+const spaces = T.str(/[ \t\r\n]/).many();
 
-const lang = T.createLanguage({
+const lang = T.language({
   root: r => T.seq([
     spaces,
     r.value,
@@ -27,7 +27,7 @@ const lang = T.createLanguage({
 
   string: r => T.seq([
     T.str('"'),
-    T.char.many(0, T.alt([T.str('"'), T.cr, T.lf])).text(),
+    T.char.many({ notMatch: T.alt([T.str('"'), T.cr, T.lf]) }).text(),
     T.str('"'),
   ], 1),
 
@@ -60,7 +60,12 @@ const lang = T.createLanguage({
     return T.seq([
       T.str('{'),
       spaces,
-      T.sep(entry, separator, 1).option(),
+      T.seq([
+        entry,
+        T.seq([
+          separator, entry,
+        ], 1).many(),
+      ]).map(x => [x[0], ...x[1]]).option(),
       spaces,
       T.str('}'),
     ], 2).map(value => {
@@ -84,7 +89,13 @@ const lang = T.createLanguage({
     return T.seq([
       T.str('['),
       spaces,
-      T.sep(r.value as T.Parser<unknown>, separator, 1).option(),
+      T.seq([
+        r.value as T.Parser<unknown>,
+        T.seq([
+          separator,
+          r.value as T.Parser<unknown>,
+        ], 1).many(),
+      ]).map(x => [x[0], ...x[1]]).option(),
       spaces,
       T.str(']'),
     ], 2).map(value => {
