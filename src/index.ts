@@ -44,7 +44,9 @@ export class Parser<T> {
     this.name = opts.name;
   }
 
-  /** internal method */
+  /**
+   * @internal
+  */
   _evalContext(): ParserContext<T> {
     if (typeof this.ctx == 'function') {
       const parser = this.ctx();
@@ -141,14 +143,14 @@ export class Parser<T> {
   }
 }
 
-type StrictParserOpts<T> = {
+export type StrictParserOpts<T> = {
   handler: ParserHandler<T>,
   children?: Parser<any>[],
   name?: string,
   lazy?: undefined,
 };
 
-type LazyParserOpts<T> = {
+export type LazyParserOpts<T> = {
   lazy: LazyContext<T>,
   name?: string,
   handler?: undefined,
@@ -165,8 +167,8 @@ export type ParserContext<T> = {
 export type LazyContext<T> =
   () => Parser<T>;
 
-type ResultType<T> = T extends Parser<infer R> ? R : never;
-type ResultTypes<T> = T extends [infer Head, ...infer Tail] ? [ResultType<Head>, ...ResultTypes<Tail>] : [];
+export type ResultType<T> = T extends Parser<infer R> ? R : never;
+export type ResultTypes<T> = T extends [infer Head, ...infer Tail] ? [ResultType<Head>, ...ResultTypes<Tail>] : [];
 
 function wrapByTraceHandler<T>(handler: ParserHandler<T>, name?: string): ParserHandler<T> {
   return (input, index, children, state) => {

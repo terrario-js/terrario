@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "declaration": true,
+    "rootDir": "./src/",
     "outDir": "./built/",
     "skipLibCheck": true,
     "removeComments": false,
