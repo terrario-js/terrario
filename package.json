@@ -29,7 +29,7 @@
     "build:cjs": "npx tsc --outdir built/cjs --module CommonJS && npm run build:cjs:rename",
     "build:cjs:rename": "node -e \"require('fs').renameSync('./built/cjs/index.js', './built/cjs/index.cjs')\"",
     "test": "jest --verbose",
-    "doc": "typedoc --plugin typedoc-plugin-markdown --out temp/docs src/index.ts"
+    "typedoc": "typedoc --plugin typedoc-plugin-markdown --out temp/docs src/index.ts"
   },
   "exports": {
     "import": "./built/index.js",
