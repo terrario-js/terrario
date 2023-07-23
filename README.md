@@ -19,7 +19,7 @@ npm i terrario
 ```
 
 ## Documentation
-[Docs](https://github.com/marihachi/terrario/tree/develop/docs/index.md)
+See [Website](https://terrario-js.github.io/)
 
 ## Basic Example
 ```ts
