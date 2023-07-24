@@ -26,41 +26,29 @@ export function failure(index: number): Failure {
 
 export type Result<T> = Success<T> | Failure;
 
-export class Parser<T, U extends Parser<any>[] = any> {
+export class Parser<T> {
   name?: string;
-  ctx: ParserContext<T, U> | LazyContext<T, U>;
+  ctx: ParserContext<T> | LazyContext<T>;
 
-  /** constructor */
-  constructor(handler: ParserHandler<T, U>, children: [...U], name?: string)
-  /** constructor (lazy) */
-  constructor(ctx: LazyContext<T, U>, name?: string)
-  constructor(arg1: ParserHandler<T, U> | LazyContext<T, U>, arg2?: [...U] | string, arg3?: string) {
-    if (arg2 == null || typeof arg2 == 'string') {
-      // lazy
-      const ctx = arg1 as LazyContext<T, U>;
-      const name = arg2;
-      this.ctx = ctx;
-      this.name = name;
-    } else {
-      const handler = arg1 as ParserHandler<T, U>;
-      const children = arg2;
-      const name = arg3;
+  constructor(opts: StrictParserOpts<T>)
+  constructor(opts: LazyParserOpts<T>)
+  constructor(opts: StrictParserOpts<T> | LazyParserOpts<T>) {
+    if (opts.handler != null) {
       this.ctx = {
-        handler: wrapByTraceHandler(handler, this.name),
-        children,
+        handler: wrapByTraceHandler(opts.handler, opts.name),
+        children: opts.children || [],
       };
-      this.name = name;
+    } else {
+      this.ctx = opts.lazy;
     }
+    this.name = opts.name;
   }
 
-  /**
-   * internal method
-  */
-  evalContext(): ParserContext<T, U> {
-    // if not evaluated yet
+  /** internal method */
+  _evalContext(): ParserContext<T> {
     if (typeof this.ctx == 'function') {
       const parser = this.ctx();
-      const ctx = parser.evalContext();
+      const ctx = parser._evalContext();
       this.ctx = {
         handler: wrapByTraceHandler(ctx.handler, this.name),
         children: ctx.children,
@@ -69,11 +57,8 @@ export class Parser<T, U extends Parser<any>[] = any> {
     return this.ctx;
   }
 
-  /**
-   * Experimental API
-  */
   exec(input: string, state: any = {}, offset: number = 0): Result<T> {
-    const ctx = this.evalContext();
+    const ctx = this._evalContext();
     return ctx.handler(input, offset, ctx.children, state);
   }
 
@@ -82,9 +67,6 @@ export class Parser<T, U extends Parser<any>[] = any> {
     return parser.exec(input, state, 0);
   }
 
-  /**
-   * Experimental API
-  */
   find(input: string, state: any = {}): { index: number, input: string, result: Result<T> } | undefined {
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
@@ -96,9 +78,6 @@ export class Parser<T, U extends Parser<any>[] = any> {
     return undefined;
   }
 
-  /**
-   * Experimental API
-  */
   findAll(input: string, state: any = {}): { index: number, input: string, result: Result<T> }[] {
     const results = [];
     for (let i = 0; i < input.length; i++) {
@@ -112,8 +91,8 @@ export class Parser<T, U extends Parser<any>[] = any> {
   }
 
   map<U>(fn: (value: T) => U): Parser<U> {
-    return new Parser((input, index, [child], state) => {
-      const result = child.exec(input, state, index);
+    return createParser((input, index, children, state) => {
+      const result = children[0].exec(input, state, index);
       if (!result.success) {
         return result;
       }
@@ -122,7 +101,7 @@ export class Parser<T, U extends Parser<any>[] = any> {
   }
 
   text(): Parser<string> {
-    return new Parser((input, index, [child], state) => {
+    return createParser((input, index, [child], state) => {
       const result = child.exec(input, state, index);
       if (!result.success) {
         return result;
@@ -132,10 +111,16 @@ export class Parser<T, U extends Parser<any>[] = any> {
     }, [this]);
   }
 
-  many(min: number): Parser<T[]>
-  many(min: number, terminator: Parser<unknown>): Parser<T[]>
-  many(min: number, terminator?: Parser<unknown>): Parser<T[]> {
-    return (terminator != null) ? manyWithout(this, min, terminator) : many(this, min);
+  many(min?: number, max?: number): Parser<T[]>
+  many(opts: { min?: number, max?: number, notMatch?: Parser<unknown> }): Parser<T[]>
+  many(arg1?: number | { min?: number, max?: number, notMatch?: Parser<unknown> }, arg2?: number): Parser<T[]> {
+    if (typeof arg1 == 'number') {
+      // with min, max
+      return many(this, { min: arg1, max: arg2 });
+    } else {
+      // with opts
+      return many(this, arg1);
+    }
   }
 
   option(): Parser<T | null> {
@@ -145,11 +130,8 @@ export class Parser<T, U extends Parser<any>[] = any> {
     ]);
   }
 
-  /**
-   * Experimental API
-  */
   state(key: string, value: (state: any) => any): Parser<T> {
-    return new Parser((input, index, [child], state) => {
+    return createParser((input, index, [child], state) => {
       const storedValue = state[key];
       state[key] = value(state);
       const result = child.exec(input, state, index);
@@ -159,20 +141,34 @@ export class Parser<T, U extends Parser<any>[] = any> {
   }
 }
 
-export type ParserHandler<T, U extends Parser<any>[]> = (input: string, index: number, children: [...U], state: any) => Result<T>;
-
-export type ParserContext<T, U extends Parser<any>[] = any> = {
-  handler: ParserHandler<T, U>;
-  children: [...U];
+type StrictParserOpts<T> = {
+  handler: ParserHandler<T>,
+  children?: Parser<any>[],
+  name?: string,
+  lazy?: undefined,
 };
 
-export type LazyContext<T, U extends Parser<any>[] = any> =
-  () => Parser<T, U>;
+type LazyParserOpts<T> = {
+  lazy: LazyContext<T>,
+  name?: string,
+  handler?: undefined,
+  children?: undefined,
+};
+
+export type ParserHandler<T> = (input: string, index: number, children: Parser<any>[], state: any) => Result<T>;
+
+export type ParserContext<T> = {
+  handler: ParserHandler<T>;
+  children: Parser<any>[];
+};
+
+export type LazyContext<T> =
+  () => Parser<T>;
 
 type ResultType<T> = T extends Parser<infer R> ? R : never;
 type ResultTypes<T> = T extends [infer Head, ...infer Tail] ? [ResultType<Head>, ...ResultTypes<Tail>] : [];
 
-function wrapByTraceHandler<T, U extends Parser<any>[] = any>(handler: ParserHandler<T, U>, name?: string): ParserHandler<T, U> {
+function wrapByTraceHandler<T>(handler: ParserHandler<T>, name?: string): ParserHandler<T> {
   return (input, index, children, state) => {
     if (state.trace && name != null) {
       const pos = `${index}`;
@@ -191,8 +187,14 @@ function wrapByTraceHandler<T, U extends Parser<any>[] = any>(handler: ParserHan
   };
 }
 
-function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
-  return new Parser((input, index, [child], state) => {
+function many<T>(parser: Parser<T>, opts: { min?: number, max?: number, notMatch?: Parser<unknown> } = {}): Parser<T[]> {
+  if (opts.notMatch != null) {
+    return many(seq([
+      notMatch(opts.notMatch),
+      parser,
+    ], 1), { min: opts.min, max: opts.max });
+  }
+  return createParser((input, index, [child], state) => {
     let result;
     let latestIndex = index;
     const accum: T[] = [];
@@ -204,18 +206,14 @@ function many<T>(parser: Parser<T>, min: number): Parser<T[]> {
       latestIndex = result.index;
       accum.push(result.value);
     }
-    if (accum.length < min) {
+    if (opts.min != null && accum.length < opts.min) {
+      return failure(latestIndex);
+    }
+    if (opts.max != null && accum.length > opts.max) {
       return failure(latestIndex);
     }
     return success(latestIndex, accum);
   }, [parser]);
-}
-
-function manyWithout<T>(parser: Parser<T>, min: number, terminator: Parser<unknown>): Parser<T[]> {
-  return many(seq([
-    notMatch(terminator),
-    parser,
-  ], 1), min);
 }
 
 export function str<T extends string>(value: T): Parser<T>
@@ -225,7 +223,7 @@ export function str(value: string | RegExp): Parser<string> {
 }
 
 function strWithString<T extends string>(value: T): Parser<T> {
-  return new Parser((input, index, [], _state) => {
+  return createParser((input, index, [], _state) => {
     if ((input.length - index) < value.length) {
       return failure(index);
     }
@@ -233,19 +231,19 @@ function strWithString<T extends string>(value: T): Parser<T> {
       return failure(index);
     }
     return success(index + value.length, value);
-  }, []);
+  });
 }
 
 function strWithRegExp(pattern: RegExp): Parser<string> {
   const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
-  return new Parser((input, index, [], _state) => {
+  return createParser((input, index, [], _state) => {
     const text = input.slice(index);
     const result = re.exec(text);
     if (result == null) {
       return failure(index);
     }
     return success(index + result[0].length, result[0]);
-  }, []);
+  });
 }
 
 export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<ResultTypes<[...T]>>
@@ -255,7 +253,7 @@ export function seq(parsers: Parser<any>[], select?: number) {
 }
 
 function seqAll<T extends Parser<any>[]>(parsers: [...T]): Parser<ResultTypes<[...T]>> {
-  return new Parser((input, index, children, state) => {
+  return createParser((input, index, children, state) => {
     let result;
     let latestIndex = index;
     const accum = [];
@@ -276,7 +274,7 @@ function seqSelect<T extends Parser<any>[], U extends number>(parsers: [...T], s
 }
 
 export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<ResultTypes<T>[number]> {
-  return new Parser((input, index, children, state) => {
+  return createParser((input, index, children, state) => {
     let result;
     for (let i = 0; i < children.length; i++) {
       result = children[i].exec(input, state, index) as Result<ResultTypes<T>[number]>;
@@ -288,31 +286,23 @@ export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<Result
   }, parsers);
 }
 
-export function sep<T>(item: Parser<T>, separator: Parser<unknown>, min: number): Parser<T[]> {
-  if (min < 1) {
-    throw new Error('"min" must be a value greater than or equal to 1.');
-  }
-  return seq([
-    item,
-    seq([
-      separator,
-      item,
-    ], 1).many(min - 1),
-  ]).map(result => [result[0], ...result[1]]);
+function createParser<T>(handler: ParserHandler<T>, children?: Parser<any>[], name?: string): Parser<T> {
+  return new Parser({ handler, children, name });
 }
+export { createParser as parser };
 
-export function lazy<T>(fn: () => Parser<T>): Parser<T> {
-  return new Parser(fn);
+export function lazy<T>(fn: () => Parser<T>, name?: string): Parser<T> {
+  return new Parser({ lazy: fn, name });
 }
 
 export function succeeded<T>(value: T): Parser<T> {
-  return new Parser((_input, index, [], _state) => {
+  return createParser((_input, index, [], _state) => {
     return success(index, value);
-  }, []);
+  });
 }
 
 export function match<T>(parser: Parser<T>): Parser<T> {
-  return new Parser((input, index, [child], state) => {
+  return createParser((input, index, [child], state) => {
     const result = child.exec(input, state, index);
     return result.success
       ? success(index, result.value)
@@ -321,7 +311,7 @@ export function match<T>(parser: Parser<T>): Parser<T> {
 }
 
 export function notMatch(parser: Parser<unknown>): Parser<null> {
-  return new Parser((input, index, [child], state) => {
+  return createParser((input, index, [child], state) => {
     const result = child.exec(input, state, index);
     return !result.success
       ? success(index, null)
@@ -329,15 +319,12 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
   }, [parser]);
 }
 
-/**
- * Experimental API
-*/
 export function cond(predicate: (state: any) => boolean): Parser<null> {
-  return new Parser((_input, index, [], state) => {
+  return createParser((_input, index, [], state) => {
     return predicate(state)
       ? success(index, null)
       : failure(index);
-  }, []);
+  });
 }
 
 export const cr = str('\r');
@@ -345,27 +332,27 @@ export const lf = str('\n');
 export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
-export const sof = new Parser((_input, index, [], _state) => {
+export const sof = createParser((_input, index, [], _state) => {
   return index == 0
     ? success(index, null)
     : failure(index);
-}, []);
+});
 
-export const eof = new Parser((input, index, [], _state) => {
+export const eof = createParser((input, index, [], _state) => {
   return index >= input.length
     ? success(index, null)
     : failure(index);
-}, []);
+});
 
-export const char = new Parser((input, index, [], _state) => {
+export const char = createParser((input, index, [], _state) => {
   if ((input.length - index) < 1) {
     return failure(index);
   }
   const value = input.charAt(index);
   return success(index + 1, value);
-}, []);
+});
 
-export const lineBegin = new Parser((input, index, [], state) => {
+export const lineBegin = createParser((input, index, [], state) => {
   if (sof.exec(input, state, index).success) {
     return success(index, null);
   }
@@ -376,7 +363,7 @@ export const lineBegin = new Parser((input, index, [], state) => {
     return success(index, null);
   }
   return failure(index);
-}, []);
+});
 
 export const lineEnd = match(alt([
   eof,
@@ -384,12 +371,8 @@ export const lineEnd = match(alt([
   lf,
 ])).map(() => null);
 
-//type Syntax<T> = (rules: Record<string, Parser<T>>) => Parser<T>;
-//type SyntaxReturn<T> = T extends (rules: Record<string, Parser<any>>) => infer R ? R : never;
-//export function createLanguage2<T extends Record<string, Syntax<any>>>(syntaxes: T): { [K in keyof T]: SyntaxReturn<T[K]> } {
-
 // TODO: 関数の型宣言をいい感じにしたい
-export function createLanguage<T>(syntaxes: { [K in keyof T]: (r: Record<string, Parser<any>>) => T[K] }): T {
+export function language<T>(syntaxes: { [K in keyof T]: (r: Record<string, Parser<any>>) => T[K] }): T {
   const rules: Record<string, Parser<any>> = {};
   for (const key of Object.keys(syntaxes)) {
     rules[key] = lazy(() => {

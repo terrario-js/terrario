@@ -1,6 +1,6 @@
 # Index of contents
 - [Basic APIs](#basic-apis)
-  - T.createLanguage()
+  - T.language()
   - parser.parse()
   - T.str()
   - T.seq()
@@ -26,7 +26,7 @@
   - parser.find()
   - parser.findAll()
 - [Custom parsers](#custom-parsers)
-  - new T.Parser()
+  - T.parser()
   - T.success()
   - T.failure()
   - parser.exec()
@@ -39,17 +39,16 @@
 
 # Basic APIs
 
-## T.createLanguage()
+## T.language()
 ```
-T.createLanguage(syntaxes: Record<string, (rules: Language) => Parser>): Language
+T.language(syntaxes: Record<string, (rules: Language) => Parser>): Language
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 We can define some syntax rules to build a language.  
 Each rule is lazy evaluated.
 
 ```ts
-const lang = T.createLanguage({
+const lang = T.language({
   root: rules => {
     return T.alt([
       rules.rule1,
@@ -75,7 +74,6 @@ console.log(result);
 ```
 parser.parse(input: string, state?: any): Result
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Parses with the parser.
 
@@ -92,7 +90,6 @@ parser.parse('a', { flag: true, count: 0 });
 ```
 T.str(value: string): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a parser that consumes the specified string.
 
@@ -109,7 +106,6 @@ console.log(result);
 ```
 T.str(pattern: Regexp): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a parser that consumes the specified regular expression.
 
@@ -124,9 +120,8 @@ console.log(result);
 
 ## T.seq()
 ```
-T.seq(parsers: Parser[]): Parser
+T.seq(parsers: Parser[], select?: boolean): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a parser that applies parsers in sequence.
 
@@ -143,10 +138,6 @@ console.log(result);
 ```
 
 ### Select a return value
-```
-T.seq(parsers: Parser[], select: boolean): Parser
-```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 You can also select a result to be returned from all of them:
 ```ts
@@ -165,7 +156,6 @@ console.log(result);
 ```
 T.alt(parsers: Parser[]): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a parser that tries to match one of the parsers.  
 The parsers are used in order of precedence.
@@ -192,7 +182,8 @@ console.log(result);
 ```
 T.sep(item: Parser, separator: Parser, min: number): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
+
+**NOTE: This API has removed.**
 
 Generates a parser that splits a string and extracts multiple items.  
 The `separator` parser is used to split the string, and the `item` parser is used to consume each item.
@@ -234,7 +225,6 @@ console.log(result);
 ```
 T.match(parser: Parser): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a new parser to continue if the match is successful. (Positive lookahead)  
 The generated parser does not consume input.
@@ -254,7 +244,6 @@ console.log(result);
 ```
 T.notMatch(parser: Parser): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a new parser to continue if the match fails. (Negative lookahead)  
 The generated parser does not consume input.
@@ -274,7 +263,6 @@ console.log(result);
 ```
 parser.map(fn: (value) => any): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Maps the parsed results using the specified function.
 
@@ -297,7 +285,6 @@ console.log(result);
 ```
 parser.text(): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 The parser maps the consumed portion as a string.
 
@@ -316,9 +303,9 @@ console.log(result);
 
 ## parser.many()
 ```
-parser.many(min: number): Parser
+parser.many(min?: number, max?: number): Parser
+parser.many(opts: { min?: number, max?: number, notMatch?: Parser }): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Repeatedly applies the parser.  
 The argument min specifies the minimum number of times it will be applied.
@@ -355,12 +342,7 @@ console.log(result);
 // => { success: true, value: [ 'abc', 'abc' ], index: 6 }
 ```
 
-### With terminator
-```
-parser.many(min: number, terminator: Parser): Parser
-```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
-
+### With termination condition
 The parser.many() can have a termination condition.
 
 The following example uses many to match strings up to ")".
@@ -369,7 +351,7 @@ The terminating condition ")" is not consumed.
 // [Equivalent PEG] "(" (!")" @.)+ ")"
 const parser = T.seq([
 	T.str('('),
-	T.char.many(1, T.str(')')),
+	T.char.many({ min: 1, notMatch: T.str(')') }),
 	T.str(')'),
 ]);
 
@@ -382,7 +364,6 @@ console.log(result);
 ```
 parser.option(): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a new parser that returns null even if the match fails.  
 Make the parser consumption optional.
@@ -409,7 +390,6 @@ console.log(result);
 ```
 T.newline: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Matches `\r\n` or `\r` or `\n`
 
@@ -417,7 +397,6 @@ Matches `\r\n` or `\r` or `\n`
 ```
 T.sof: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Matches start of input string.
 
@@ -425,7 +404,6 @@ Matches start of input string.
 ```
 T.eof: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Matches end of input string.
 
@@ -445,7 +423,6 @@ console.log(result);
 ```
 T.char: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 A parser that consumes any single character.
 
@@ -462,7 +439,6 @@ console.log(result);
 ```
 T.lineBegin: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 ```ts
 //TODO
@@ -472,7 +448,6 @@ T.lineBegin: Parser
 ```
 T.lineEnd: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 ```ts
 //TODO
@@ -491,7 +466,6 @@ type Failure = {
 };
 type Result = Success | Failure;
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Result structure is unstable yet.
 
@@ -501,7 +475,6 @@ Result structure is unstable yet.
 ```
 parser.state(key: string, value: (state: any) => any): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 parser.state() creates a parser that sets a value to a specified key in a state object.  
 When this parser finishes executing, the contents of the state object are restored.
@@ -510,7 +483,6 @@ When this parser finishes executing, the contents of the state object are restor
 ```
 T.cond(predicate: (state: any) => boolean): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Conditional branching can be performed using the state.
 
@@ -529,30 +501,27 @@ console.log(result);
 
 ## parser.find()
 ```
-parser.find(input: string, state?: any): { index: number, input: string, result: Result<T> } | undefined
+parser.find(input: string, state?: any): { index: number, input: string, result: Result } | undefined
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Find the matches to the pattern, starting from the front
 
 ## parser.findAll()
 ```
-parser.findAll(input: string, state?: any): { index: number, input: string, result: Result<T> }[]
+parser.findAll(input: string, state?: any): { index: number, input: string, result: Result }[]
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 # Custom parsers
 
-## new T.Parser()
+## T.parser()
 ```
-new T.Parser(handler: (input: string, index: number, state: any) => Result)
+T.parser(handler: (input: string, index: number, children: Parser[], state: any) => Result, children?: Parser[], name?: string): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Makes a new custom parser.
 
 ```ts
-const parser = new T.Parser((input, index, state) => {
+const parser = T.parser((input, index, children, state) => {
   if (index >= input.length) {
     return T.failure(index);
   }
@@ -564,7 +533,6 @@ const parser = new T.Parser((input, index, state) => {
 ```
 T.success(index: number, value: any): Success
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Generates a result indicating the success of a parser.
 
@@ -572,15 +540,13 @@ Generates a result indicating the success of a parser.
 ```
 T.failure(index: number): Failure
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Generates a result indicating the failure of a parser.
 
 ### parser.exec()
 ```
-parser.exec(input: string, state?: any, offset?: number): Result<T>
+parser.exec(input: string, state?: any, offset?: number): Result
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Perform other parsers within the custom parser.
 
@@ -588,18 +554,16 @@ Perform other parsers within the custom parser.
 
 ## T.lazy()
 ```
-T.lazy(fn: () => Parser): Parser
+T.lazy(fn: () => Parser, name?: string): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a new parser that is lazy-evaluated.  
-Normally there is no need to use this API. Use T.createLanguage() instead.
+Normally there is no need to use this API. Use T.language() instead.
 
 ## T.succeeded()
 ```
 T.succeeded(value: any): Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Stable
 
 Generates a parser that succeeds with the specified value.
 
@@ -614,7 +578,6 @@ console.log(result);
 ```
 T.cr: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Matches `\r` (CR)
 
@@ -622,7 +585,6 @@ Matches `\r` (CR)
 ```
 T.lf: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Matches `\n` (LF)
 
@@ -630,6 +592,5 @@ Matches `\n` (LF)
 ```
 T.crlf: Parser
 ```
-![mark](https://placehold.co/15x15/1cc8d4/1cc8d4.png) Stability: Experimental
 
 Matches `\r\n` (CR + LF)

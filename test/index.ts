@@ -4,7 +4,7 @@ import * as T from '../src/index.js';
 describe('Parser', () => {
   describe('parse()', () => {
     it('input', () => {
-      const parser = new T.Parser((input, index, children, state) => {
+      const parser = T.parser((input, index, children, state) => {
         return T.success(index, null);
       }, []);
       const result = parser.parse('');
@@ -12,7 +12,7 @@ describe('Parser', () => {
     });
 
     it('state', () => {
-      const parser = new T.Parser((input, index, children, state) => {
+      const parser = T.parser((input, index, children, state) => {
         if (state.value !== 1) {
           return T.failure(index);
         }
@@ -24,7 +24,7 @@ describe('Parser', () => {
   });
 
   it('map()', () => {
-    const parser = new T.Parser((input, index, children, state) => {
+    const parser = T.parser((input, index, children, state) => {
       return T.success(index, 1);
     }, []).map(value => {
       return value === 1 ? 2 : 3;
@@ -47,11 +47,11 @@ describe('Parser', () => {
   });
 
   describe('many()', () => {
-    describe('min = 0', () => {
+    describe('basic', () => {
       it('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many(0);
+        const parser = T.str('abc').many();
 
         input = '';
         result = parser.parse(input);
@@ -63,7 +63,7 @@ describe('Parser', () => {
       it('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many(0);
+        const parser = T.str('abc').many();
 
         input = 'abc';
         result = parser.parse(input);
@@ -115,7 +115,7 @@ describe('Parser', () => {
 
       const parser = T.seq([
         T.str('('),
-        T.char.many(1, T.str(')')).text(),
+        T.char.many({ min: 1, notMatch: T.str(')') }).text(),
         T.str(')'),
       ], 1);
 
@@ -224,44 +224,6 @@ describe('Combinators', () => {
     assert.strictEqual(result.index, 3);
   });
 
-  describe('sep()', () => {
-    describe('min = 2', () => {
-      it('0 item', () => {
-        let input, result;
-
-        const parser = T.sep(T.str('abc'), T.str(','), 2);
-
-        input = '';
-        result = parser.parse(input);
-        assert.ok(!result.success);
-        assert.strictEqual(result.index, 0);
-      });
-
-      it('1 item', () => {
-        let input, result;
-
-        const parser = T.sep(T.str('abc'), T.str(','), 2);
-
-        input = 'abc';
-        result = parser.parse(input);
-        assert.ok(!result.success);
-        assert.strictEqual(result.index, 3);
-      });
-
-      it('2 items', () => {
-        let input, result;
-
-        const parser = T.sep(T.str('abc'), T.str(','), 2);
-
-        input = 'abc,abc';
-        result = parser.parse(input);
-        assert.ok(result.success);
-        assert.deepStrictEqual(result.value, ['abc', 'abc']);
-        assert.strictEqual(result.index, 7);
-      });
-    });
-  });
-
   // it('lazy()', () => {
   // });
 
@@ -274,6 +236,7 @@ describe('Combinators', () => {
   it('state api', () => {
     let input, parser, result;
 
+    // 1
     parser = T.seq([
       T.cond(state => state.enabled),
       T.char,
@@ -283,6 +246,7 @@ describe('Combinators', () => {
     assert.ok(result.success);
     assert.strictEqual(result.index, 1);
 
+    // 2
     parser = T.seq([
       T.cond(state => state.enabled),
       T.char,
@@ -291,6 +255,18 @@ describe('Combinators', () => {
     result = parser.parse('a');
     assert.ok(!result.success);
     assert.strictEqual(result.index, 0);
+
+    // 3
+    parser = T.seq([
+      T.succeeded(null).state('enabled', () => true),
+      T.cond(state => !state.enabled),
+      T.str('a'),
+    ], 2)
+
+    result = parser.parse('a');
+    assert.ok(result.success);
+    assert.strictEqual(result.index, 1);
+
   });
 
   it('eof', () => {
@@ -323,5 +299,5 @@ describe('Combinators', () => {
   // });
 });
 
-// it('createLanguage()', () => {
+// it('language()', () => {
 // });
