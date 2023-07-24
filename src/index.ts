@@ -67,7 +67,7 @@ export class Parser<T> {
   */
   constructor(opts: StrictParserOpts<T>)
   /**
-   * Parser constructor
+   * Parser constructor (Lazy parser)
    * 
    * @internal
   */
@@ -102,7 +102,7 @@ export class Parser<T> {
   }
 
   /**
-   * Execute a child parser in the parser.
+   * Execute the parser handler.
    * 
    * @public
   */
@@ -155,7 +155,8 @@ export class Parser<T> {
   }
 
   /**
-   * map
+   * Create a new parser that wraps the current parser.
+   * The generated parser maps the result of the inner parser and returns it as a result.
    * 
    * @public
   */
@@ -170,7 +171,8 @@ export class Parser<T> {
   }
 
   /**
-   * text
+   * Create a new parser that wraps the current parser.
+   * The generated parser will return the text in the range matched by the inner parser.
    * 
    * @public
   */
@@ -186,13 +188,13 @@ export class Parser<T> {
   }
 
   /**
-   * many
+   * Create a new parser that tries to apply the parser iteratively.
    * 
    * @public
   */
   many(min?: number, max?: number): Parser<T[]>
   /**
-   * many
+   * Create a new parser that tries to apply the parser iteratively.
    * 
    * @public
   */
@@ -208,7 +210,9 @@ export class Parser<T> {
   }
 
   /**
-   * option
+   * Create a new parser that wraps the current parser.
+   * The generated parser returns success regardless of whether the inner parser successfully matched.
+   * If the inner parser fails, a null value is returned.
    * 
    * @public
   */
@@ -220,7 +224,10 @@ export class Parser<T> {
   }
 
   /**
-   * state
+   * Create a new parser that wraps the current parser.
+   * The generated parser will set the value of the state variable from the given set function and
+   * run the inner parser. When the inner parser finishes executing, it restores the value of the
+   * state variable.
    * 
    * @public
   */
@@ -339,13 +346,13 @@ function many<T>(parser: Parser<T>, opts: { min?: number, max?: number, notMatch
 }
 
 /**
- * str
+ * Create a new parser that matches the given string.
  * 
  * @public
 */
 export function str<T extends string>(value: T): Parser<T>
 /**
- * str
+ * Create a new parser that matches the given regular expression.
  * 
  * @public
 */
@@ -434,7 +441,7 @@ export function alt<T extends Parser<unknown>[]>(parsers: [...T]): Parser<Result
 }
 
 /**
- * parser
+ * Create a custom parser.
  * 
  * @public
 */
@@ -444,7 +451,7 @@ function createParser<T>(handler: ParserHandler<T>, children?: Parser<any>[], na
 export { createParser as parser };
 
 /**
- * lazy
+ * Create a lazy parser.
  * 
  * @public
 */
@@ -453,7 +460,7 @@ export function lazy<T>(fn: () => Parser<T>, name?: string): Parser<T> {
 }
 
 /**
- * succeeded
+ * Create a new parser that already succeeds.
  * 
  * @public
 */
