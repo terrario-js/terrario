@@ -29,7 +29,9 @@
     "build:cjs": "npx tsc --outdir built/cjs --module CommonJS && npm run build:cjs:rename",
     "build:cjs:rename": "node -e \"require('fs').renameSync('./built/cjs/index.js', './built/cjs/index.cjs')\"",
     "test": "jest --verbose",
-    "typedoc": "typedoc --plugin typedoc-plugin-markdown --out temp/docs src/index.ts"
+    "typedoc": "typedoc --plugin typedoc-plugin-markdown --out temp/docs src/index.ts",
+    "api-init": "api-extractor init",
+    "api": "api-extractor run --local --verbose"
   },
   "exports": {
     "import": "./built/index.js",
@@ -37,6 +39,7 @@
     "default": "./built/index.js"
   },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.36.3",
     "@types/jest": "29.5.3",
     "@types/node": "20.4.2",
     "jest": "29.6.1",
