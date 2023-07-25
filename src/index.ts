@@ -386,15 +386,16 @@ function strWithRegExp(pattern: RegExp): Parser<string> {
 }
 
 /**
- * seq
+ * Create a new parser that sequentially applies an array of parser.
  * 
  * @public
 */
 export function seq<T extends Parser<any>[]>(parsers: [...T]): Parser<ResultTypes<[...T]>>
 /**
- * seq
+ * Create a new parser that sequentially applies an array of parser.
  * 
  * @public
+ * @param select The index of the data returned in the result.
 */
 export function seq<T extends Parser<any>[], U extends number>(parsers: [...T], select: U): T[U]
 export function seq(parsers: Parser<any>[], select?: number) {
@@ -523,7 +524,7 @@ export const crlf = str('\r\n');
 export const newline = alt([crlf, cr, lf]);
 
 /**
- * sof
+ * Match the begin of the input string.
  * 
  * @public
 */
@@ -534,7 +535,7 @@ export const sof = createParser((_input, index, [], _state) => {
 });
 
 /**
- * eof
+ * Match the end of the input string.
  * 
  * @public
 */
@@ -545,7 +546,7 @@ export const eof = createParser((input, index, [], _state) => {
 });
 
 /**
- * char
+ * any char
  * 
  * @public
 */
@@ -558,7 +559,7 @@ export const char = createParser((input, index, [], _state) => {
 });
 
 /**
- * lineBegin
+ * Match lineBegin
  * 
  * @public
 */
@@ -576,7 +577,7 @@ export const lineBegin = createParser((input, index, [], state) => {
 });
 
 /**
- * lineEnd
+ * Match lineEnd
  * 
  * @public
 */
@@ -587,7 +588,7 @@ export const lineEnd = match(alt([
 ])).map(() => null);
 
 /**
- * language
+ * Create a language
  * 
  * @public
 */
