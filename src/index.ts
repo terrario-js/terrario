@@ -90,7 +90,7 @@ export class Parser<T> {
    * @internal
   */
   _evalContext(): ParserContext<T> {
-    if (typeof this.ctx == 'function') {
+    if (typeof this.ctx === 'function') {
       const parser = this.ctx();
       const ctx = parser._evalContext();
       this.ctx = {
@@ -200,7 +200,7 @@ export class Parser<T> {
   */
   many(opts: { min?: number, max?: number, notMatch?: Parser<unknown> }): Parser<T[]>
   many(arg1?: number | { min?: number, max?: number, notMatch?: Parser<unknown> }, arg2?: number): Parser<T[]> {
-    if (typeof arg1 == 'number') {
+    if (typeof arg1 === 'number') {
       // with min, max
       return many(this, { min: arg1, max: arg2 });
     } else {
@@ -358,7 +358,7 @@ export function str<T extends string>(value: T): Parser<T>
 */
 export function str(pattern: RegExp): Parser<string>
 export function str(value: string | RegExp): Parser<string> {
-  return (typeof value == 'string') ? strWithString(value) : strWithRegExp(value);
+  return (typeof value === 'string') ? strWithString(value) : strWithRegExp(value);
 }
 
 function strWithString<T extends string>(value: T): Parser<T> {
@@ -528,7 +528,7 @@ export const newline = alt([crlf, cr, lf]);
  * @public
 */
 export const sof = createParser((_input, index, [], _state) => {
-  return index == 0
+  return index === 0
     ? success(index, null)
     : failure(index);
 });
