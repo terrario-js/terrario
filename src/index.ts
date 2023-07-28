@@ -240,6 +240,19 @@ export class Parser<T> {
       return result;
     }, [this]);
   }
+
+  /**
+   * where
+   * 
+   * @public
+  */
+  where(predicate: (state: any) => boolean): Parser<null> {
+    return createParser((input, index, [child], state) => {
+      return predicate(state)
+        ? child.exec(input, state, index)
+        : failure(index);
+    }, [this]);
+  }
 }
 
 /**
@@ -497,19 +510,6 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
       ? success(index, null)
       : failure(index);
   }, [parser]);
-}
-
-/**
- * cond
- * 
- * @public
-*/
-export function cond(predicate: (state: any) => boolean): Parser<null> {
-  return createParser((_input, index, [], state) => {
-    return predicate(state)
-      ? success(index, null)
-      : failure(index);
-  });
 }
 
 export const cr = str('\r');
