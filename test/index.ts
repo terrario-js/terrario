@@ -6,7 +6,7 @@ describe('Parser', () => {
     it('input', () => {
       const parser = T.parser((input, index, children, state) => {
         return T.success(index, null);
-      }, []);
+      });
       const result = parser.parse('');
       assert.ok(result.success);
     });
@@ -17,7 +17,7 @@ describe('Parser', () => {
           return T.failure(index);
         }
         return T.success(index, null);
-      }, []);
+      });
       const result = parser.parse('', { value: 1 });
       assert.ok(result.success);
     });
@@ -26,7 +26,7 @@ describe('Parser', () => {
   it('map()', () => {
     const parser = T.parser((input, index, children, state) => {
       return T.success(index, 1);
-    }, []).map(value => {
+    }).map(value => {
       return value === 1 ? 2 : 3;
     });
     const result = parser.parse('');
