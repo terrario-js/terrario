@@ -1,17 +1,17 @@
-import * as Api from './index.js';
+import * as T from './index.js';
 
 /**
  * Create a language
  * 
  * @public
 */
-export function language<T>(syntaxes: { [K in keyof T]: (r: Record<string, Api.Parser<any>>) => T[K] }): T {
+export function language<U>(syntaxes: { [K in keyof U]: (r: Record<string, T.Parser<any>>) => U[K] }): U {
   // TODO: 関数の型宣言をいい感じにしたい
-  const rules: Record<string, Api.Parser<any>> = {};
+  const rules: Record<string, T.Parser<any>> = {};
   for (const key of Object.keys(syntaxes)) {
-    rules[key] = Api.lazy(() => {
+    rules[key] = T.lazy(() => {
       const parser = (syntaxes as any)[key](rules);
-      if (parser == null || !(parser instanceof Api.Parser)) {
+      if (parser == null || !(parser instanceof T.Parser)) {
         throw new Error('syntax must return a Parser.');
       }
       parser.name = key;
