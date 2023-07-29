@@ -24,12 +24,13 @@
     "url": "git+https://github.com/marihachi/terrario.git"
   },
   "scripts": {
-    "build": "mkdir ./dist && npm run build:esm && npm run build:cjs && npm run build:copy",
+    "build": "npm run clean && mkdir ./dist && npm run build:esm && npm run build:cjs && npm run build:copy",
     "build:esm": "tsc -p tsconfig.esm.json && cp -r ./template/esm/ ./dist/esm && npm run build:esm:types",
     "build:esm:types": "api-extractor run --local --verbose -c ./api-extractor.esm.json",
     "build:cjs": "tsc -p tsconfig.cjs.json && cp -r ./template/cjs/ ./dist/cjs && npm run build:cjs:types",
     "build:cjs:types": "api-extractor run --local --verbose -c ./api-extractor.cjs.json",
     "build:copy": "cd ./build && copy ./**/*.js ../dist",
+    "clean": "rm -rf ./build && rm -rf ./dist",
     "test": "jest --verbose",
     "typedoc": "typedoc --plugin typedoc-plugin-markdown --out temp/docs src/index.ts",
     "api-init": "api-extractor init"
