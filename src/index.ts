@@ -240,19 +240,6 @@ export class Parser<T> {
       return result;
     }, [this]);
   }
-
-  /**
-   * where
-   * 
-   * @public
-  */
-  where(predicate: (state: any) => boolean): Parser<null> {
-    return createParser((input, index, [child], state) => {
-      return predicate(state)
-        ? child.exec(input, state, index)
-        : failure(index);
-    }, [this]);
-  }
 }
 
 /**
@@ -508,6 +495,19 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
     const result = child.exec(input, state, index);
     return !result.success
       ? success(index, null)
+      : failure(index);
+  }, [parser]);
+}
+
+/**
+ * where
+ * 
+ * @public
+*/
+export function where<T>(condition: (state: any) => boolean, parser: Parser<T>): Parser<T> {
+  return createParser((input, index, [child], state) => {
+    return condition(state)
+      ? child.exec(input, state, index)
       : failure(index);
   }, [parser]);
 }

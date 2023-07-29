@@ -237,20 +237,18 @@ describe('Combinators', () => {
     let input, parser, result;
 
     // 1
-    parser = T.seq([
-      T.cond(state => state.enabled),
-      T.char,
-    ]).state('enabled', () => true);
+    parser = T.where(state => state.enabled,
+      T.char
+    ).state('enabled', () => true);
 
     result = parser.parse('a');
     assert.ok(result.success);
     assert.strictEqual(result.index, 1);
 
     // 2
-    parser = T.seq([
-      T.cond(state => state.enabled),
-      T.char,
-    ]).state('enabled', () => false);
+    parser = T.where(state => state.enabled,
+      T.char
+    ).state('enabled', () => false);
 
     result = parser.parse('a');
     assert.ok(!result.success);
@@ -259,8 +257,9 @@ describe('Combinators', () => {
     // 3
     parser = T.seq([
       T.succeeded(null).state('enabled', () => true),
-      T.cond(state => !state.enabled),
-      T.str('a'),
+      T.where(state => !state.enabled,
+        T.str('a')
+      ),
     ], 2)
 
     result = parser.parse('a');
