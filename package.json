@@ -1,13 +1,13 @@
 {
   "name": "terrario",
-  "version": "0.10.0-dev.8",
+  "version": "0.10.0-dev.9",
   "description": "A refined, expressive parser combinator library.",
   "license": "MIT",
   "author": "Marihachi",
   "type": "module",
   "module": "./dist/esm/index.js",
   "main": "./dist/cjs/index.js",
-  "types": "./dist/terrario.d.ts",
+  "types": "./dist/esm/terrario.d.mts",
   "contributors": [
     "ThinaticSystem <git@thinaticsystem.com> (https://thinaticsystem.com/)"
   ],
@@ -24,12 +24,12 @@
     "url": "git+https://github.com/marihachi/terrario.git"
   },
   "scripts": {
-    "build": "mkdir ./dist && npm run build:tsc && npm run build:copy && npm run build:types",
-    "build:tsc": "npm run build:esm && npm run build:cjs",
-    "build:esm": "tsc -p tsconfig.esm.json && cp -r ./template/esm/ ./dist/esm",
-    "build:cjs": "tsc -p tsconfig.cjs.json && cp -r ./template/cjs/ ./dist/cjs",
+    "build": "mkdir ./dist && npm run build:esm && npm run build:cjs && npm run build:copy",
+    "build:esm": "tsc -p tsconfig.esm.json && cp -r ./template/esm/ ./dist/esm && npm run build:esm:types",
+    "build:esm:types": "api-extractor run --local --verbose -c ./api-extractor.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && cp -r ./template/cjs/ ./dist/cjs && npm run build:cjs:types",
+    "build:cjs:types": "api-extractor run --local --verbose -c ./api-extractor.cjs.json",
     "build:copy": "cd ./build && copy ./**/*.js ../dist",
-    "build:types": "api-extractor run --local --verbose",
     "test": "jest --verbose",
     "typedoc": "typedoc --plugin typedoc-plugin-markdown --out temp/docs src/index.ts",
     "api-init": "api-extractor init"
@@ -37,11 +37,11 @@
   "exports": {
     ".": {
       "require": {
-        "types": "./dist/terrario.d.ts",
+        "types": "./dist/cjs/terrario.d.cts",
         "default": "./dist/cjs/index.js"
       },
       "import": {
-        "types": "./dist/terrario.d.ts",
+        "types": "./dist/esm/terrario.d.mts",
         "default": "./dist/esm/index.js"
       }
     }
