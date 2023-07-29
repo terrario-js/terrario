@@ -14,6 +14,7 @@
 ## 0.x.x (unreleased)
 
 - Change api: T.cond(predicate) -> T.where(condition, parser)
+- Improve package build.
 
 ## 0.9.0 (2023/07/21)
 
