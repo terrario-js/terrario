@@ -1,13 +1,12 @@
 {
   "name": "terrario",
-  "version": "0.9.0",
+  "version": "0.10.0-dev.1",
   "description": "A refined, expressive parser combinator library.",
   "license": "MIT",
   "author": "Marihachi",
   "type": "module",
-  "module": "./built/index.js",
-  "main": "./built/cjs/index.cjs",
-  "types": "./built/index.d.ts",
+  "module": "./build/esm/index.js",
+  "main": "./build/cjs/index.js",
   "contributors": [
     "ThinaticSystem <git@thinaticsystem.com> (https://thinaticsystem.com/)"
   ],
@@ -25,18 +24,17 @@
   },
   "scripts": {
     "build": "npm run build:esm && npm run build:cjs",
-    "build:esm": "tsc",
-    "build:cjs": "npx tsc --outdir built/cjs --module CommonJS && npm run build:cjs:rename",
-    "build:cjs:rename": "node -e \"require('fs').renameSync('./built/cjs/index.js', './built/cjs/index.cjs')\"",
+    "build:esm": "tsc -p tsconfig.esm.json && cp -r ./template/esm ./build",
+    "build:cjs": "tsc -p tsconfig.cjs.json && cp -r ./template/cjs ./build",
     "test": "jest --verbose",
     "typedoc": "typedoc --plugin typedoc-plugin-markdown --out temp/docs src/index.ts",
     "api-init": "api-extractor init",
     "api": "api-extractor run --local --verbose"
   },
   "exports": {
-    "import": "./built/index.js",
-    "require": "./built/cjs/index.cjs",
-    "default": "./built/index.js"
+    "import": "./build/esm/index.js",
+    "require": "./build/cjs/index.js",
+    "default": "./build/esm/index.js"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.36.3",
@@ -49,7 +47,7 @@
     "typescript": "5.1.6"
   },
   "files": [
-    "built/**/*",
+    "build/**/*",
     "CHANGELOG.md"
   ]
 }
