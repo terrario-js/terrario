@@ -1,6 +1,6 @@
 {
   "name": "terrario",
-  "version": "0.10.0-dev.7",
+  "version": "0.10.0-dev.8",
   "description": "A refined, expressive parser combinator library.",
   "license": "MIT",
   "author": "Marihachi",
@@ -35,12 +35,15 @@
     "api-init": "api-extractor init"
   },
   "exports": {
-    "types": "./dist/terrario.d.ts",
-    "import": {
-      "default": "./dist/esm/index.js"
-    },
-    "require": {
-      "default": "./dist/cjs/index.js"
+    ".": {
+      "require": {
+        "types": "./dist/terrario.d.ts",
+        "default": "./dist/cjs/index.js"
+      },
+      "import": {
+        "types": "./dist/terrario.d.ts",
+        "default": "./dist/esm/index.js"
+      }
     }
   },
   "devDependencies": {
