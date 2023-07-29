@@ -260,7 +260,7 @@ describe('Combinators', () => {
       T.where(state => !state.enabled,
         T.str('a')
       ),
-    ], 2)
+    ], 1);
 
     result = parser.parse('a');
     assert.ok(result.success);
