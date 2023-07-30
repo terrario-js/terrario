@@ -11,7 +11,7 @@
 
 -->
 
-## 0.x.x (unreleased)
+## 0.10.0 (2023/07/30)
 
 - Change api: T.cond(predicate) -> T.where(condition, parser)
 - Improve types of T.language() API.
