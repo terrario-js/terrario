@@ -1,6 +1,6 @@
-const { performance } = require('perf_hooks');
-const readLine = require('readline');
-const { parse } = require('./built/index');
+import { performance } from 'perf_hooks';
+import * as readLine from 'readline';
+import { parse } from './built/index.js';
 
 class InputCanceledError extends Error {
   constructor(message) {

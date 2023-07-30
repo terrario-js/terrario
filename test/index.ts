@@ -6,7 +6,7 @@ describe('Parser', () => {
     it('input', () => {
       const parser = T.parser((input, index, children, state) => {
         return T.success(index, null);
-      }, []);
+      });
       const result = parser.parse('');
       assert.ok(result.success);
     });
@@ -17,7 +17,7 @@ describe('Parser', () => {
           return T.failure(index);
         }
         return T.success(index, null);
-      }, []);
+      });
       const result = parser.parse('', { value: 1 });
       assert.ok(result.success);
     });
@@ -26,7 +26,7 @@ describe('Parser', () => {
   it('map()', () => {
     const parser = T.parser((input, index, children, state) => {
       return T.success(index, 1);
-    }, []).map(value => {
+    }).map(value => {
       return value === 1 ? 2 : 3;
     });
     const result = parser.parse('');
@@ -237,20 +237,18 @@ describe('Combinators', () => {
     let input, parser, result;
 
     // 1
-    parser = T.seq([
-      T.cond(state => state.enabled),
-      T.char,
-    ]).state('enabled', () => true);
+    parser = T.where(state => state.enabled,
+      T.char
+    ).state('enabled', () => true);
 
     result = parser.parse('a');
     assert.ok(result.success);
     assert.strictEqual(result.index, 1);
 
     // 2
-    parser = T.seq([
-      T.cond(state => state.enabled),
-      T.char,
-    ]).state('enabled', () => false);
+    parser = T.where(state => state.enabled,
+      T.char
+    ).state('enabled', () => false);
 
     result = parser.parse('a');
     assert.ok(!result.success);
@@ -259,9 +257,10 @@ describe('Combinators', () => {
     // 3
     parser = T.seq([
       T.succeeded(null).state('enabled', () => true),
-      T.cond(state => !state.enabled),
-      T.str('a'),
-    ], 2)
+      T.where(state => !state.enabled,
+        T.str('a')
+      ),
+    ], 1);
 
     result = parser.parse('a');
     assert.ok(result.success);

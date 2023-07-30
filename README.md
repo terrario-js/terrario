@@ -3,12 +3,12 @@
 [![Test](https://github.com/marihachi/terrario/actions/workflows/test.yml/badge.svg)](https://github.com/marihachi/terrario/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A simple, expressive parser combinator library with TypeScript.
+A refined, expressive parser combinator library.
 [Try it out!](https://npm.runkit.com/terrario)
 
 - 📍 Minimal yet powerful APIs
 - 🖨 Scannerless parsing
-- ⚙ Supports conditional branching by state
+- ⚙ Supports conditional control by state
 - ✨ Zero dependency
 
 The Terrario is inspired by PEG.js, Parsimmon, etc.
@@ -19,7 +19,7 @@ npm i terrario
 ```
 
 ## Documentation
-[Docs](https://github.com/marihachi/terrario/tree/develop/docs/index.md)
+See [Website](https://terrario-js.github.io/)
 
 ## Basic Example
 ```ts

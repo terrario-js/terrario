@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "commonjs",
-    "declaration": true,
+    "target": "ES2020",
+    "module": "ES2022",
+    "moduleResolution": "Node",
     "outDir": "./built/",
-    "removeComments": true,
+    "declaration": true,
     "strict": true,
-    "strictFunctionTypes": true,
-    "strictNullChecks": true,
-    "experimentalDecorators": true,
     "noImplicitReturns": true,
+    "removeComments": true,
+    "experimentalDecorators": true,
     "esModuleInterop": true,
   },
   "include": [
