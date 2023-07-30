@@ -592,12 +592,11 @@ export const lineEnd = match(alt([
  * 
  * @public
 */
-export function language<U>(syntaxes: { [K in keyof U]: (r: Record<string, Parser<any>>) => U[K] }): U {
-  // TODO: 関数の型宣言をいい感じにしたい
-  const rules: Record<string, Parser<any>> = {};
-  for (const key of Object.keys(syntaxes)) {
-    rules[key] = lazy(() => {
-      const parser = (syntaxes as any)[key](rules);
+export function language<U extends Language<U>>(source: LanguageSource<U>): U {
+  const lang: Record<string, Parser<any>> = {};
+  for (const key of Object.keys(source)) {
+    lang[key] = lazy(() => {
+      const parser = (source as any)[key](lang);
       if (parser == null || !(parser instanceof Parser)) {
         throw new Error('syntax must return a Parser.');
       }
@@ -605,5 +604,19 @@ export function language<U>(syntaxes: { [K in keyof U]: (r: Record<string, Parse
       return parser;
     });
   }
-  return rules as any;
+  return lang as any;
 }
+
+/**
+ * A type must be a language object.
+ * 
+ * @public
+*/
+export type Language<U> = {[K in keyof U]: U[K] extends Parser<unknown> ? U[K] : never };
+
+/**
+ * Language source
+ * 
+ * @public
+*/
+export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) => U[K] };
