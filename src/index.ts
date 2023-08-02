@@ -620,3 +620,61 @@ export type Language<U> = {[K in keyof U]: U[K] extends Parser<unknown> ? U[K] :
  * @public
 */
 export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) => U[K] };
+
+// infix expressions
+
+export function infix<T>(expr: Parser<T>, opTable: { op: string, prec: number, assoc: 'left' | 'right' }[]): Parser<InfixNode<T>> {
+  const infixParser: Parser<InfixNode<T>> = createParser((input, index, [child], state) => {
+    let latestIndex = index;
+    let result;
+
+    // left expr
+    result = child.exec(input, latestIndex, state);
+    if (!result.success) {
+      return result;
+    }
+    let left: InfixNode<T> = result.value as T;
+    latestIndex = result.index;
+
+    while (true) {
+      // get operator info
+      let info: { op: string, prec: number, assoc: 'left' | 'right' } | undefined;
+      for (const entry of opTable) {
+        if (input.startsWith(entry.op, latestIndex)) {
+          info = entry;
+        }
+      }
+      if (info == null || info.prec < state._minPrec) {
+        break;
+      }
+
+      // next next prec
+      const nextMinPrec = (info.assoc == 'left') ? info.prec + 1 : info.prec;
+      latestIndex += info.op.length;
+
+      // right expr
+      result = infixParser
+        .state('_minPrec', () => nextMinPrec)
+        .exec(input, latestIndex, state);
+      if (!result.success) {
+        return result;
+      }
+      let right: InfixNode<T> = result.value;
+      latestIndex = result.index;
+
+      left = { op: info.op, left, right };
+    }
+    return success(latestIndex, left);
+  }, [expr]);
+
+  return infixParser
+    .state('_minPrec', () => 0);
+}
+
+export type InfixNode<T> = T | Infix<T>;
+
+export interface Infix<T> {
+  op: string;
+  left: InfixNode<T>;
+  right: InfixNode<T>;
+}
