@@ -300,3 +300,15 @@ describe('Combinators', () => {
 
 // it('language()', () => {
 // });
+
+test('infix', () => {
+  const parser = T.infix(T.str(/[0-9]/), {
+    ops: [
+      { op: '+', prec: 1, assoc: 'left' },
+    ]
+  });
+
+  const input = '1+2+3';
+  const result = parser.parse(input);
+  assert.ok(result.success);
+});

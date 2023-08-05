@@ -623,8 +623,8 @@ export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) 
 
 // infix expressions
 
-export function infix<T>(expr: Parser<T>, opTable: { op: string, prec: number, assoc: 'left' | 'right' }[]): Parser<InfixNode<T>> {
-  const infixParser: Parser<InfixNode<T>> = createParser((input, index, [child], state) => {
+export function infix<T, U = Infix<T, T>>(expr: Parser<T>, opts: InfixOpts<T, U> = {}): Parser<T | U> {
+  const infixParser: Parser<T | U> = createParser((input, index, [child], state) => {
     let latestIndex = index;
     let result;
 
@@ -633,13 +633,13 @@ export function infix<T>(expr: Parser<T>, opTable: { op: string, prec: number, a
     if (!result.success) {
       return result;
     }
-    let left: InfixNode<T> = result.value as T;
+    let left: T | U = result.value as T;
     latestIndex = result.index;
 
     while (true) {
       // get operator info
       let info: { op: string, prec: number, assoc: 'left' | 'right' } | undefined;
-      for (const entry of opTable) {
+      for (const entry of opts.ops ?? []) {
         if (input.startsWith(entry.op, latestIndex)) {
           info = entry;
         }
@@ -659,10 +659,10 @@ export function infix<T>(expr: Parser<T>, opTable: { op: string, prec: number, a
       if (!result.success) {
         return result;
       }
-      let right: InfixNode<T> = result.value;
+      let right = result.value;
       latestIndex = result.index;
 
-      left = { op: info.op, left, right };
+      left = opts.map != null ? opts.map({ op: info.op, left, right }) : ({ op: info.op, left, right } as U);
     }
     return success(latestIndex, left);
   }, [expr]);
@@ -671,10 +671,19 @@ export function infix<T>(expr: Parser<T>, opTable: { op: string, prec: number, a
     .state('_minPrec', () => 0);
 }
 
-export type InfixNode<T> = T | Infix<T>;
+type InfixOpts<T, U> = {
+  ops?: { op: string, prec: number, assoc: 'left' | 'right' }[],
+  map?: (infix: Infix<T, U>) => U,
+};
 
-export interface Infix<T> {
+export class Infix<T, U> {
   op: string;
-  left: InfixNode<T>;
-  right: InfixNode<T>;
+  left: T | U;
+  right: T | U;
+
+  constructor(op: string, left: T | U, right: T | U) {
+    this.op = op;
+    this.left = left;
+    this.right = right;
+  }
 }
