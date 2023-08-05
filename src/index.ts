@@ -671,19 +671,13 @@ export function infix<T, U = Infix<T, T>>(expr: Parser<T>, opts: InfixOpts<T, U>
     .state('_minPrec', () => 0);
 }
 
-type InfixOpts<T, U> = {
+export type InfixOpts<T, U> = {
   ops?: { op: string, prec: number, assoc: 'left' | 'right' }[],
   map?: (infix: Infix<T, U>) => U,
 };
 
-export class Infix<T, U> {
+export interface Infix<T, U> {
   op: string;
   left: T | U;
   right: T | U;
-
-  constructor(op: string, left: T | U, right: T | U) {
-    this.op = op;
-    this.left = left;
-    this.right = right;
-  }
 }
