@@ -3,7 +3,7 @@ import * as T from '../src/index.js';
 
 describe('Parser', () => {
   describe('parse()', () => {
-    it('input', () => {
+    test('input', () => {
       const parser = T.parser((input, index, children, state) => {
         return T.success(index, null);
       });
@@ -11,7 +11,7 @@ describe('Parser', () => {
       assert.ok(result.success);
     });
 
-    it('state', () => {
+    test('state', () => {
       const parser = T.parser((input, index, children, state) => {
         if (state.value !== 1) {
           return T.failure(index);
@@ -23,7 +23,7 @@ describe('Parser', () => {
     });
   });
 
-  it('map()', () => {
+  test('map()', () => {
     const parser = T.parser((input, index, children, state) => {
       return T.success(index, 1);
     }).map(value => {
@@ -34,7 +34,7 @@ describe('Parser', () => {
     assert.deepStrictEqual(result.value, 2);
   });
 
-  it('text()', () => {
+  test('text()', () => {
     const input = 'abc123';
     const parser = T.seq([
       T.str('abc'),
@@ -48,7 +48,7 @@ describe('Parser', () => {
 
   describe('many()', () => {
     describe('basic', () => {
-      it('0 item', () => {
+      test('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
         const parser = T.str('abc').many();
@@ -60,7 +60,7 @@ describe('Parser', () => {
         assert.strictEqual(result.index, 0);
       });
 
-      it('1 item', () => {
+      test('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
         const parser = T.str('abc').many();
@@ -74,7 +74,7 @@ describe('Parser', () => {
     });
 
     describe('min = 1', () => {
-      it('0 item', () => {
+      test('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
         const parser = T.str('').many(1);
@@ -85,7 +85,7 @@ describe('Parser', () => {
         assert.strictEqual(result.index, 0);
       });
 
-      it('1 item', () => {
+      test('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
         const parser = T.str('abc').many(1);
@@ -97,7 +97,7 @@ describe('Parser', () => {
         assert.strictEqual(result.index, 3);
       });
 
-      it('2 items', () => {
+      test('2 items', () => {
         let input: string, result: T.Result<string[]>;
 
         const parser = T.str('abc').many(1);
@@ -110,7 +110,7 @@ describe('Parser', () => {
       });
     });
 
-    it('with terminator', () => {
+    test('with terminator', () => {
       let input: string, result: T.Result<string>;
 
       const parser = T.seq([
@@ -127,14 +127,14 @@ describe('Parser', () => {
     });
   });
 
-  // it('option()', () => {
+  // test('option()', () => {
   // });
 });
 
 describe('Combinators', () => {
   describe('str()', () => {
     describe('with string value', () => {
-      it('matched', () => {
+      test('matched', () => {
         const input = 'abc';
         const parser = T.str('abc');
         const result = parser.parse(input);
@@ -143,7 +143,7 @@ describe('Combinators', () => {
         assert.strictEqual(result.index, 3);
       });
 
-      it('not matched', () => {
+      test('not matched', () => {
         const input = 'ab';
         const parser = T.str('abc');
         const result = parser.parse(input);
@@ -152,7 +152,7 @@ describe('Combinators', () => {
       });
     });
 
-    it('with RegExp value', () => {
+    test('with RegExp value', () => {
       const input = 'abcDEF';
       const parser = T.str(/[a-z]+/i);
       const result = parser.parse(input);
@@ -164,7 +164,7 @@ describe('Combinators', () => {
 
   describe('seq()', () => {
     describe('all', () => {
-      it('success', () => {
+      test('success', () => {
         const input = 'abc123';
         const parser = T.seq([
           T.str('abc'),
@@ -176,7 +176,7 @@ describe('Combinators', () => {
         assert.strictEqual(result.index, 6);
       });
 
-      it('partial success', () => {
+      test('partial success', () => {
         const input = 'abc1';
         const parser = T.seq([
           T.str('abc'),
@@ -187,7 +187,7 @@ describe('Combinators', () => {
         assert.strictEqual(result.index, 3);
       });
 
-      it('failure', () => {
+      test('failure', () => {
         const input = 'a';
         const parser = T.seq([
           T.str('abc'),
@@ -199,7 +199,7 @@ describe('Combinators', () => {
       });
     });
 
-    it('with select param', () => {
+    test('with select param', () => {
       const input = 'abc123';
       const parser = T.seq([
         T.str('abc'),
@@ -212,7 +212,7 @@ describe('Combinators', () => {
     });
   });
 
-  it('alt()', () => {
+  test('alt()', () => {
     const input = '123';
     const parser = T.alt([
       T.str('abc'),
@@ -224,16 +224,16 @@ describe('Combinators', () => {
     assert.strictEqual(result.index, 3);
   });
 
-  // it('lazy()', () => {
+  // test('lazy()', () => {
   // });
 
-  // it('match()', () => {
+  // test('match()', () => {
   // });
 
-  // it('notMatch()', () => {
+  // test('notMatch()', () => {
   // });
 
-  it('state api', () => {
+  test('state api', () => {
     let input, parser, result;
 
     // 1
@@ -268,7 +268,7 @@ describe('Combinators', () => {
 
   });
 
-  it('eof', () => {
+  test('eof', () => {
     let input, parser, result;
 
     parser = T.eof;
@@ -282,7 +282,7 @@ describe('Combinators', () => {
     assert.strictEqual(result.index, 0);
   });
 
-  it('char', () => {
+  test('char', () => {
     const input = 'a';
     const parser = T.char;
     const result = parser.parse(input);
@@ -291,14 +291,14 @@ describe('Combinators', () => {
     assert.strictEqual(result.index, 1);
   });
 
-  // it('lineBegin()', () => {
+  // test('lineBegin()', () => {
   // });
 
-  // it('lineEnd()', () => {
+  // test('lineEnd()', () => {
   // });
 });
 
-// it('language()', () => {
+// test('language()', () => {
 // });
 
 test('infix', () => {
