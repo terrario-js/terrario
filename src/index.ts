@@ -106,7 +106,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  exec(input: string, state: any = {}, offset: number = 0): Result<U> {
+  exec(input: string, state: Record<string, any> = {}, offset: number = 0): Result<U> {
     const ctx = this._evalContext();
     return ctx.handler(input, offset, ctx.children, state);
   }
@@ -167,7 +167,7 @@ export class Parser<U> {
         return result;
       }
       return success(result.index, fn(result.value));
-    }, [this]);
+    }, [this], 'map');
   }
 
   /**
@@ -184,7 +184,7 @@ export class Parser<U> {
       }
       const text = input.slice(index, result.index);
       return success(result.index, text);
-    }, [this]);
+    }, [this], 'text');
   }
 
   /**
@@ -238,7 +238,7 @@ export class Parser<U> {
       const result = child.exec(input, state, index);
       state[key] = storedValue;
       return result;
-    }, [this]);
+    }, [this], 'state');
   }
 }
 
@@ -299,16 +299,17 @@ export type ResultTypes<U> = U extends [infer Head, ...infer Tail] ? [ResultType
 
 function wrapByTraceHandler<U>(handler: ParserHandler<U>, name?: string): ParserHandler<U> {
   return (input, index, children, state) => {
-    if (state.trace && name != null) {
+    if (state.trace) {
+      const internalName = name != null ? name : '<unnamed>';
       const pos = `${index}`;
-      console.log(`${pos.padEnd(6, ' ')}enter ${name}`);
+      console.log(`${pos.padEnd(6, ' ')}enter ${internalName}`);
       const result = handler(input, index, children, state);
       if (result.success) {
         const pos = `${index}:${result.index}`;
-        console.log(`${pos.padEnd(6, ' ')}match ${name}`);
+        console.log(`${pos.padEnd(6, ' ')}success ${internalName}`);
       } else {
         const pos = `${index}`;
-        console.log(`${pos.padEnd(6, ' ')}fail ${name}`);
+        console.log(`${pos.padEnd(6, ' ')}failure ${internalName}`);
       }
       return result;
     }
@@ -342,7 +343,7 @@ function many<U>(parser: Parser<U>, opts: { min?: number, max?: number, notMatch
       return failure(latestIndex);
     }
     return success(latestIndex, accum);
-  }, [parser]);
+  }, [parser], 'many');
 }
 
 /**
@@ -370,7 +371,7 @@ function strWithString<U extends string>(value: U): Parser<U> {
       return failure(index);
     }
     return success(index + value.length, value);
-  });
+  }, undefined, 'str');
 }
 
 function strWithRegExp(pattern: RegExp): Parser<string> {
@@ -382,7 +383,7 @@ function strWithRegExp(pattern: RegExp): Parser<string> {
       return failure(index);
     }
     return success(index + result[0].length, result[0]);
-  });
+  }, undefined, 'str');
 }
 
 /**
@@ -416,7 +417,7 @@ function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[.
       accum.push(result.value);
     }
     return success(latestIndex, (accum as ResultTypes<[...U]>));
-  }, parsers);
+  }, parsers, 'seq');
 }
 
 function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
@@ -438,7 +439,7 @@ export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<Result
       }
     }
     return failure(index);
-  }, parsers);
+  }, parsers, 'alt');
 }
 
 /**
@@ -468,7 +469,7 @@ export function lazy<U>(fn: () => Parser<U>, name?: string): Parser<U> {
 export function succeeded<U>(value: U): Parser<U> {
   return createParser((_input, index, [], _state) => {
     return success(index, value);
-  });
+  }, undefined, 'succeeded');
 }
 
 /**
@@ -482,7 +483,7 @@ export function match<U>(parser: Parser<U>): Parser<U> {
     return result.success
       ? success(index, result.value)
       : failure(index);
-  }, [parser]);
+  }, [parser], 'match');
 }
 
 /**
@@ -496,7 +497,7 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
     return !result.success
       ? success(index, null)
       : failure(index);
-  }, [parser]);
+  }, [parser], 'notMatch');
 }
 
 /**
@@ -509,7 +510,7 @@ export function where<U>(condition: (state: any) => boolean, parser: Parser<U>):
     return condition(state)
       ? child.exec(input, state, index)
       : failure(index);
-  }, [parser]);
+  }, [parser], 'where');
 }
 
 export const cr = str('\r');
@@ -532,7 +533,7 @@ export const sof = createParser((_input, index, [], _state) => {
   return index === 0
     ? success(index, null)
     : failure(index);
-});
+}, undefined, 'sof');
 
 /**
  * Match the end of the input string.
@@ -543,7 +544,7 @@ export const eof = createParser((input, index, [], _state) => {
   return index >= input.length
     ? success(index, null)
     : failure(index);
-});
+}, undefined, 'eof');
 
 /**
  * any char
@@ -556,7 +557,7 @@ export const char = createParser((input, index, [], _state) => {
   }
   const value = input.charAt(index);
   return success(index + 1, value);
-});
+}, undefined, 'char');
 
 /**
  * Match lineBegin
@@ -574,7 +575,7 @@ export const lineBegin = createParser((input, index, [], state) => {
     return success(index, null);
   }
   return failure(index);
-});
+}, undefined, 'lineBegin');
 
 /**
  * Match lineEnd
@@ -629,7 +630,7 @@ export function infix<T, U = Infix<T, T>>(expr: Parser<T>, opts: InfixOpts<T, U>
     let result;
 
     // left expr
-    result = child.exec(input, latestIndex, state);
+    result = child.exec(input, state, latestIndex);
     if (!result.success) {
       return result;
     }
@@ -655,7 +656,7 @@ export function infix<T, U = Infix<T, T>>(expr: Parser<T>, opts: InfixOpts<T, U>
       // right expr
       result = infixParser
         .state('_minPrec', () => nextMinPrec)
-        .exec(input, latestIndex, state);
+        .exec(input, state, latestIndex);
       if (!result.success) {
         return result;
       }
@@ -665,7 +666,7 @@ export function infix<T, U = Infix<T, T>>(expr: Parser<T>, opts: InfixOpts<T, U>
       left = opts.map != null ? opts.map({ op: info.op, left, right }) : ({ op: info.op, left, right } as U);
     }
     return success(latestIndex, left);
-  }, [expr]);
+  }, [expr], 'infix');
 
   return infixParser
     .state('_minPrec', () => 0);

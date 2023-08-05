@@ -308,7 +308,9 @@ test('infix', () => {
     ]
   });
 
-  const input = '1+2+3';
-  const result = parser.parse(input);
+  const input = '1+2';
+  const result = parser.parse(input, { trace: true });
   assert.ok(result.success);
+  assert.strictEqual(result.index, 3);
+  assert.deepStrictEqual(result.value, { op: '+', left: '1', right: '2' });
 });
