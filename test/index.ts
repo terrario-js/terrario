@@ -302,16 +302,38 @@ describe('Combinators', () => {
 // });
 
 test('infix', () => {
-  const parser = T.infix(T.str(/[0-9]/).many(1).text(), {
+  type Operator = {
+    op: string,
+    left: number | Operator,
+    right: number | Operator,
+  }
+  const parser = T.infix<number, Operator>({
+    expr: T.str(/[0-9]/)
+      .many(1)
+      .text()
+      .map(x => Number(x)),
     ops: [
       { op: '+', prec: 1, assoc: 'left' },
       { op: '*', prec: 2, assoc: 'left' },
-    ]
+    ],
+    map: (x) => { return { op: x.op, left: x.left, right: x.right }; }
   });
 
   const input = '12+34*5+67';
   const result = parser.parse(input);
   assert.ok(result.success);
   assert.strictEqual(result.index, 10);
-  assert.deepStrictEqual(result.value, { op: '+', left: { op: '+', left: '12', right: { op: '*', left: '34', right: '5' }}, right: '67' });
+  assert.deepStrictEqual(result.value, {
+    op: '+',
+    left: {
+      op: '+',
+      left: 12,
+      right: {
+        op: '*',
+        left: 34,
+        right: 5
+      }
+    },
+    right: 67
+  });
 });

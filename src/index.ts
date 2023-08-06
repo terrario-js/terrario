@@ -624,7 +624,7 @@ export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) 
 
 // infix expressions
 
-export function infix<T, U = Infix<T, T>>(expr: Parser<T>, opts: InfixOpts<T, U> = {}): Parser<T | U> {
+export function infix<T, U>(opts: InfixOpts<T, U>): Parser<T | U> {
   const infixParser: Parser<T | U> = createParser((input, index, [child], state) => {
     let latestIndex = index;
     let result;
@@ -660,25 +660,26 @@ export function infix<T, U = Infix<T, T>>(expr: Parser<T>, opts: InfixOpts<T, U>
       if (!result.success) {
         return result;
       }
-      let right = result.value;
+      let right: T | U = result.value;
       latestIndex = result.index;
 
       left = opts.map != null ? opts.map({ op: info.op, left, right }) : ({ op: info.op, left, right } as U);
     }
     return success(latestIndex, left);
-  }, [expr], 'infix');
+  }, [opts.expr], 'infix');
 
   return infixParser
     .state('_minPrec', () => 0);
 }
 
 export type InfixOpts<T, U> = {
-  ops?: { op: string, prec: number, assoc: 'left' | 'right' }[],
-  map?: (infix: Infix<T, U>) => U,
+  expr: Parser<T>,
+  ops: { op: string, prec: number, assoc: 'left' | 'right' }[],
+  map: (infix: Infix<T | U>) => U,
 };
 
-export interface Infix<T, U> {
+export interface Infix<T> {
   op: string;
-  left: T | U;
-  right: T | U;
+  left: T;
+  right: T;
 }
