@@ -622,9 +622,11 @@ export type Language<U> = {[K in keyof U]: U[K] extends Parser<unknown> ? U[K] :
 */
 export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) => U[K] };
 
-// infix expressions
+// operator expression
 
-export function infix<T, U>(opts: InfixOpts<T, U>): Parser<T | U> {
+export function operatorExpr<T, U>(opts: OperatorExprOpts<T, U>): Parser<T | U> {
+  // pratt parser
+
   const infixParser: Parser<T | U> = createParser((input, index, [child], state) => {
     let latestIndex = index;
     let result;
@@ -672,14 +674,22 @@ export function infix<T, U>(opts: InfixOpts<T, U>): Parser<T | U> {
     .state('_minPrec', () => 0);
 }
 
-export type InfixOpts<T, U> = {
-  expr: Parser<T>,
-  ops: { op: string, prec: number, assoc: 'left' | 'right' }[],
-  map: (infix: Infix<T | U>) => U,
+export type OperatorExprOpts<T, U> = {
+  atom: Parser<T>,
+  prefixOps: UnaryOp<T, U>[],
+  infixOps: InfixOp<T, U>[],
+  postfixOps: UnaryOp<T, U>[],
 };
 
-export interface Infix<T> {
-  op: string;
-  left: T;
-  right: T;
-}
+export type UnaryOp<T, U> = {
+  match: Parser<T>,
+  bp: number,
+  map: (x: T) => U,
+};
+
+export type InfixOp<T, U> = {
+  match: Parser<T>,
+  leftBp: number,
+  rightBp: number,
+  map: (x: T, y: T) => U,
+};
