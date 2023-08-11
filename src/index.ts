@@ -624,10 +624,15 @@ export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) 
 
 // operator expression
 
-export function operatorExpr<T, U>(opts: OperatorExprOpts<T, U>): Parser<T | U> {
+export function operatorExpr<A, B, C, D, E, F, G>(opts: {
+  atom: Parser<A>,
+  prefixOps: UnaryOp<A, E, B>[],
+  infixOps: InfixOp<A, F, C>[],
+  postfixOps: UnaryOp<A, G, D>[],
+}): Parser<A | E | F | G> {
   // pratt parser
 
-  const infixParser: Parser<T | U> = createParser((input, index, [child], state) => {
+  const infixParser: Parser<A | E | F | G> = createParser((input, index, [child], state) => {
     let latestIndex = index;
     let result;
 
@@ -674,22 +679,52 @@ export function operatorExpr<T, U>(opts: OperatorExprOpts<T, U>): Parser<T | U> 
     .state('_minPrec', () => 0);
 }
 
-export type OperatorExprOpts<T, U> = {
-  atom: Parser<T>,
-  prefixOps: UnaryOp<T, U>[],
-  infixOps: InfixOp<T, U>[],
-  postfixOps: UnaryOp<T, U>[],
-};
-
-export type UnaryOp<T, U> = {
-  match: Parser<T>,
+export type UnaryOp<T, U, V> = {
+  match: Parser<V>,
   bp: number,
-  map: (x: T) => U,
+  map: (op: V, expr: T) => U,
 };
 
-export type InfixOp<T, U> = {
-  match: Parser<T>,
+export type InfixOp<T, U, V> = {
+  match: Parser<V>,
   leftBp: number,
   rightBp: number,
-  map: (x: T, y: T) => U,
+  map: (op: V, left: T, right: T) => U,
 };
+
+// experiment for T.operatorExpr()
+
+type Expr = number;
+
+type PrefixOps = {
+  kind: 'minus', expr: Expr
+};
+type InfixOps = {
+  kind: '+', left: Expr, right: Expr
+} | {
+  kind: '-', left: Expr, right: Expr
+} | {
+  kind: '*', left: Expr, right: Expr
+} | {
+  kind: '/', left: Expr, right: Expr
+};
+type PostfixOps = {
+  kind: 'index', target: Expr, expr: Expr
+};
+
+const parser = operatorExpr({
+  atom: str(/[0-9]/)
+    .many(1)
+    .text()
+    .map(x => Number(x)),
+  prefixOps: [
+    { match: str('-'), bp: 10, map: (op, expr) => ({ kind: 'minus', expr } as PrefixOps)},
+  ],
+  infixOps: [
+    { match: str('+'), leftBp: 10, rightBp: 11, map: (op, left, right) => ({ kind: "+", left, right } as InfixOps) },
+    { match: str('*'), leftBp: 20, rightBp: 21, map: (op, left, right) => ({ kind: "*", left, right } as InfixOps) },
+  ],
+  postfixOps: [
+    { match: str('[0]').map(x => Number(x[1])), bp: 10, map: (op, expr) => ({ kind: 'index', target: expr, expr: op } as PostfixOps) },
+  ]
+});
