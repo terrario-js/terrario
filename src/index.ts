@@ -669,7 +669,7 @@ export function operatorExpr<A, M>(atom: Parser<A>, operators: Operator<unknown,
         if (opResult.op.bp < state._minBp) {
           break;
         }
-        latestIndex = result.index;
+        latestIndex = opResult.index;
         // map
         const opExpr = opResult.op.map(opResult.value, leftValue);
         leftValue = opExpr;
