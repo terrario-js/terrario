@@ -27,7 +27,7 @@ export class PrattConfig<A, M> {
   }
 
   /**
-   * Create a new parser of Pratt.
+   * Create a new Pratt parser.
   */
   build() {
     return buildPaPrattrser(this);
