@@ -303,26 +303,40 @@ describe('Combinators', () => {
 // });
 
 test('operatorExpr', () => {
-  const parser = T.operatorExpr(
-    T.str(/[0-9]/)
-      .many(1)
-      .text()
-      .map(x => Number(x)),
-    [
-      { kind: 'prefix', match: T.str('-'), bp: 40, map: (op, value) => ({ op: 'minus-sign', expr: value })},
-      //{ kind: 'postfix', match: T.str('!'), bp: 30, map: (op, value) => ({ op: '!', expr: value }) },
-      { kind: 'infix', match: T.str('*'), leftBp: 20, rightBp: 21, map: (op, left, right) => ({ op: '*', left, right }) },
-      { kind: 'infix', match: T.str('/'), leftBp: 20, rightBp: 21, map: (op, left, right) => ({ op: '/', left, right }) },
-      { kind: 'infix', match: T.str('+'), leftBp: 10, rightBp: 11, map: (op, left, right) => ({ op: '+', left, right }) },
-      { kind: 'infix', match: T.str('-'), leftBp: 10, rightBp: 11, map: (op, left, right) => ({ op: '-', left, right }) },
+  function op(op: string): T.Parser<any> {
+    const sp = T.alt([T.str(' '), T.str('\t'), T.newline]).many();
+    return T.seq([
+      sp,
+      T.str(op),
+      sp,
     ]);
+  }
 
-  //console.log(inspect(parser.parse('1+2*3/4-5'), { depth: 10 }));
+  const config = T.prattConfig()
+    .setAtom(
+      T.str(/[0-9]/)
+        .many(1)
+        .text()
+        .map(x => Number(x))
+    );
 
-  const input = '12+34*5+67';
+  config.addOperatorGroup()
+    .addPrefix(op('-'), (op, value) => ({ op: 'minus-sign', expr: value }));
+
+  config.addOperatorGroup()
+    .addInfix(op('*'), 'left', (op, left, right) => ({ op: '*', left, right }))
+    .addInfix(op('/'), 'left', (op, left, right) => ({ op: '/', left, right }));
+  
+  config.addOperatorGroup()
+    .addInfix(op('+'), 'left', (op, left, right) => ({ op: '+', left, right }))
+    .addInfix(op('-'), 'left', (op, left, right) => ({ op: '-', left, right }));
+
+  const parser = config.build();
+
+  const input = '12 + 34\t*\r\n5 + \t\r\n67';
   const result = parser.parse(input);
   assert.ok(result.success);
-  assert.strictEqual(result.index, 10);
+  assert.strictEqual(result.index, 20);
   assert.deepStrictEqual(result.value, {
     op: '+',
     left: {
