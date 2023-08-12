@@ -624,21 +624,19 @@ export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) 
 
 // operator expression
 
-export function operatorExpr<A, B, C, D, E, F, G>(opts: {
-  atom: Parser<A>,
-  prefixOps: UnaryOp<A | E | F | G, E, B>[],
-  infixOps: InfixOp<A | E | F | G, F, C>[],
-  postfixOps: UnaryOp<A | E | F | G, G, D>[],
-}): Parser<A | E | F | G> {
+/**
+ * Create a new parser of operator expression powered by pratt parser.
+*/
+export function operatorExpr<A, M>(atom: Parser<A>, operators: Operator<unknown, A | M, M>[]): Parser<A | M> {
   // pratt parser
   // https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
-  const exprBpParser: Parser<A | E | F | G> = createParser((input, index, children, state) => {
+  const exprBpParser: Parser<A | M> = createParser((input, index, children, state) => {
     let latestIndex = index;
     let result, opResult;
     let leftValue;
 
     // try parse as operators
-    opResult = tryParseOps(input, state, latestIndex, opts.prefixOps);
+    opResult = tryParseOps(input, state, latestIndex, operators, 'prefix');
     if (opResult) {
       latestIndex = opResult.index;
       const bp = opResult.op.bp;
@@ -656,7 +654,7 @@ export function operatorExpr<A, B, C, D, E, F, G>(opts: {
       leftValue = opExpr;
     } else {
       // parse as atom if operators are failed
-      result = opts.atom.exec(input, state, latestIndex);
+      result = atom.exec(input, state, latestIndex);
       if (!result.success) {
         // failure
         return result;
@@ -666,7 +664,7 @@ export function operatorExpr<A, B, C, D, E, F, G>(opts: {
     }
 
     while (latestIndex < input.length) {
-      opResult = tryParseOps(input, state, latestIndex, opts.postfixOps);
+      opResult = tryParseOps(input, state, latestIndex, operators, 'postfix');
       if (opResult) {
         if (opResult.op.bp < state._minBp) {
           break;
@@ -676,7 +674,7 @@ export function operatorExpr<A, B, C, D, E, F, G>(opts: {
         const opExpr = opResult.op.map(opResult.value, leftValue);
         leftValue = opExpr;
       } else {
-        opResult = tryParseOps(input, state, latestIndex, opts.infixOps);
+        opResult = tryParseOps(input, state, latestIndex, operators, 'infix');
         if (!opResult) {
           return failure(latestIndex);
         }
@@ -708,23 +706,65 @@ export function operatorExpr<A, B, C, D, E, F, G>(opts: {
     .state('_minBp', () => 0);
 }
 
-export type UnaryOp<T, U, V> = {
-  match: Parser<V>,
+export type Operator<O, V, M> =
+  | PrefixOperator<O, V, M>
+  | InfixOperator<O, V, M>
+  | PostfixOperator<O, V, M>;
+
+export type PrefixOperator<O, V, M> = {
+  kind: 'prefix',
+  match: Parser<O>,
   bp: number,
-  map: (op: V, expr: T) => U,
+  map: (op: O, value: V) => M,
 };
 
-export type InfixOp<T, U, V> = {
-  match: Parser<V>,
+export type InfixOperator<O, V, M> = {
+  kind: 'infix',
+  match: Parser<O>,
   leftBp: number,
   rightBp: number,
-  map: (op: V, left: T, right: T) => U,
+  map: (op: O, left: V, right: V) => M,
 };
 
-function tryParseOps<A, B, C>(input: string, state: any, index: number, ops: UnaryOp<A, B, C>[]): { value: C, index: number, op: UnaryOp<A, B, C> } | undefined
-function tryParseOps<A, B, C>(input: string, state: any, index: number, ops: InfixOp<A, B, C>[]): { value: C, index: number, op: InfixOp<A, B, C> } | undefined
-function tryParseOps(input: string, state: any, index: number, ops: any[]): { value: any, index: number, op: any } | undefined {
+export type PostfixOperator<O, V, M> = {
+  kind: 'postfix',
+  match: Parser<O>,
+  bp: number,
+  map: (op: O, value: V) => M,
+}
+
+function tryParseOps<O, V, M>(
+  input: string,
+  state: any,
+  index: number,
+  ops: Operator<O, V, M>[],
+  kind: 'prefix'
+): { value: O, index: number, op: PrefixOperator<O, V, M> } | undefined
+function tryParseOps<O, V, M>(
+  input: string,
+  state: any,
+  index: number,
+  ops: Operator<O, V, M>[],
+  kind: 'infix'
+): { value: O, index: number, op: InfixOperator<O, V, M> } | undefined
+function tryParseOps<O, V, M>(
+  input: string,
+  state: any,
+  index: number,
+  ops: Operator<O, V, M>[],
+  kind: 'postfix'
+): { value: O, index: number, op: PostfixOperator<O, V, M> } | undefined
+function tryParseOps<O, V, M>(
+  input: string,
+  state: any,
+  index: number,
+  ops: Operator<O, V, M>[],
+  kind: 'prefix' | 'infix' | 'postfix'
+): { value: any, index: number, op: Operator<O, V, M> } | undefined {
   for (const op of ops) {
+    if (op.kind !== kind) {
+      continue;
+    }
     const result = op.match.exec(input, state, index);
     if (result.success) {
       return { value: result.value, index: result.index, op };

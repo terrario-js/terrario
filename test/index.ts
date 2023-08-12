@@ -1,5 +1,6 @@
 import assert from 'assert';
 import * as T from '../src/index.js';
+import { inspect } from 'util';
 
 describe('Parser', () => {
   describe('parse()', () => {
@@ -301,23 +302,22 @@ describe('Combinators', () => {
 // test('language()', () => {
 // });
 
-test('infix', () => {
-  type Operator = {
-    op: string,
-    left: number | Operator,
-    right: number | Operator,
-  }
-  const parser = T.infix<number, Operator>({
-    expr: T.str(/[0-9]/)
+test('operatorExpr', () => {
+  const parser = T.operatorExpr(
+    T.str(/[0-9]/)
       .many(1)
       .text()
       .map(x => Number(x)),
-    ops: [
-      { op: '+', prec: 1, assoc: 'left' },
-      { op: '*', prec: 2, assoc: 'left' },
-    ],
-    map: (x) => { return { op: x.op, left: x.left, right: x.right }; }
-  });
+    [
+      { kind: 'prefix', match: T.str('-'), bp: 40, map: (op, value) => ({ op: 'minus-sign', expr: value })},
+      //{ kind: 'postfix', match: T.str('!'), bp: 30, map: (op, value) => ({ op: '!', expr: value }) },
+      { kind: 'infix', match: T.str('*'), leftBp: 20, rightBp: 21, map: (op, left, right) => ({ op: '*', left, right }) },
+      { kind: 'infix', match: T.str('/'), leftBp: 20, rightBp: 21, map: (op, left, right) => ({ op: '/', left, right }) },
+      { kind: 'infix', match: T.str('+'), leftBp: 10, rightBp: 11, map: (op, left, right) => ({ op: '+', left, right }) },
+      { kind: 'infix', match: T.str('-'), leftBp: 10, rightBp: 11, map: (op, left, right) => ({ op: '-', left, right }) },
+    ]);
+
+  //console.log(inspect(parser.parse('1+2*3/4-5'), { depth: 10 }));
 
   const input = '12+34*5+67';
   const result = parser.parse(input);
