@@ -626,57 +626,86 @@ export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) 
 
 export function operatorExpr<A, B, C, D, E, F, G>(opts: {
   atom: Parser<A>,
-  prefixOps: UnaryOp<A, E, B>[],
-  infixOps: InfixOp<A, F, C>[],
-  postfixOps: UnaryOp<A, G, D>[],
+  prefixOps: UnaryOp<A | E | F | G, E, B>[],
+  infixOps: InfixOp<A | E | F | G, F, C>[],
+  postfixOps: UnaryOp<A | E | F | G, G, D>[],
 }): Parser<A | E | F | G> {
   // pratt parser
-
-  const infixParser: Parser<A | E | F | G> = createParser((input, index, [child], state) => {
+  // https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html
+  const exprBpParser: Parser<A | E | F | G> = createParser((input, index, children, state) => {
     let latestIndex = index;
-    let result;
+    let result, opResult;
+    let leftValue;
 
-    // left expr
-    result = child.exec(input, state, latestIndex);
-    if (!result.success) {
-      return result;
-    }
-    let left: T | U = result.value as T;
-    latestIndex = result.index;
-
-    while (true) {
-      // get operator info
-      let info: { op: string, prec: number, assoc: 'left' | 'right' } | undefined;
-      for (const entry of opts.ops ?? []) {
-        if (input.startsWith(entry.op, latestIndex)) {
-          info = entry;
-        }
-      }
-      if (info == null || info.prec < state._minPrec) {
-        break;
-      }
-
-      // next next prec
-      const nextMinPrec = (info.assoc == 'left') ? info.prec + 1 : info.prec;
-      latestIndex += info.op.length;
-
-      // right expr
-      result = infixParser
-        .state('_minPrec', () => nextMinPrec)
+    // try parse as operators
+    opResult = tryParseOps(input, state, latestIndex, opts.prefixOps);
+    if (opResult) {
+      latestIndex = opResult.index;
+      const bp = opResult.op.bp;
+      // continued expression
+      result = exprBpParser
+        .state('_minBp', () => bp)
         .exec(input, state, latestIndex);
       if (!result.success) {
+        // failure
         return result;
       }
-      let right: T | U = result.value;
       latestIndex = result.index;
-
-      left = opts.map != null ? opts.map({ op: info.op, left, right }) : ({ op: info.op, left, right } as U);
+      // map
+      const opExpr = opResult.op.map(opResult.value, result.value);
+      leftValue = opExpr;
+    } else {
+      // parse as atom if operators are failed
+      result = opts.atom.exec(input, state, latestIndex);
+      if (!result.success) {
+        // failure
+        return result;
+      }
+      leftValue = result.value;
+      latestIndex = result.index;
     }
-    return success(latestIndex, left);
-  }, [opts.expr], 'infix');
 
-  return infixParser
-    .state('_minPrec', () => 0);
+    while (latestIndex < input.length) {
+      opResult = tryParseOps(input, state, latestIndex, opts.postfixOps);
+      if (opResult) {
+        if (opResult.op.bp < state._minBp) {
+          break;
+        }
+        latestIndex = result.index;
+        // map
+        const opExpr = opResult.op.map(opResult.value, leftValue);
+        leftValue = opExpr;
+      } else {
+        opResult = tryParseOps(input, state, latestIndex, opts.infixOps);
+        if (!opResult) {
+          return failure(latestIndex);
+        }
+        if (opResult.op.leftBp < state._minBp) {
+          break;
+        }
+        latestIndex = opResult.index;
+        const bp = opResult.op.rightBp;
+        // continued expression
+        result = exprBpParser
+          .state('_minBp', () => bp)
+          .exec(input, state, latestIndex);
+        if (!result.success) {
+          // failure
+          return result;
+        }
+        const rightValue = result.value;
+        latestIndex = result.index;
+        // map
+        const opExpr = opResult.op.map(opResult.value, leftValue, rightValue);
+        leftValue = opExpr;
+      }
+    }
+
+    return success(latestIndex, leftValue);
+  }, [], 'operatorExpr');
+
+  return exprBpParser
+    .state('_minBp', () => 0);
 }
 
 export type UnaryOp<T, U, V> = {
@@ -692,39 +721,14 @@ export type InfixOp<T, U, V> = {
   map: (op: V, left: T, right: T) => U,
 };
 
-// experiment for T.operatorExpr()
-
-type Expr = number;
-
-type PrefixOps = {
-  kind: 'minus', expr: Expr
-};
-type InfixOps = {
-  kind: '+', left: Expr, right: Expr
-} | {
-  kind: '-', left: Expr, right: Expr
-} | {
-  kind: '*', left: Expr, right: Expr
-} | {
-  kind: '/', left: Expr, right: Expr
-};
-type PostfixOps = {
-  kind: 'index', target: Expr, expr: Expr
-};
-
-const parser = operatorExpr({
-  atom: str(/[0-9]/)
-    .many(1)
-    .text()
-    .map(x => Number(x)),
-  prefixOps: [
-    { match: str('-'), bp: 10, map: (op, expr) => ({ kind: 'minus', expr } as PrefixOps)},
-  ],
-  infixOps: [
-    { match: str('+'), leftBp: 10, rightBp: 11, map: (op, left, right) => ({ kind: "+", left, right } as InfixOps) },
-    { match: str('*'), leftBp: 20, rightBp: 21, map: (op, left, right) => ({ kind: "*", left, right } as InfixOps) },
-  ],
-  postfixOps: [
-    { match: str('[0]').map(x => Number(x[1])), bp: 10, map: (op, expr) => ({ kind: 'index', target: expr, expr: op } as PostfixOps) },
-  ]
-});
+function tryParseOps<A, B, C>(input: string, state: any, index: number, ops: UnaryOp<A, B, C>[]): { value: C, index: number, op: UnaryOp<A, B, C> } | undefined
+function tryParseOps<A, B, C>(input: string, state: any, index: number, ops: InfixOp<A, B, C>[]): { value: C, index: number, op: InfixOp<A, B, C> } | undefined
+function tryParseOps(input: string, state: any, index: number, ops: any[]): { value: any, index: number, op: any } | undefined {
+  for (const op of ops) {
+    const result = op.match.exec(input, state, index);
+    if (result.success) {
+      return { value: result.value, index: result.index, op };
+    }
+  }
+  return undefined;
+}
