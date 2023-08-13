@@ -1,0 +1,18 @@
+{
+  "name": "example-lang",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./cli.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ."
+  },
+  "devDependencies": {
+    "@types/node": "20.4.2",
+    "typescript": "5.1.6"
+  },
+  "dependencies": {
+    "terrario": "../../"
+  }
+}
