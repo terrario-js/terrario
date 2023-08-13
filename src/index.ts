@@ -58,6 +58,7 @@ export type Result<U> = Success<U> | Failure;
 */
 export class Parser<U> {
   name?: string;
+  info?: string;
   ctx: ParserContext<U> | LazyContext<U>;
 
   /**
@@ -75,13 +76,14 @@ export class Parser<U> {
   constructor(opts: StrictParserOpts<U> | LazyParserOpts<U>) {
     if (opts.handler != null) {
       this.ctx = {
-        handler: wrapByTraceHandler(opts.handler, opts.name),
+        handler: wrapByTraceHandler(opts.handler, opts.name, opts.info),
         children: opts.children || [],
       };
     } else {
       this.ctx = opts.lazy;
     }
     this.name = opts.name;
+    this.info = opts.info;
   }
 
   /**
@@ -94,7 +96,7 @@ export class Parser<U> {
       const parser = this.ctx();
       const ctx = parser._evalContext();
       this.ctx = {
-        handler: wrapByTraceHandler(ctx.handler, this.name),
+        handler: wrapByTraceHandler(ctx.handler, this.name, this.info),
         children: ctx.children,
       };
     }
@@ -249,6 +251,7 @@ export type StrictParserOpts<U> = {
   handler: ParserHandler<U>,
   children?: Parser<any>[],
   name?: string,
+  info?: string,
   lazy?: undefined,
 };
 
@@ -258,6 +261,7 @@ export type StrictParserOpts<U> = {
 export type LazyParserOpts<U> = {
   lazy: LazyContext<U>,
   name?: string,
+  info?: string,
   handler?: undefined,
   children?: undefined,
 };
@@ -297,19 +301,19 @@ export type ResultType<U> = U extends Parser<infer R> ? R : never;
 */
 export type ResultTypes<U> = U extends [infer Head, ...infer Tail] ? [ResultType<Head>, ...ResultTypes<Tail>] : [];
 
-function wrapByTraceHandler<U>(handler: ParserHandler<U>, name?: string): ParserHandler<U> {
+function wrapByTraceHandler<U>(handler: ParserHandler<U>, name?: string, info: string = ''): ParserHandler<U> {
   return (input, index, children, state) => {
     if (state.trace) {
       const internalName = name != null ? name : '<unnamed>';
       const pos = `${index}`;
-      console.log(`${pos.padEnd(6, ' ')}enter ${internalName}`);
+      console.log(`${pos.padEnd(6, ' ')}enter ${internalName} ${info}`);
       const result = handler(input, index, children, state);
       if (result.success) {
         const pos = `${index}:${result.index}`;
-        console.log(`${pos.padEnd(6, ' ')}success ${internalName}`);
+        console.log(`${pos.padEnd(6, ' ')}success ${internalName} ${info}`);
       } else {
         const pos = `${index}`;
-        console.log(`${pos.padEnd(6, ' ')}failure ${internalName}`);
+        console.log(`${pos.padEnd(6, ' ')}failure ${internalName} ${info}`);
       }
       return result;
     }
@@ -371,7 +375,7 @@ function strWithString<U extends string>(value: U): Parser<U> {
       return failure(index);
     }
     return success(index + value.length, value);
-  }, undefined, 'str');
+  }, undefined, 'str', `value=${value}`);
 }
 
 function strWithRegExp(pattern: RegExp): Parser<string> {
@@ -383,7 +387,7 @@ function strWithRegExp(pattern: RegExp): Parser<string> {
       return failure(index);
     }
     return success(index + result[0].length, result[0]);
-  }, undefined, 'str');
+  }, undefined, 'str', `pattern=${pattern}`);
 }
 
 /**
@@ -417,7 +421,7 @@ function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[.
       accum.push(result.value);
     }
     return success(latestIndex, (accum as ResultTypes<[...U]>));
-  }, parsers, 'seq');
+  }, parsers, 'seq', `length=${parsers.length}`);
 }
 
 function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
@@ -439,7 +443,7 @@ export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<Result
       }
     }
     return failure(index);
-  }, parsers, 'alt');
+  }, parsers, 'alt', `length=${parsers.length}`);
 }
 
 /**
@@ -447,8 +451,8 @@ export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<Result
  * 
  * @public
 */
-function createParser<U>(handler: ParserHandler<U>, children?: Parser<any>[], name?: string): Parser<U> {
-  return new Parser({ handler, children, name });
+function createParser<U>(handler: ParserHandler<U>, children?: Parser<any>[], name?: string, info?: string): Parser<U> {
+  return new Parser({ handler, children, name, info });
 }
 export { createParser as parser };
 
@@ -457,8 +461,8 @@ export { createParser as parser };
  * 
  * @public
 */
-export function lazy<U>(fn: () => Parser<U>, name?: string): Parser<U> {
-  return new Parser({ lazy: fn, name });
+export function lazy<U>(fn: () => Parser<U>, name?: string, info?: string): Parser<U> {
+  return new Parser({ lazy: fn, name, info });
 }
 
 /**
