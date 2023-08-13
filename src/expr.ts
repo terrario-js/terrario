@@ -96,65 +96,73 @@ function buildPrattParser<A, M>(config: PrattConfig<A, M>): T.Parser<A | M> {
     let result, opResult;
     let leftValue;
 
-    // try parse as operators
+    // prefix operator
     opResult = tryParseOps(input, state, latestIndex, operators, 'prefix');
     if (opResult) {
+      // consume prefix operator
       latestIndex = opResult.index;
+      // expression
       const bp = opResult.op.bp;
-      // continued expression
       result = prattParser
         .state('_minBp', () => bp)
         .exec(input, state, latestIndex);
       if (!result.success) {
-        // failure
         return result;
       }
-      latestIndex = result.index;
-      // map
       const opExpr = opResult.op.map(opResult.value, result.value);
       leftValue = opExpr;
+      // consume expression
+      latestIndex = result.index;
     } else {
-      // parse as atom if operators are failed
+      // atom
       result = atom.exec(input, state, latestIndex);
       if (!result.success) {
-        // failure
         return result;
       }
       leftValue = result.value;
+      // consume atom
       latestIndex = result.index;
     }
 
     while (latestIndex < input.length) {
+      // postfix operator
       opResult = tryParseOps(input, state, latestIndex, operators, 'postfix');
       if (opResult) {
         if (opResult.op.bp < state._minBp) {
           break;
         }
-        latestIndex = opResult.index;
-        // map
         const opExpr = opResult.op.map(opResult.value, leftValue);
         leftValue = opExpr;
-      } else {
-        opResult = tryParseOps(input, state, latestIndex, operators, 'infix');
-        if (!opResult || opResult.op.leftBp < state._minBp) {
+        // consume
+        latestIndex = opResult.index;
+        continue;
+      }
+
+      // infix operator
+      opResult = tryParseOps(input, state, latestIndex, operators, 'infix');
+      if (opResult) {
+        if (opResult.op.leftBp < state._minBp) {
           break;
         }
+        // consume
         latestIndex = opResult.index;
+
+        // expression
         const bp = opResult.op.rightBp;
-        // continued expression
         result = prattParser
           .state('_minBp', () => bp)
           .exec(input, state, latestIndex);
         if (!result.success) {
-          // failure
           return result;
         }
         const rightValue = result.value;
-        latestIndex = result.index;
-        // map
         const opExpr = opResult.op.map(opResult.value, leftValue, rightValue);
         leftValue = opExpr;
+        // consume expression
+        latestIndex = result.index;
+        continue;
       }
+      break;
     }
 
     return T.success(latestIndex, leftValue);
