@@ -136,10 +136,7 @@ function buildPrattParser<A, M>(config: PrattConfig<A, M>): T.Parser<A | M> {
         leftValue = opExpr;
       } else {
         opResult = tryParseOps(input, state, latestIndex, operators, 'infix');
-        if (!opResult) {
-          return T.failure(latestIndex);
-        }
-        if (opResult.op.leftBp < state._minBp) {
+        if (!opResult || opResult.op.leftBp < state._minBp) {
           break;
         }
         latestIndex = opResult.index;
