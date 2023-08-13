@@ -30,7 +30,7 @@ export class PrattConfig<A, M> {
    * Create a new Pratt parser.
   */
   build() {
-    return buildPaPrattrser(this);
+    return buildPrattParser(this);
   }
 }
 
@@ -82,7 +82,7 @@ type PostfixOperatorSource<V, M> = {
   map: (op: any, value: V) => M,
 }
 
-function buildPaPrattrser<A, M>(config: PrattConfig<A, M>): T.Parser<A | M> {
+function buildPrattParser<A, M>(config: PrattConfig<A, M>): T.Parser<A | M> {
   if (config.valueParser == null) {
     throw new TypeError('value parser is not configured');
   }
