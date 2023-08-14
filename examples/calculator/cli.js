@@ -1,6 +1,6 @@
 import { performance } from 'perf_hooks';
 import * as readLine from 'readline';
-import { parse } from './build/index.js';
+import { calculator } from './build/index.js';
 
 class InputCanceledError extends Error {
   constructor(message) {
@@ -43,11 +43,11 @@ async function entryPoint() {
 
     try {
       const parseTimeStart = performance.now();
-      const result = parse(input);
+      const result = calculator(input);
       const parseTimeEnd = performance.now();
       console.log(JSON.stringify(result, null, '  '));
       const parseTime = (parseTimeEnd - parseTimeStart).toFixed(3);
-      console.log(`parsing time: ${parseTime}ms`);
+      console.log(`execution time: ${parseTime}ms`);
     }
     catch (err) {
       console.error(err);

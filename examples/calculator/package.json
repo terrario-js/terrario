@@ -1,5 +1,5 @@
 {
-  "name": "example-lang",
+  "name": "example-calculator",
   "version": "1.0.0",
   "private": true,
   "main": "./cli.js",
