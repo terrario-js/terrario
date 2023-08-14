@@ -1,62 +1,11 @@
+import { success, failure, Result } from './result.js';
+
 /**
- * Success result type
+ * String Parser
  * 
  * @public
 */
-export type Success<U> = {
-  success: true;
-  index: number;
-  value: U;
-};
-
-/**
- * Make a success result.
- * 
- * @public
-*/
-export function success<U>(index: number, value: U): Success<U> {
-  return {
-    success: true,
-    value: value,
-    index: index,
-  };
-}
-
-/**
- * Failure result type
- * 
- * @public
-*/
-export type Failure = {
-  success: false;
-  index: number;
-};
-
-/**
- * Make a failure result.
- * 
- * @public
-*/
-export function failure(index: number): Failure {
-  return {
-    success: false,
-    index: index,
-  };
-}
-
-/**
- * Parser result
- * 
- * @public
- */
-export type Result<U> = Success<U> | Failure;
-
-/**
- * Parser class
- * 
- * @public
-*/
-export class Parser<U> {
+export class StringParser<U> {
   tag: string;
   ctx: ParserContext<U> | LazyContext<U>;
 
@@ -158,7 +107,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  map<V>(fn: (value: U) => V): Parser<V> {
+  map<V>(fn: (value: U) => V): StringParser<V> {
     return createParser((input, index, state) => {
       const result = this.exec(input, state, index);
       if (!result.success) {
@@ -169,35 +118,18 @@ export class Parser<U> {
   }
 
   /**
-   * Create a new parser that wraps the current parser.
-   * The generated parser will return the text in the range matched by the inner parser.
+   * Create a new parser that tries to apply the parser iteratively.
    * 
    * @public
   */
-  text(): Parser<string> {
-    return createParser((input, index, state) => {
-      const result = this.exec(input, state, index);
-      if (!result.success) {
-        return result;
-      }
-      const text = input.slice(index, result.index);
-      return success(result.index, text);
-    }, 'text');
-  }
-
+  many(min?: number, max?: number): StringParser<U[]>
   /**
    * Create a new parser that tries to apply the parser iteratively.
    * 
    * @public
   */
-  many(min?: number, max?: number): Parser<U[]>
-  /**
-   * Create a new parser that tries to apply the parser iteratively.
-   * 
-   * @public
-  */
-  many(opts: { min?: number, max?: number, notMatch?: Parser<unknown> }): Parser<U[]>
-  many(arg1?: number | { min?: number, max?: number, notMatch?: Parser<unknown> }, arg2?: number): Parser<U[]> {
+  many(opts: { min?: number, max?: number, notMatch?: StringParser<unknown> }): StringParser<U[]>
+  many(arg1?: number | { min?: number, max?: number, notMatch?: StringParser<unknown> }, arg2?: number): StringParser<U[]> {
     if (typeof arg1 === 'number') {
       // with min, max
       return many(this, { min: arg1, max: arg2 });
@@ -214,7 +146,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  option(): Parser<U | null> {
+  option(): StringParser<U | null> {
     return alt([
       this,
       succeeded(null),
@@ -229,7 +161,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  state(key: string, value: (state: any) => any): Parser<U> {
+  state(key: string, value: (state: any) => any): StringParser<U> {
     return createParser((input, index, state) => {
       const storedValue = state[key];
       state[key] = value(state);
@@ -237,6 +169,23 @@ export class Parser<U> {
       state[key] = storedValue;
       return result;
     }, 'state');
+  }
+
+  /**
+   * Create a new parser that wraps the current parser.
+   * The generated parser will return the text in the range matched by the inner parser.
+   * 
+   * @public
+  */
+  text(): StringParser<string> {
+    return createParser((input, index, state) => {
+      const result = this.exec(input, state, index);
+      if (!result.success) {
+        return result;
+      }
+      const text = input.slice(index, result.index);
+      return success(result.index, text);
+    }, 'text');
   }
 }
 
@@ -276,14 +225,14 @@ export type ParserContext<U> = {
  * @internal
 */
 export type LazyContext<U> =
-  () => Parser<U>;
+  () => StringParser<U>;
 
 /**
  * Get result type of Parser.
  * 
  * @internal
 */
-export type ResultType<U> = U extends Parser<infer R> ? R : never;
+export type ResultType<U> = U extends StringParser<infer R> ? R : never;
 
 /**
  * Get result types of Parsers.
@@ -311,7 +260,7 @@ function wrapByTraceHandler<U>(handler: ParserHandler<U>, tag: string): ParserHa
   };
 }
 
-function many<U>(parser: Parser<U>, opts: { min?: number, max?: number, notMatch?: Parser<unknown> } = {}): Parser<U[]> {
+function many<U>(parser: StringParser<U>, opts: { min?: number, max?: number, notMatch?: StringParser<unknown> } = {}): StringParser<U[]> {
   if (opts.notMatch != null) {
     return many(seq([
       notMatch(opts.notMatch),
@@ -341,63 +290,23 @@ function many<U>(parser: Parser<U>, opts: { min?: number, max?: number, notMatch
 }
 
 /**
- * Create a new parser that matches the given string.
- * 
- * @public
-*/
-export function str<U extends string>(value: U): Parser<U>
-/**
- * Create a new parser that matches the given regular expression.
- * 
- * @public
-*/
-export function str(pattern: RegExp): Parser<string>
-export function str(value: string | RegExp): Parser<string> {
-  return (typeof value === 'string') ? strWithString(value) : strWithRegExp(value);
-}
-
-function strWithString<U extends string>(value: U): Parser<U> {
-  return createParser((input, index, _state) => {
-    if ((input.length - index) < value.length) {
-      return failure(index);
-    }
-    if (input.slice(index, index + value.length) !== value) {
-      return failure(index);
-    }
-    return success(index + value.length, value);
-  }, `str value=${value}`);
-}
-
-function strWithRegExp(pattern: RegExp): Parser<string> {
-  const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
-  return createParser((input, index, _state) => {
-    const text = input.slice(index);
-    const result = re.exec(text);
-    if (result == null) {
-      return failure(index);
-    }
-    return success(index + result[0].length, result[0]);
-  }, `str pattern=${pattern}`);
-}
-
-/**
  * Create a new parser that sequentially applies an array of parser.
  * 
  * @public
 */
-export function seq<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>>
+export function seq<U extends StringParser<any>[]>(parsers: [...U]): StringParser<ResultTypes<[...U]>>
 /**
  * Create a new parser that sequentially applies an array of parser.
  * 
  * @public
  * @param select - The index of the data returned in the result.
 */
-export function seq<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V]
-export function seq(parsers: Parser<any>[], select?: number) {
+export function seq<U extends StringParser<any>[], V extends number>(parsers: [...U], select: V): U[V]
+export function seq(parsers: StringParser<any>[], select?: number) {
   return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
 
-function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>> {
+function seqAll<U extends StringParser<any>[]>(parsers: [...U]): StringParser<ResultTypes<[...U]>> {
   return createParser((input, index, state) => {
     let result;
     let latestIndex = index;
@@ -414,7 +323,7 @@ function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[.
   }, `seq length=${parsers.length}`);
 }
 
-function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
+function seqSelect<U extends StringParser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
   return seqAll(parsers).map(values => values[select]);
 }
 
@@ -423,7 +332,7 @@ function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], s
  * 
  * @public
 */
-export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<ResultTypes<U>[number]> {
+export function alt<U extends StringParser<unknown>[]>(parsers: [...U]): StringParser<ResultTypes<U>[number]> {
   return createParser((input, index, state) => {
     let result;
     for (let i = 0; i < parsers.length; i++) {
@@ -441,8 +350,8 @@ export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<Result
  * 
  * @public
 */
-function createParser<U>(handler: ParserHandler<U>, tag?: string): Parser<U> {
-  return new Parser({ handler, tag });
+function createParser<U>(handler: ParserHandler<U>, tag?: string): StringParser<U> {
+  return new StringParser({ handler, tag });
 }
 export { createParser as parser };
 
@@ -451,8 +360,8 @@ export { createParser as parser };
  * 
  * @public
 */
-export function lazy<U>(fn: () => Parser<U>, tag?: string): Parser<U> {
-  return new Parser({ lazy: fn, tag });
+export function lazy<U>(fn: () => StringParser<U>, tag?: string): StringParser<U> {
+  return new StringParser({ lazy: fn, tag });
 }
 
 /**
@@ -460,7 +369,7 @@ export function lazy<U>(fn: () => Parser<U>, tag?: string): Parser<U> {
  * 
  * @public
 */
-export function succeeded<U>(value: U): Parser<U> {
+export function succeeded<U>(value: U): StringParser<U> {
   return createParser((_input, index, _state) => {
     return success(index, value);
   }, 'succeeded');
@@ -471,7 +380,7 @@ export function succeeded<U>(value: U): Parser<U> {
  * 
  * @public
 */
-export function match<U>(parser: Parser<U>): Parser<U> {
+export function match<U>(parser: StringParser<U>): StringParser<U> {
   return createParser((input, index, state) => {
     const result = parser.exec(input, state, index);
     return result.success
@@ -485,7 +394,7 @@ export function match<U>(parser: Parser<U>): Parser<U> {
  * 
  * @public
 */
-export function notMatch(parser: Parser<unknown>): Parser<null> {
+export function notMatch(parser: StringParser<unknown>): StringParser<null> {
   return createParser((input, index, state) => {
     const result = parser.exec(input, state, index);
     return !result.success
@@ -499,24 +408,13 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
  * 
  * @public
 */
-export function where<U>(condition: (state: any) => boolean, parser: Parser<U>): Parser<U> {
+export function where<U>(condition: (state: any) => boolean, parser: StringParser<U>): StringParser<U> {
   return createParser((input, index, state) => {
     return condition(state)
       ? parser.exec(input, state, index)
       : failure(index);
   }, 'where');
 }
-
-export const cr = str('\r');
-export const lf = str('\n');
-export const crlf = str('\r\n');
-
-/**
- * newline
- * 
- * @public
-*/
-export const newline = alt([crlf, cr, lf]);
 
 /**
  * Match the begin of the input string.
@@ -541,6 +439,83 @@ export const eof = createParser((input, index, _state) => {
 }, 'eof');
 
 /**
+ * Create a language
+ * 
+ * @public
+*/
+export function language<U extends Language<U>>(source: LanguageSource<U>): U {
+  const lang: Record<string, StringParser<any>> = {};
+  for (const key of Object.keys(source)) {
+    lang[key] = lazy(() => {
+      const parser = (source as any)[key](lang);
+      if (parser == null || !(parser instanceof StringParser)) {
+        throw new Error('syntax must return a Parser.');
+      }
+      parser.tag = `${parser.tag} key=${key}`;
+      return parser;
+    });
+  }
+  return lang as any;
+}
+
+/**
+ * A type must be a language object.
+ * 
+ * @public
+*/
+export type Language<U> = {[K in keyof U]: U[K] extends StringParser<unknown> ? U[K] : never };
+
+/**
+ * Language source
+ * 
+ * @public
+*/
+export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) => U[K] };
+
+
+
+
+/**
+ * Create a new parser that matches the given string.
+ * 
+ * @public
+*/
+export function str<U extends string>(value: U): StringParser<U>
+/**
+ * Create a new parser that matches the given regular expression.
+ * 
+ * @public
+*/
+export function str(pattern: RegExp): StringParser<string>
+export function str(value: string | RegExp): StringParser<string> {
+  return (typeof value === 'string') ? strWithString(value) : strWithRegExp(value);
+}
+
+function strWithString<U extends string>(value: U): StringParser<U> {
+  return createParser((input, index, _state) => {
+    if ((input.length - index) < value.length) {
+      return failure(index);
+    }
+    if (input.slice(index, index + value.length) !== value) {
+      return failure(index);
+    }
+    return success(index + value.length, value);
+  }, `str value=${value}`);
+}
+
+function strWithRegExp(pattern: RegExp): StringParser<string> {
+  const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
+  return createParser((input, index, _state) => {
+    const text = input.slice(index);
+    const result = re.exec(text);
+    if (result == null) {
+      return failure(index);
+    }
+    return success(index + result[0].length, result[0]);
+  }, `str pattern=${pattern}`);
+}
+
+/**
  * any char
  * 
  * @public
@@ -552,6 +527,18 @@ export const char = createParser((input, index, _state) => {
   const value = input.charAt(index);
   return success(index + 1, value);
 }, 'char');
+
+
+export const cr = str('\r');
+export const lf = str('\n');
+export const crlf = str('\r\n');
+
+/**
+ * newline
+ * 
+ * @public
+*/
+export const newline = alt([crlf, cr, lf]);
 
 /**
  * Match lineBegin
@@ -581,37 +568,3 @@ export const lineEnd = match(alt([
   cr,
   lf,
 ])).map(() => null);
-
-/**
- * Create a language
- * 
- * @public
-*/
-export function language<U extends Language<U>>(source: LanguageSource<U>): U {
-  const lang: Record<string, Parser<any>> = {};
-  for (const key of Object.keys(source)) {
-    lang[key] = lazy(() => {
-      const parser = (source as any)[key](lang);
-      if (parser == null || !(parser instanceof Parser)) {
-        throw new Error('syntax must return a Parser.');
-      }
-      parser.tag = `${parser.tag} key=${key}`;
-      return parser;
-    });
-  }
-  return lang as any;
-}
-
-/**
- * A type must be a language object.
- * 
- * @public
-*/
-export type Language<U> = {[K in keyof U]: U[K] extends Parser<unknown> ? U[K] : never };
-
-/**
- * Language source
- * 
- * @public
-*/
-export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) => U[K] };
