@@ -45,7 +45,7 @@ async function entryPoint() {
       const parseTimeStart = performance.now();
       const result = calculator(input);
       const parseTimeEnd = performance.now();
-      console.log(JSON.stringify(result, null, '  '));
+      console.log(result);
       const parseTime = (parseTimeEnd - parseTimeStart).toFixed(3);
       console.log(`execution time: ${parseTime}ms`);
     }

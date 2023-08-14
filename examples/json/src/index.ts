@@ -1,4 +1,4 @@
-import * as T from 'terrario';
+import { string as T } from 'terrario';
 
 const spaces = T.str(/[ \t\r\n]/).many();
 

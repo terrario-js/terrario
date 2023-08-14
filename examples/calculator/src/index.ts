@@ -43,7 +43,7 @@ const lang = T.language<Lang>({
   },
 });
 
-function parse(input: string[]) {
+function parse(input: string[]): Expr {
   const result = lang.root.parse(input);
   if (!result.success) {
     throw new Error(`syntax error. (index=${result.index})`);
@@ -100,48 +100,54 @@ export function evaluate(expr: Expr): number {
   }
 }
 
-const digitRegexp = /^[0-9]/;
+const digitRegexp = /^[0-9]$/;
 
-function tokenize(input: string): string[] {
+function scan(input: string): string[] {
   const tokens: string[] = [];
-  let result;
   let index = 0;
   while (index < input.length) {
-    const str = input.slice(index);
-    if (str.startsWith('**')) {
-      tokens.push('**');
-      index += 2;
-      continue;
-    }
-    if (str.startsWith('*')) {
-      tokens.push('*');
-      index += 1;
-      continue;
-    }
-    if (str.startsWith('/')) {
-      tokens.push('/');
-      index += 1;
-      continue;
-    }
-    if (str.startsWith('+')) {
-      tokens.push('+');
-      index += 1;
-      continue;
-    }
-    if (str.startsWith('-')) {
-      tokens.push('-');
-      index += 1;
-      continue;
-    }
-    if (str.startsWith('%')) {
-      tokens.push('%');
-      index += 1;
-      continue;
+    switch (input[index]) {
+      case ' ':
+      case '\t':
+      case '\r':
+      case '\n': {
+        index += 1;
+        continue;
+      }
+      case '*': {
+        index += 1;
+        if (input[index] == '*') {
+          index += 1;
+          tokens.push('**');
+        } else {
+          tokens.push('*');
+        }
+        continue;
+      }
+      case '/': {
+        index += 1;
+        tokens.push('/');
+        continue;
+      }
+      case '+': {
+        index += 1;
+        tokens.push('+');
+        continue;
+      }
+      case '-': {
+        index += 1;
+        tokens.push('-');
+        continue;
+      }
+      case '%': {
+        index += 1;
+        tokens.push('%');
+        continue;
+      }
     }
     // digit
-    result = digitRegexp.exec(str);
-    if (result != null) {
-      tokens.push(result[0]);
+    if (digitRegexp.test(input[index])) {
+      tokens.push(input[index]);
       index += 1;
       continue;
     }
@@ -151,7 +157,7 @@ function tokenize(input: string): string[] {
 }
 
 export function calculator(input: string): number {
-  const tokens = tokenize(input);
+  const tokens = scan(input);
   const expr = parse(tokens);
   const result = evaluate(expr);
   return result;
