@@ -1,4 +1,4 @@
-import * as T from 'terrario';
+import { token as T } from 'terrario';
 
 type OperatorInfo = {
   kind: 'prefix' | 'postfix',
@@ -20,17 +20,17 @@ export interface Operator<U> {
 
 export function buildPrattParser<U>(atom: T.Parser<U>): T.Parser<U | Operator<U>> {
   const operators: OperatorInfo[] = [
-    { kind: 'infix', name: 'pow', match: T.str('**'), leftBp: 41, rightBp: 40 }, // right to left
-    { kind: 'prefix', name: 'plus', match: T.str('+'), bp: 30 },
-    { kind: 'prefix', name: 'minus', match: T.str('-'), bp: 30 },
-    { kind: 'infix', name: 'mul', match: T.str('*'), leftBp: 20, rightBp: 21 }, // left to right
-    { kind: 'infix', name: 'div', match: T.str('/'), leftBp: 20, rightBp: 21 }, // left to right
-    { kind: 'infix', name: 'mod', match: T.str('%'), leftBp: 20, rightBp: 21 }, // left to right
-    { kind: 'infix', name: 'add', match: T.str('+'), leftBp: 10, rightBp: 11 }, // left to right
-    { kind: 'infix', name: 'sub', match: T.str('-'), leftBp: 10, rightBp: 11 }, // left to right
+    { kind: 'infix', name: 'pow', match: T.token('**'), leftBp: 41, rightBp: 40 }, // right to left
+    { kind: 'prefix', name: 'plus', match: T.token('+'), bp: 30 },
+    { kind: 'prefix', name: 'minus', match: T.token('-'), bp: 30 },
+    { kind: 'infix', name: 'mul', match: T.token('*'), leftBp: 20, rightBp: 21 }, // left to right
+    { kind: 'infix', name: 'div', match: T.token('/'), leftBp: 20, rightBp: 21 }, // left to right
+    { kind: 'infix', name: 'mod', match: T.token('%'), leftBp: 20, rightBp: 21 }, // left to right
+    { kind: 'infix', name: 'add', match: T.token('+'), leftBp: 10, rightBp: 11 }, // left to right
+    { kind: 'infix', name: 'sub', match: T.token('-'), leftBp: 10, rightBp: 11 }, // left to right
   ];
 
-  const prattParser: T.Parser<U | Operator<U>> = T.parser((input, index, children, state) => {
+  const prattParser: T.Parser<U | Operator<U>> = T.parser((input, index, state) => {
     let latestIndex = index;
     let leftValue;
     let result, opResult;

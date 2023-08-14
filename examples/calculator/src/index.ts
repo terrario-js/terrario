@@ -1,4 +1,4 @@
-import * as T from 'terrario';
+import { token as T } from 'terrario';
 import { Operator, buildPrattParser } from './pratt.js';
 
 type Expr = { kind: 'number', value: number } | Operator<Expr>;
@@ -9,7 +9,7 @@ interface Lang {
   number: T.Parser<Expr>;
 }
 
-const spaces = T.str(/[ \t\r\n]/).many();
+const spaces = T.token(/[ \t\r\n]/).many();
 
 const lang = T.language<Lang>({
   root: r => T.seq([
@@ -31,19 +31,19 @@ const lang = T.language<Lang>({
   },
 
   number: r => {
-    const digit0 = T.str(/[0-9]/);
-    const digit1 = T.str(/[1-9]/);
+    const digit0 = T.token(/[0-9]/);
+    const digit1 = T.token(/[1-9]/);
     return T.alt([
       T.seq([
         digit1,
         digit0.many(1),
-      ]).text(),
+      ]).map(([x, y]) => ([x, ...y].join(''))),
       digit0,
     ]).map(x => ({ kind: 'number', value: Number(x) }));
   },
 });
 
-function parse(input: string) {
+function parse(input: string[]) {
   const result = lang.root.parse(input);
   if (!result.success) {
     throw new Error(`syntax error. (index=${result.index})`);
@@ -100,8 +100,59 @@ export function evaluate(expr: Expr): number {
   }
 }
 
+const digitRegexp = /^[0-9]/;
+
+function tokenize(input: string): string[] {
+  const tokens: string[] = [];
+  let result;
+  let index = 0;
+  while (index < input.length) {
+    const str = input.slice(index);
+    if (str.startsWith('**')) {
+      tokens.push('**');
+      index += 2;
+      continue;
+    }
+    if (str.startsWith('*')) {
+      tokens.push('*');
+      index += 1;
+      continue;
+    }
+    if (str.startsWith('/')) {
+      tokens.push('/');
+      index += 1;
+      continue;
+    }
+    if (str.startsWith('+')) {
+      tokens.push('+');
+      index += 1;
+      continue;
+    }
+    if (str.startsWith('-')) {
+      tokens.push('-');
+      index += 1;
+      continue;
+    }
+    if (str.startsWith('%')) {
+      tokens.push('%');
+      index += 1;
+      continue;
+    }
+    // digit
+    result = digitRegexp.exec(str);
+    if (result != null) {
+      tokens.push(result[0]);
+      index += 1;
+      continue;
+    }
+    throw new Error('invalid token');
+  }
+  return tokens;
+}
+
 export function calculator(input: string): number {
-  const expr = parse(input);
+  const tokens = tokenize(input);
+  const expr = parse(tokens);
   const result = evaluate(expr);
   return result;
 }
