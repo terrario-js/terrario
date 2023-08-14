@@ -77,7 +77,6 @@ export class Parser<U> {
     if (opts.handler != null) {
       this.ctx = {
         handler: wrapByTraceHandler(opts.handler, opts.name, opts.info),
-        children: opts.children || [],
       };
     } else {
       this.ctx = opts.lazy;
@@ -97,7 +96,6 @@ export class Parser<U> {
       const ctx = parser._evalContext();
       this.ctx = {
         handler: wrapByTraceHandler(ctx.handler, this.name, this.info),
-        children: ctx.children,
       };
     }
     return this.ctx;
@@ -110,7 +108,7 @@ export class Parser<U> {
   */
   exec(input: string, state: Record<string, any> = {}, offset: number = 0): Result<U> {
     const ctx = this._evalContext();
-    return ctx.handler(input, offset, ctx.children, state);
+    return ctx.handler(input, offset, state);
   }
 
   /**
@@ -163,13 +161,13 @@ export class Parser<U> {
    * @public
   */
   map<V>(fn: (value: U) => V): Parser<V> {
-    return createParser((input, index, children, state) => {
-      const result = children[0].exec(input, state, index);
+    return createParser((input, index, state) => {
+      const result = this.exec(input, state, index);
       if (!result.success) {
         return result;
       }
       return success(result.index, fn(result.value));
-    }, [this], 'map');
+    }, 'map');
   }
 
   /**
@@ -179,14 +177,14 @@ export class Parser<U> {
    * @public
   */
   text(): Parser<string> {
-    return createParser((input, index, [child], state) => {
-      const result = child.exec(input, state, index);
+    return createParser((input, index, state) => {
+      const result = this.exec(input, state, index);
       if (!result.success) {
         return result;
       }
       const text = input.slice(index, result.index);
       return success(result.index, text);
-    }, [this], 'text');
+    }, 'text');
   }
 
   /**
@@ -234,13 +232,13 @@ export class Parser<U> {
    * @public
   */
   state(key: string, value: (state: any) => any): Parser<U> {
-    return createParser((input, index, [child], state) => {
+    return createParser((input, index, state) => {
       const storedValue = state[key];
       state[key] = value(state);
-      const result = child.exec(input, state, index);
+      const result = this.exec(input, state, index);
       state[key] = storedValue;
       return result;
-    }, [this], 'state');
+    }, 'state');
   }
 }
 
@@ -249,7 +247,6 @@ export class Parser<U> {
 */
 export type StrictParserOpts<U> = {
   handler: ParserHandler<U>,
-  children?: Parser<any>[],
   name?: string,
   info?: string,
   lazy?: undefined,
@@ -263,7 +260,6 @@ export type LazyParserOpts<U> = {
   name?: string,
   info?: string,
   handler?: undefined,
-  children?: undefined,
 };
 
 /**
@@ -271,14 +267,13 @@ export type LazyParserOpts<U> = {
  * 
  * @public
 */
-export type ParserHandler<U> = (input: string, index: number, children: Parser<any>[], state: any) => Result<U>;
+export type ParserHandler<U> = (input: string, index: number, state: any) => Result<U>;
 
 /**
  * @internal
 */
 export type ParserContext<U> = {
   handler: ParserHandler<U>;
-  children: Parser<any>[];
 };
 
 /**
@@ -302,12 +297,12 @@ export type ResultType<U> = U extends Parser<infer R> ? R : never;
 export type ResultTypes<U> = U extends [infer Head, ...infer Tail] ? [ResultType<Head>, ...ResultTypes<Tail>] : [];
 
 function wrapByTraceHandler<U>(handler: ParserHandler<U>, name?: string, info: string = ''): ParserHandler<U> {
-  return (input, index, children, state) => {
+  return (input, index, state) => {
     if (state.trace) {
       const internalName = name != null ? name : '<unnamed>';
       const pos = `${index}`;
       console.log(`${pos.padEnd(6, ' ')}enter ${internalName} ${info}`);
-      const result = handler(input, index, children, state);
+      const result = handler(input, index, state);
       if (result.success) {
         const pos = `${index}:${result.index}`;
         console.log(`${pos.padEnd(6, ' ')}success ${internalName} ${info}`);
@@ -317,7 +312,7 @@ function wrapByTraceHandler<U>(handler: ParserHandler<U>, name?: string, info: s
       }
       return result;
     }
-    return handler(input, index, children, state);
+    return handler(input, index, state);
   };
 }
 
@@ -328,12 +323,12 @@ function many<U>(parser: Parser<U>, opts: { min?: number, max?: number, notMatch
       parser,
     ], 1), { min: opts.min, max: opts.max });
   }
-  return createParser((input, index, [child], state) => {
+  return createParser((input, index, state) => {
     let result;
     let latestIndex = index;
     const accum: U[] = [];
     while (latestIndex < input.length) {
-      result = child.exec(input, state, latestIndex);
+      result = parser.exec(input, state, latestIndex);
       if (!result.success) {
         break;
       }
@@ -347,7 +342,7 @@ function many<U>(parser: Parser<U>, opts: { min?: number, max?: number, notMatch
       return failure(latestIndex);
     }
     return success(latestIndex, accum);
-  }, [parser], 'many');
+  }, 'many');
 }
 
 /**
@@ -367,7 +362,7 @@ export function str(value: string | RegExp): Parser<string> {
 }
 
 function strWithString<U extends string>(value: U): Parser<U> {
-  return createParser((input, index, [], _state) => {
+  return createParser((input, index, _state) => {
     if ((input.length - index) < value.length) {
       return failure(index);
     }
@@ -375,19 +370,19 @@ function strWithString<U extends string>(value: U): Parser<U> {
       return failure(index);
     }
     return success(index + value.length, value);
-  }, undefined, 'str', `value=${value}`);
+  }, 'str', `value=${value}`);
 }
 
 function strWithRegExp(pattern: RegExp): Parser<string> {
   const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
-  return createParser((input, index, [], _state) => {
+  return createParser((input, index, _state) => {
     const text = input.slice(index);
     const result = re.exec(text);
     if (result == null) {
       return failure(index);
     }
     return success(index + result[0].length, result[0]);
-  }, undefined, 'str', `pattern=${pattern}`);
+  }, 'str', `pattern=${pattern}`);
 }
 
 /**
@@ -408,12 +403,12 @@ export function seq(parsers: Parser<any>[], select?: number) {
 }
 
 function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>> {
-  return createParser((input, index, children, state) => {
+  return createParser((input, index, state) => {
     let result;
     let latestIndex = index;
     const accum = [];
-    for (let i = 0; i < children.length; i++) {
-      result = children[i].exec(input, state, latestIndex);
+    for (let i = 0; i < parsers.length; i++) {
+      result = parsers[i].exec(input, state, latestIndex);
       if (!result.success) {
         return result;
       }
@@ -421,7 +416,7 @@ function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[.
       accum.push(result.value);
     }
     return success(latestIndex, (accum as ResultTypes<[...U]>));
-  }, parsers, 'seq', `length=${parsers.length}`);
+  }, 'seq', `length=${parsers.length}`);
 }
 
 function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
@@ -434,16 +429,16 @@ function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], s
  * @public
 */
 export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<ResultTypes<U>[number]> {
-  return createParser((input, index, children, state) => {
+  return createParser((input, index, state) => {
     let result;
-    for (let i = 0; i < children.length; i++) {
-      result = children[i].exec(input, state, index) as Result<ResultTypes<U>[number]>;
+    for (let i = 0; i < parsers.length; i++) {
+      result = parsers[i].exec(input, state, index) as Result<ResultTypes<U>[number]>;
       if (result.success) {
         return result;
       }
     }
     return failure(index);
-  }, parsers, 'alt', `length=${parsers.length}`);
+  }, 'alt', `length=${parsers.length}`);
 }
 
 /**
@@ -451,8 +446,8 @@ export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<Result
  * 
  * @public
 */
-function createParser<U>(handler: ParserHandler<U>, children?: Parser<any>[], name?: string, info?: string): Parser<U> {
-  return new Parser({ handler, children, name, info });
+function createParser<U>(handler: ParserHandler<U>, name?: string, info?: string): Parser<U> {
+  return new Parser({ handler, name, info });
 }
 export { createParser as parser };
 
@@ -471,7 +466,7 @@ export function lazy<U>(fn: () => Parser<U>, name?: string, info?: string): Pars
  * @public
 */
 export function succeeded<U>(value: U): Parser<U> {
-  return createParser((_input, index, [], _state) => {
+  return createParser((_input, index, _state) => {
     return success(index, value);
   }, undefined, 'succeeded');
 }
@@ -482,12 +477,12 @@ export function succeeded<U>(value: U): Parser<U> {
  * @public
 */
 export function match<U>(parser: Parser<U>): Parser<U> {
-  return createParser((input, index, [child], state) => {
-    const result = child.exec(input, state, index);
+  return createParser((input, index, state) => {
+    const result = parser.exec(input, state, index);
     return result.success
       ? success(index, result.value)
       : failure(index);
-  }, [parser], 'match');
+  }, 'match');
 }
 
 /**
@@ -496,12 +491,12 @@ export function match<U>(parser: Parser<U>): Parser<U> {
  * @public
 */
 export function notMatch(parser: Parser<unknown>): Parser<null> {
-  return createParser((input, index, [child], state) => {
-    const result = child.exec(input, state, index);
+  return createParser((input, index, state) => {
+    const result = parser.exec(input, state, index);
     return !result.success
       ? success(index, null)
       : failure(index);
-  }, [parser], 'notMatch');
+  }, 'notMatch');
 }
 
 /**
@@ -510,11 +505,11 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
  * @public
 */
 export function where<U>(condition: (state: any) => boolean, parser: Parser<U>): Parser<U> {
-  return createParser((input, index, [child], state) => {
+  return createParser((input, index, state) => {
     return condition(state)
-      ? child.exec(input, state, index)
+      ? parser.exec(input, state, index)
       : failure(index);
-  }, [parser], 'where');
+  }, 'where');
 }
 
 export const cr = str('\r');
@@ -533,7 +528,7 @@ export const newline = alt([crlf, cr, lf]);
  * 
  * @public
 */
-export const sof = createParser((_input, index, [], _state) => {
+export const sof = createParser((_input, index, _state) => {
   return index === 0
     ? success(index, null)
     : failure(index);
@@ -544,7 +539,7 @@ export const sof = createParser((_input, index, [], _state) => {
  * 
  * @public
 */
-export const eof = createParser((input, index, [], _state) => {
+export const eof = createParser((input, index, _state) => {
   return index >= input.length
     ? success(index, null)
     : failure(index);
@@ -555,7 +550,7 @@ export const eof = createParser((input, index, [], _state) => {
  * 
  * @public
 */
-export const char = createParser((input, index, [], _state) => {
+export const char = createParser((input, index, _state) => {
   if ((input.length - index) < 1) {
     return failure(index);
   }
@@ -568,7 +563,7 @@ export const char = createParser((input, index, [], _state) => {
  * 
  * @public
 */
-export const lineBegin = createParser((input, index, [], state) => {
+export const lineBegin = createParser((input, index, state) => {
   if (sof.exec(input, state, index).success) {
     return success(index, null);
   }

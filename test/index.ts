@@ -1,11 +1,10 @@
 import assert from 'assert';
 import * as T from '../src/index.js';
-import { inspect } from 'util';
 
 describe('Parser', () => {
   describe('parse()', () => {
     test('input', () => {
-      const parser = T.parser((input, index, children, state) => {
+      const parser = T.parser((input, index, state) => {
         return T.success(index, null);
       });
       const result = parser.parse('');
@@ -13,7 +12,7 @@ describe('Parser', () => {
     });
 
     test('state', () => {
-      const parser = T.parser((input, index, children, state) => {
+      const parser = T.parser((input, index, state) => {
         if (state.value !== 1) {
           return T.failure(index);
         }
@@ -25,7 +24,7 @@ describe('Parser', () => {
   });
 
   test('map()', () => {
-    const parser = T.parser((input, index, children, state) => {
+    const parser = T.parser((input, index, state) => {
       return T.success(index, 1);
     }).map(value => {
       return value === 1 ? 2 : 3;
@@ -301,53 +300,3 @@ describe('Combinators', () => {
 
 // test('language()', () => {
 // });
-
-test('operatorExpr', () => {
-  function op(op: string): T.Parser<any> {
-    const sp = T.alt([T.str(' '), T.str('\t'), T.newline]).many();
-    return T.seq([
-      sp,
-      T.str(op),
-      sp,
-    ]);
-  }
-
-  const config = T.prattConfig()
-    .setAtom(
-      T.str(/[0-9]/)
-        .many(1)
-        .text()
-        .map(x => Number(x))
-    );
-
-  config.addOperatorGroup()
-    .addPrefix(op('-'), (op, value) => ({ op: 'minus-sign', expr: value }));
-
-  config.addOperatorGroup()
-    .addInfix(op('*'), 'left', (op, left, right) => ({ op: '*', left, right }))
-    .addInfix(op('/'), 'left', (op, left, right) => ({ op: '/', left, right }));
-  
-  config.addOperatorGroup()
-    .addInfix(op('+'), 'left', (op, left, right) => ({ op: '+', left, right }))
-    .addInfix(op('-'), 'left', (op, left, right) => ({ op: '-', left, right }));
-
-  const parser = config.build();
-
-  const input = '12 + 34\t*\r\n5 + \t\r\n67';
-  const result = parser.parse(input);
-  assert.ok(result.success);
-  assert.strictEqual(result.index, 20);
-  assert.deepStrictEqual(result.value, {
-    op: '+',
-    left: {
-      op: '+',
-      left: 12,
-      right: {
-        op: '*',
-        left: 34,
-        right: 5
-      }
-    },
-    right: 67
-  });
-});
