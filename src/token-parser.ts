@@ -25,10 +25,11 @@ export class TokenParser<U> {
     this.tag = opts.tag ?? '';
     if (opts.handler != null) {
       this.ctx = {
+        kind: 'strict',
         handler: wrapByTraceHandler(opts.handler, this.tag),
       };
     } else {
-      this.ctx = opts.lazy;
+      this.ctx = { kind: 'lazy', handler: opts.lazy };
     }
   }
 
@@ -38,10 +39,11 @@ export class TokenParser<U> {
    * @internal
   */
   _evalContext(): ParserContext<U> {
-    if (typeof this.ctx === 'function') {
-      const parser = this.ctx();
+    if (this.ctx.kind === 'lazy') {
+      const parser = this.ctx.handler();
       const ctx = parser._evalContext();
       this.ctx = {
+        kind: 'strict',
         handler: wrapByTraceHandler(ctx.handler, this.tag),
       };
     }
@@ -185,7 +187,7 @@ export type StrictParserOpts<U> = {
  * @internal
 */
 export type LazyParserOpts<U> = {
-  lazy: LazyContext<U>,
+  lazy: () => TokenParser<U>,
   tag?: string,
   handler?: undefined,
 };
@@ -201,14 +203,17 @@ export type ParserHandler<U> = (input: string[], index: number, state: any) => R
  * @internal
 */
 export type ParserContext<U> = {
-  handler: ParserHandler<U>;
+  kind: 'strict',
+  handler: ParserHandler<U>,
 };
 
 /**
  * @internal
 */
-export type LazyContext<U> =
-  () => TokenParser<U>;
+export type LazyContext<U> = {
+  kind: 'lazy',
+  handler: () => TokenParser<U>,
+};
 
 /**
  * Get result type of Parser.
