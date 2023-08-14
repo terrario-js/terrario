@@ -625,9 +625,3 @@ export type Language<U> = {[K in keyof U]: U[K] extends Parser<unknown> ? U[K] :
  * @public
 */
 export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) => U[K] };
-
-export {
-  prattConfig,
-  PrattConfig,
-  OperatorGroup,
-} from './expr.js';
