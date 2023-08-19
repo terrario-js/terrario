@@ -9,23 +9,11 @@ interface Lang {
   number: T.Parser<Expr>;
 }
 
-const spaces = T.token(/[ \t\r\n]/).many();
-
 const lang = T.language<Lang>({
-  root: r => T.seq([
-    spaces,
-    r.expr,
-    spaces,
-  ], 1),
+  root: r => r.expr,
 
   expr: r => {
-    const atom = T.seq([
-      spaces,
-      T.alt([
-        r.number,
-      ]),
-      spaces,
-    ], 1);
+    const atom = r.number;
     const pratt = buildPrattParser(atom);
     return pratt;
   },
