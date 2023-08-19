@@ -79,7 +79,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  parse(input: string, state: any = {}): Result<U> {
+  parse(input: string, state: Record<string, any> = {}): Result<U> {
     const parser = seq([this, eof], 0);
     return parser.exec(input, state, 0);
   }
@@ -89,7 +89,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  find(input: string, state: any = {}): { index: number, input: string, result: Result<U> } | undefined {
+  find(input: string, state: Record<string, any> = {}): { index: number, input: string, result: Result<U> } | undefined {
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
       const result = this.exec(input, innerState, i);
@@ -105,7 +105,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  findAll(input: string, state: any = {}): { index: number, input: string, result: Result<U> }[] {
+  findAll(input: string, state: Record<string, any> = {}): { index: number, input: string, result: Result<U> }[] {
     const results = [];
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
@@ -177,7 +177,7 @@ export class Parser<U> {
    * 
    * @public
   */
-  state(key: string, value: (state: any) => any): Parser<U> {
+  state(key: string, value: (state: Record<string, any>) => any): Parser<U> {
     return createParser((input, index, state) => {
       const storedValue = state[key];
       state[key] = value(state);
@@ -228,7 +228,7 @@ export type LazyParserOpts<U> = {
  * 
  * @public
 */
-export type ParserHandler<U> = (input: string, index: number, state: any) => Result<U>;
+export type ParserHandler<U> = (input: string, index: number, state: Record<string, any>) => Result<U>;
 
 /**
  * @internal
@@ -313,19 +313,19 @@ function many<U>(parser: Parser<U>, opts: { min?: number, max?: number, notMatch
  * 
  * @public
 */
-export function seq<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>>
+export function seq<U extends Parser<unknown>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>>
 /**
  * Create a new parser that sequentially applies an array of parser.
  * 
  * @public
  * @param select - The index of the data returned in the result.
 */
-export function seq<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V]
-export function seq(parsers: Parser<any>[], select?: number) {
+export function seq<U extends Parser<unknown>[], V extends number>(parsers: [...U], select: V): U[V]
+export function seq(parsers: Parser<unknown>[], select?: number) {
   return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
 
-function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>> {
+function seqAll<U extends Parser<unknown>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>> {
   return createParser((input, index, state) => {
     let result;
     let latestIndex = index;
@@ -342,7 +342,7 @@ function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[.
   }, `seq length=${parsers.length}`);
 }
 
-function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
+function seqSelect<U extends Parser<unknown>[], V extends number>(parsers: [...U], select: V): U[V] {
   return seqAll(parsers).map(values => values[select]);
 }
 
@@ -427,7 +427,7 @@ export function notMatch(parser: Parser<unknown>): Parser<null> {
  * 
  * @public
 */
-export function where<U>(condition: (state: any) => boolean, parser: Parser<U>): Parser<U> {
+export function where<U>(condition: (state: Record<string, any>) => boolean, parser: Parser<U>): Parser<U> {
   return createParser((input, index, state) => {
     return condition(state)
       ? parser.exec(input, state, index)
@@ -463,7 +463,7 @@ export const eof = createParser((input, index, _state) => {
  * @public
 */
 export function language<U extends Language<U>>(source: LanguageSource<U>): U {
-  const lang: Record<string, Parser<any>> = {};
+  const lang: Record<string, Parser<unknown>> = {};
   for (const key of Object.keys(source)) {
     lang[key] = lazy(() => {
       const parser = (source as any)[key](lang);
