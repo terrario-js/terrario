@@ -1,6 +1,6 @@
-import { string as T } from 'terrario';
+import * as T from 'terrario';
 
-const spaces = T.str(/[ \t\r\n]/).many();
+const spaces = T.token(/[ \t\r\n]/).many();
 
 type JsonValue = null | boolean | string | number | Record<string, unknown> | unknown[];
 
@@ -31,35 +31,35 @@ const lang = T.language<Json>({
     r.number,
   ]),
 
-  null: r => T.str('null').map(() => null),
+  null: r => T.token('null').map(() => null),
 
   bool: r => T.alt([
-    T.str('true'),
-    T.str('false'),
+    T.token('true'),
+    T.token('false'),
   ]).map(value => (value === 'true')),
 
   string: r => T.seq([
-    T.str('"'),
-    T.char.many({ notMatch: T.alt([T.str('"'), T.cr, T.lf]) }).text(),
-    T.str('"'),
+    T.token('"'),
+    T.any.many({ notMatch: T.alt([T.token('"'), T.cr, T.lf]) }).span(),
+    T.token('"'),
   ], 1),
 
   number: r => T.alt([
     T.seq([
-      T.str(/[+-]/).option(),
-      T.str(/[0-9]/).many(1),
+      T.token(/[+-]/).option(),
+      T.token(/[0-9]/).many(1),
       T.seq([
-        T.str('.'),
-        T.str(/[0-9]/).many(1),
+        T.token('.'),
+        T.token(/[0-9]/).many(1),
       ]).option(),
-    ]).text(),
+    ]).span(),
   ]).map(value => Number(value)),
 
   object: r => {
     const entry = T.seq([
       r.string,
       spaces,
-      T.str(':'),
+      T.token(':'),
       spaces,
       r.value,
     ]).map(value => {
@@ -67,11 +67,11 @@ const lang = T.language<Json>({
     });
     const separator = T.seq([
       spaces,
-      T.str(','),
+      T.token(','),
       spaces,
     ]);
     return T.seq([
-      T.str('{'),
+      T.token('{'),
       spaces,
       T.seq([
         entry,
@@ -80,7 +80,7 @@ const lang = T.language<Json>({
         ], 1).many(),
       ]).map(x => [x[0], ...x[1]]).option(),
       spaces,
-      T.str('}'),
+      T.token('}'),
     ], 2).map(value => {
       if (value == null) {
         return {};
@@ -96,11 +96,11 @@ const lang = T.language<Json>({
   array: r => {
     const separator = T.seq([
       spaces,
-      T.str(','),
+      T.token(','),
       spaces,
     ]);
     return T.seq([
-      T.str('['),
+      T.token('['),
       spaces,
       T.seq([
         r.value,
@@ -110,7 +110,7 @@ const lang = T.language<Json>({
         ], 1).many(),
       ]).map(x => [x[0], ...x[1]]).option(),
       spaces,
-      T.str(']'),
+      T.token(']'),
     ], 2).map(value => {
       return (value != null ? value : []);
     });

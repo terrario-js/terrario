@@ -1,4 +1,4 @@
-import { token as T } from 'terrario';
+import { tokenParsers as T } from 'terrario';
 import { Operator, buildPrattParser } from './pratt.js';
 
 type Expr = { kind: 'number', value: number } | Operator<Expr>;

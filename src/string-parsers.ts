@@ -1,11 +1,25 @@
-import { success, failure, Result } from './result.js';
+import {
+  Failure,
+  Result,
+  Success,
+  failure,
+  success,
+} from './result.js';
+
+export {
+  Failure,
+  Result,
+  Success,
+  failure,
+  success,
+};
 
 /**
- * Token Parser
+ * String Parser
  * 
  * @public
 */
-export class TokenParser<U> {
+export class Parser<U> {
   tag: string;
   ctx: ParserContext<U> | LazyContext<U>;
 
@@ -55,7 +69,7 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  exec(input: string[], state: Record<string, any> = {}, offset: number = 0): Result<U> {
+  exec(input: string, state: Record<string, any> = {}, offset: number = 0): Result<U> {
     const ctx = this._evalContext();
     return ctx.handler(input, offset, state);
   }
@@ -65,7 +79,7 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  parse(input: string[], state: any = {}): Result<U> {
+  parse(input: string, state: any = {}): Result<U> {
     const parser = seq([this, eof], 0);
     return parser.exec(input, state, 0);
   }
@@ -75,7 +89,7 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  find(input: string[], state: any = {}): { index: number, input: string[], result: Result<U> } | undefined {
+  find(input: string, state: any = {}): { index: number, input: string, result: Result<U> } | undefined {
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
       const result = this.exec(input, innerState, i);
@@ -91,7 +105,7 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  findAll(input: string[], state: any = {}): { index: number, input: string[], result: Result<U> }[] {
+  findAll(input: string, state: any = {}): { index: number, input: string, result: Result<U> }[] {
     const results = [];
     for (let i = 0; i < input.length; i++) {
       const innerState = Object.assign({}, state);
@@ -109,7 +123,7 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  map<V>(fn: (value: U) => V): TokenParser<V> {
+  map<V>(fn: (value: U) => V): Parser<V> {
     return createParser((input, index, state) => {
       const result = this.exec(input, state, index);
       if (!result.success) {
@@ -124,14 +138,14 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  many(min?: number, max?: number): TokenParser<U[]>
+  many(min?: number, max?: number): Parser<U[]>
   /**
    * Create a new parser that tries to apply the parser iteratively.
    * 
    * @public
   */
-  many(opts: { min?: number, max?: number, notMatch?: TokenParser<unknown> }): TokenParser<U[]>
-  many(arg1?: number | { min?: number, max?: number, notMatch?: TokenParser<unknown> }, arg2?: number): TokenParser<U[]> {
+  many(opts: { min?: number, max?: number, notMatch?: Parser<unknown> }): Parser<U[]>
+  many(arg1?: number | { min?: number, max?: number, notMatch?: Parser<unknown> }, arg2?: number): Parser<U[]> {
     if (typeof arg1 === 'number') {
       // with min, max
       return many(this, { min: arg1, max: arg2 });
@@ -148,7 +162,7 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  option(): TokenParser<U | null> {
+  option(): Parser<U | null> {
     return alt([
       this,
       succeeded(null),
@@ -163,7 +177,7 @@ export class TokenParser<U> {
    * 
    * @public
   */
-  state(key: string, value: (state: any) => any): TokenParser<U> {
+  state(key: string, value: (state: any) => any): Parser<U> {
     return createParser((input, index, state) => {
       const storedValue = state[key];
       state[key] = value(state);
@@ -171,6 +185,23 @@ export class TokenParser<U> {
       state[key] = storedValue;
       return result;
     }, 'state');
+  }
+
+  /**
+   * Create a new parser that wraps the current parser.
+   * The generated parser will return the span in the range matched by the inner parser.
+   * 
+   * @public
+  */
+  span(): Parser<string> {
+    return createParser((input, index, state) => {
+      const result = this.exec(input, state, index);
+      if (!result.success) {
+        return result;
+      }
+      const text = input.slice(index, result.index);
+      return success(result.index, text);
+    }, 'span');
   }
 }
 
@@ -187,7 +218,7 @@ export type StrictParserOpts<U> = {
  * @internal
 */
 export type LazyParserOpts<U> = {
-  lazy: () => TokenParser<U>,
+  lazy: () => Parser<U>,
   tag?: string,
   handler?: undefined,
 };
@@ -197,7 +228,7 @@ export type LazyParserOpts<U> = {
  * 
  * @public
 */
-export type ParserHandler<U> = (input: string[], index: number, state: any) => Result<U>;
+export type ParserHandler<U> = (input: string, index: number, state: any) => Result<U>;
 
 /**
  * @internal
@@ -212,7 +243,7 @@ export type ParserContext<U> = {
 */
 export type LazyContext<U> = {
   kind: 'lazy',
-  handler: () => TokenParser<U>,
+  handler: () => Parser<U>,
 };
 
 /**
@@ -220,7 +251,7 @@ export type LazyContext<U> = {
  * 
  * @internal
 */
-export type ResultType<U> = U extends TokenParser<infer R> ? R : never;
+export type ResultType<U> = U extends Parser<infer R> ? R : never;
 
 /**
  * Get result types of Parsers.
@@ -248,7 +279,7 @@ function wrapByTraceHandler<U>(handler: ParserHandler<U>, tag: string): ParserHa
   };
 }
 
-function many<U>(parser: TokenParser<U>, opts: { min?: number, max?: number, notMatch?: TokenParser<unknown> } = {}): TokenParser<U[]> {
+function many<U>(parser: Parser<U>, opts: { min?: number, max?: number, notMatch?: Parser<unknown> } = {}): Parser<U[]> {
   if (opts.notMatch != null) {
     return many(seq([
       notMatch(opts.notMatch),
@@ -282,19 +313,19 @@ function many<U>(parser: TokenParser<U>, opts: { min?: number, max?: number, not
  * 
  * @public
 */
-export function seq<U extends TokenParser<any>[]>(parsers: [...U]): TokenParser<ResultTypes<[...U]>>
+export function seq<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>>
 /**
  * Create a new parser that sequentially applies an array of parser.
  * 
  * @public
  * @param select - The index of the data returned in the result.
 */
-export function seq<U extends TokenParser<any>[], V extends number>(parsers: [...U], select: V): U[V]
-export function seq(parsers: TokenParser<any>[], select?: number) {
+export function seq<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V]
+export function seq(parsers: Parser<any>[], select?: number) {
   return (select == null) ? seqAll(parsers) : seqSelect(parsers, select);
 }
 
-function seqAll<U extends TokenParser<any>[]>(parsers: [...U]): TokenParser<ResultTypes<[...U]>> {
+function seqAll<U extends Parser<any>[]>(parsers: [...U]): Parser<ResultTypes<[...U]>> {
   return createParser((input, index, state) => {
     let result;
     let latestIndex = index;
@@ -311,7 +342,7 @@ function seqAll<U extends TokenParser<any>[]>(parsers: [...U]): TokenParser<Resu
   }, `seq length=${parsers.length}`);
 }
 
-function seqSelect<U extends TokenParser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
+function seqSelect<U extends Parser<any>[], V extends number>(parsers: [...U], select: V): U[V] {
   return seqAll(parsers).map(values => values[select]);
 }
 
@@ -320,7 +351,7 @@ function seqSelect<U extends TokenParser<any>[], V extends number>(parsers: [...
  * 
  * @public
 */
-export function alt<U extends TokenParser<unknown>[]>(parsers: [...U]): TokenParser<ResultTypes<U>[number]> {
+export function alt<U extends Parser<unknown>[]>(parsers: [...U]): Parser<ResultTypes<U>[number]> {
   return createParser((input, index, state) => {
     let result;
     for (let i = 0; i < parsers.length; i++) {
@@ -338,8 +369,8 @@ export function alt<U extends TokenParser<unknown>[]>(parsers: [...U]): TokenPar
  * 
  * @public
 */
-function createParser<U>(handler: ParserHandler<U>, tag?: string): TokenParser<U> {
-  return new TokenParser({ handler, tag });
+function createParser<U>(handler: ParserHandler<U>, tag?: string): Parser<U> {
+  return new Parser({ handler, tag });
 }
 export { createParser as parser };
 
@@ -348,8 +379,8 @@ export { createParser as parser };
  * 
  * @public
 */
-export function lazy<U>(fn: () => TokenParser<U>, tag?: string): TokenParser<U> {
-  return new TokenParser({ lazy: fn, tag });
+export function lazy<U>(fn: () => Parser<U>, tag?: string): Parser<U> {
+  return new Parser({ lazy: fn, tag });
 }
 
 /**
@@ -357,7 +388,7 @@ export function lazy<U>(fn: () => TokenParser<U>, tag?: string): TokenParser<U> 
  * 
  * @public
 */
-export function succeeded<U>(value: U): TokenParser<U> {
+export function succeeded<U>(value: U): Parser<U> {
   return createParser((_input, index, _state) => {
     return success(index, value);
   }, 'succeeded');
@@ -368,7 +399,7 @@ export function succeeded<U>(value: U): TokenParser<U> {
  * 
  * @public
 */
-export function match<U>(parser: TokenParser<U>): TokenParser<U> {
+export function match<U>(parser: Parser<U>): Parser<U> {
   return createParser((input, index, state) => {
     const result = parser.exec(input, state, index);
     return result.success
@@ -382,7 +413,7 @@ export function match<U>(parser: TokenParser<U>): TokenParser<U> {
  * 
  * @public
 */
-export function notMatch(parser: TokenParser<unknown>): TokenParser<null> {
+export function notMatch(parser: Parser<unknown>): Parser<null> {
   return createParser((input, index, state) => {
     const result = parser.exec(input, state, index);
     return !result.success
@@ -396,7 +427,7 @@ export function notMatch(parser: TokenParser<unknown>): TokenParser<null> {
  * 
  * @public
 */
-export function where<U>(condition: (state: any) => boolean, parser: TokenParser<U>): TokenParser<U> {
+export function where<U>(condition: (state: any) => boolean, parser: Parser<U>): Parser<U> {
   return createParser((input, index, state) => {
     return condition(state)
       ? parser.exec(input, state, index)
@@ -432,11 +463,11 @@ export const eof = createParser((input, index, _state) => {
  * @public
 */
 export function language<U extends Language<U>>(source: LanguageSource<U>): U {
-  const lang: Record<string, TokenParser<any>> = {};
+  const lang: Record<string, Parser<any>> = {};
   for (const key of Object.keys(source)) {
     lang[key] = lazy(() => {
       const parser = (source as any)[key](lang);
-      if (parser == null || !(parser instanceof TokenParser)) {
+      if (parser == null || !(parser instanceof Parser)) {
         throw new Error('syntax must return a Parser.');
       }
       parser.tag = `${parser.tag} key=${key}`;
@@ -451,7 +482,7 @@ export function language<U extends Language<U>>(source: LanguageSource<U>): U {
  * 
  * @public
 */
-export type Language<U> = {[K in keyof U]: U[K] extends TokenParser<unknown> ? U[K] : never };
+export type Language<U> = {[K in keyof U]: U[K] extends Parser<unknown> ? U[K] : never };
 
 /**
  * Language source
@@ -465,46 +496,57 @@ export type LanguageSource<U extends Language<U>> = { [K in keyof U]: (lang: U) 
  * 
  * @public
 */
-export function token<U extends string>(value: U): TokenParser<U>
+export function token<U extends string>(value: U): Parser<U>
 /**
  * Create a new parser that matches the given regular expression.
  * 
  * @public
 */
-export function token(pattern: RegExp): TokenParser<string>
-export function token(value: string | RegExp): TokenParser<string> {
+export function token(pattern: RegExp): Parser<string>
+export function token(value: string | RegExp): Parser<string> {
   return (typeof value === 'string') ? tokenWithString(value) : tokenWithRegExp(value);
 }
 
-function tokenWithString<U extends string>(value: U): TokenParser<U> {
+function tokenWithString<U extends string>(value: U): Parser<U> {
   return createParser((input, index, _state) => {
-    if (index >= input.length) {
+    if ((input.length - index) < value.length) {
       return failure(index);
     }
-    if (input[index] !== value) {
+    if (input.slice(index, index + value.length) !== value) {
       return failure(index);
     }
-    return success(index + 1, value);
-  }, `str value=${value}`);
+    return success(index + value.length, value);
+  }, `token value=${value}`);
 }
 
-function tokenWithRegExp(pattern: RegExp): TokenParser<string> {
-  const re = RegExp(`^(?:${pattern.source})$`, pattern.flags);
+function tokenWithRegExp(pattern: RegExp): Parser<string> {
+  const re = RegExp(`^(?:${pattern.source})`, pattern.flags);
   return createParser((input, index, _state) => {
-    if (index >= input.length) {
-      return failure(index);
-    }
-    const result = re.exec(input[index]);
+    const text = input.slice(index);
+    const result = re.exec(text);
     if (result == null) {
       return failure(index);
     }
-    return success(index + 1, result[0]);
-  }, `str pattern=${pattern}`);
+    return success(index + result[0].length, result[0]);
+  }, `token pattern=${pattern}`);
 }
+
+/**
+ * any char
+ * 
+ * @public
+*/
+export const any = createParser((input, index, _state) => {
+  if ((input.length - index) < 1) {
+    return failure(index);
+  }
+  const value = input.charAt(index);
+  return success(index + 1, value);
+}, 'any');
 
 export const cr = token('\r');
 export const lf = token('\n');
-export const crlf = seq([cr, lf]);
+export const crlf = token('\r\n');
 
 /**
  * newline
