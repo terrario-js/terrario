@@ -13,9 +13,11 @@
 
 ## 0.x.x (unreleased)
 
-- Change: Parser for handling strings has been renamed to StringParser.
-- Feature: Add TokenParser.
-- Change: [StringParser] 'children' parameter of T.parser() API has removed.
+- Change: Rename parser.text() to parser.span()
+- Change: Rename T.str() to T.token()
+- Change: Rename T.char to T.any
+- Feature: Add Token Parsers API, an alternative Parser API.
+- Change: child parsers has removed.
 
 ## 0.10.0 (2023/07/30)
 
