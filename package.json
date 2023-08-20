@@ -1,6 +1,6 @@
 {
   "name": "terrario",
-  "version": "0.11.0-dev.2",
+  "version": "0.11.0",
   "description": "A refined, expressive parser combinator library.",
   "license": "MIT",
   "author": "marihachi <marihachi0620@gmail.com> (https://marihachi.github.io/)",
