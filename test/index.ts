@@ -3,16 +3,16 @@ import * as T from '../src/index.js';
 
 describe('Parser', () => {
   describe('parse()', () => {
-    it('input', () => {
-      const parser = T.parser((input, index, children, state) => {
+    test('input', () => {
+      const parser = T.parser((input, index, state) => {
         return T.success(index, null);
       });
       const result = parser.parse('');
       assert.ok(result.success);
     });
 
-    it('state', () => {
-      const parser = T.parser((input, index, children, state) => {
+    test('state', () => {
+      const parser = T.parser((input, index, state) => {
         if (state.value !== 1) {
           return T.failure(index);
         }
@@ -23,8 +23,8 @@ describe('Parser', () => {
     });
   });
 
-  it('map()', () => {
-    const parser = T.parser((input, index, children, state) => {
+  test('map()', () => {
+    const parser = T.parser((input, index, state) => {
       return T.success(index, 1);
     }).map(value => {
       return value === 1 ? 2 : 3;
@@ -34,12 +34,12 @@ describe('Parser', () => {
     assert.deepStrictEqual(result.value, 2);
   });
 
-  it('text()', () => {
+  test('span()', () => {
     const input = 'abc123';
     const parser = T.seq([
-      T.str('abc'),
-      T.str('123'),
-    ]).text();
+      T.token('abc'),
+      T.token('123'),
+    ]).span();
     const result = parser.parse(input);
     assert.ok(result.success);
     assert.deepStrictEqual(result.value, input);
@@ -48,10 +48,10 @@ describe('Parser', () => {
 
   describe('many()', () => {
     describe('basic', () => {
-      it('0 item', () => {
+      test('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many();
+        const parser = T.token('abc').many();
 
         input = '';
         result = parser.parse(input);
@@ -60,10 +60,10 @@ describe('Parser', () => {
         assert.strictEqual(result.index, 0);
       });
 
-      it('1 item', () => {
+      test('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many();
+        const parser = T.token('abc').many();
 
         input = 'abc';
         result = parser.parse(input);
@@ -74,10 +74,10 @@ describe('Parser', () => {
     });
 
     describe('min = 1', () => {
-      it('0 item', () => {
+      test('0 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('').many(1);
+        const parser = T.token('').many(1);
 
         input = '';
         result = parser.parse(input);
@@ -85,10 +85,10 @@ describe('Parser', () => {
         assert.strictEqual(result.index, 0);
       });
 
-      it('1 item', () => {
+      test('1 item', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many(1);
+        const parser = T.token('abc').many(1);
 
         input = 'abc';
         result = parser.parse(input);
@@ -97,10 +97,10 @@ describe('Parser', () => {
         assert.strictEqual(result.index, 3);
       });
 
-      it('2 items', () => {
+      test('2 items', () => {
         let input: string, result: T.Result<string[]>;
 
-        const parser = T.str('abc').many(1);
+        const parser = T.token('abc').many(1);
 
         input = 'abcabc';
         result = parser.parse(input);
@@ -110,13 +110,13 @@ describe('Parser', () => {
       });
     });
 
-    it('with terminator', () => {
+    test('with terminator', () => {
       let input: string, result: T.Result<string>;
 
       const parser = T.seq([
-        T.str('('),
-        T.char.many({ min: 1, notMatch: T.str(')') }).text(),
-        T.str(')'),
+        T.token('('),
+        T.any.many({ min: 1, notMatch: T.token(')') }).span(),
+        T.token(')'),
       ], 1);
 
       input = '(abc)';
@@ -127,34 +127,34 @@ describe('Parser', () => {
     });
   });
 
-  // it('option()', () => {
+  // test('option()', () => {
   // });
 });
 
 describe('Combinators', () => {
-  describe('str()', () => {
+  describe('token()', () => {
     describe('with string value', () => {
-      it('matched', () => {
+      test('matched', () => {
         const input = 'abc';
-        const parser = T.str('abc');
+        const parser = T.token('abc');
         const result = parser.parse(input);
         assert.ok(result.success);
         assert.deepStrictEqual(result.value, input);
         assert.strictEqual(result.index, 3);
       });
 
-      it('not matched', () => {
+      test('not matched', () => {
         const input = 'ab';
-        const parser = T.str('abc');
+        const parser = T.token('abc');
         const result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 0);
       });
     });
 
-    it('with RegExp value', () => {
+    test('with RegExp value', () => {
       const input = 'abcDEF';
-      const parser = T.str(/[a-z]+/i);
+      const parser = T.token(/[a-z]+/i);
       const result = parser.parse(input);
       assert.ok(result.success);
       assert.deepStrictEqual(result.value, input);
@@ -164,11 +164,11 @@ describe('Combinators', () => {
 
   describe('seq()', () => {
     describe('all', () => {
-      it('success', () => {
+      test('success', () => {
         const input = 'abc123';
         const parser = T.seq([
-          T.str('abc'),
-          T.str('123'),
+          T.token('abc'),
+          T.token('123'),
         ]);
         const result = parser.parse(input);
         assert.ok(result.success);
@@ -176,22 +176,22 @@ describe('Combinators', () => {
         assert.strictEqual(result.index, 6);
       });
 
-      it('partial success', () => {
+      test('partial success', () => {
         const input = 'abc1';
         const parser = T.seq([
-          T.str('abc'),
-          T.str('123'),
+          T.token('abc'),
+          T.token('123'),
         ]);
         const result = parser.parse(input);
         assert.ok(!result.success);
         assert.strictEqual(result.index, 3);
       });
 
-      it('failure', () => {
+      test('failure', () => {
         const input = 'a';
         const parser = T.seq([
-          T.str('abc'),
-          T.str('123'),
+          T.token('abc'),
+          T.token('123'),
         ]);
         const result = parser.parse(input);
         assert.ok(!result.success);
@@ -199,11 +199,11 @@ describe('Combinators', () => {
       });
     });
 
-    it('with select param', () => {
+    test('with select param', () => {
       const input = 'abc123';
       const parser = T.seq([
-        T.str('abc'),
-        T.str('123'),
+        T.token('abc'),
+        T.token('123'),
       ], 0);
       const result = parser.parse(input);
       assert.ok(result.success);
@@ -212,11 +212,11 @@ describe('Combinators', () => {
     });
   });
 
-  it('alt()', () => {
+  test('alt()', () => {
     const input = '123';
     const parser = T.alt([
-      T.str('abc'),
-      T.str('123'),
+      T.token('abc'),
+      T.token('123'),
     ]);
     const result = parser.parse(input);
     assert.ok(result.success);
@@ -224,21 +224,21 @@ describe('Combinators', () => {
     assert.strictEqual(result.index, 3);
   });
 
-  // it('lazy()', () => {
+  // test('lazy()', () => {
   // });
 
-  // it('match()', () => {
+  // test('match()', () => {
   // });
 
-  // it('notMatch()', () => {
+  // test('notMatch()', () => {
   // });
 
-  it('state api', () => {
+  test('state api', () => {
     let input, parser, result;
 
     // 1
     parser = T.where(state => state.enabled,
-      T.char
+      T.any
     ).state('enabled', () => true);
 
     result = parser.parse('a');
@@ -247,7 +247,7 @@ describe('Combinators', () => {
 
     // 2
     parser = T.where(state => state.enabled,
-      T.char
+      T.any
     ).state('enabled', () => false);
 
     result = parser.parse('a');
@@ -258,7 +258,7 @@ describe('Combinators', () => {
     parser = T.seq([
       T.succeeded(null).state('enabled', () => true),
       T.where(state => !state.enabled,
-        T.str('a')
+        T.token('a')
       ),
     ], 1);
 
@@ -268,7 +268,7 @@ describe('Combinators', () => {
 
   });
 
-  it('eof', () => {
+  test('eof', () => {
     let input, parser, result;
 
     parser = T.eof;
@@ -282,21 +282,21 @@ describe('Combinators', () => {
     assert.strictEqual(result.index, 0);
   });
 
-  it('char', () => {
+  test('any', () => {
     const input = 'a';
-    const parser = T.char;
+    const parser = T.any;
     const result = parser.parse(input);
     assert.ok(result.success);
     assert.deepStrictEqual(result.value, 'a');
     assert.strictEqual(result.index, 1);
   });
 
-  // it('lineBegin()', () => {
+  // test('lineBegin()', () => {
   // });
 
-  // it('lineEnd()', () => {
+  // test('lineEnd()', () => {
   // });
 });
 
-// it('language()', () => {
+// test('language()', () => {
 // });

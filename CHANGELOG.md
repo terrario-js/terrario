@@ -11,6 +11,14 @@
 
 -->
 
+## 0.11.0 (2023/08/20)
+
+- Change: Rename parser.text() to parser.span()
+- Change: Rename T.str() to T.token()
+- Change: Rename T.char to T.any
+- Feature: Add Token Parsers API, an alternative Parser API.
+- Change: child parsers has removed.
+
 ## 0.10.0 (2023/07/30)
 
 - Change api: T.cond(predicate) -> T.where(condition, parser)

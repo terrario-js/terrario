@@ -41,7 +41,8 @@ console.log(result);
 ```
 
 ## Examples
-- [JSON parsing](https://github.com/marihachi/terrario/tree/develop/examples/json)
+- [JSON parser](https://github.com/terrario-js/terrario/tree/9f5c16e7451429297354fec4fe6f8f010da6d70b/examples/json)
+- [calculator](https://github.com/terrario-js/terrario/tree/9f5c16e7451429297354fec4fe6f8f010da6d70b/examples/calculator)
 
 ## License
 MIT License
