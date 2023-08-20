@@ -11,7 +11,7 @@
 
 -->
 
-## 0.x.x (unreleased)
+## 0.11.0 (2023/08/20)
 
 - Change: Rename parser.text() to parser.span()
 - Change: Rename T.str() to T.token()
