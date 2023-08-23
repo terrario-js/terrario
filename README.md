@@ -7,7 +7,7 @@ A refined, expressive parser combinator library.
 [Try it out!](https://npm.runkit.com/terrario)
 
 - 📍 Minimal yet powerful APIs
-- 🖨 Scannerless parsing
+- 🖨 Supports scannerless parsing and tokens parsing
 - ⚙ Supports conditional control by state
 - ✨ Zero dependency
 
@@ -27,9 +27,9 @@ import * as T from 'terrario';
 
 // build a parser
 const parser = T.alt([
-  T.str('hello'),
-  T.str('world'),
-  T.str(' '),
+  T.token('hello'),
+  T.token('world'),
+  T.token(' '),
 ]).many();
 
 // parse the input string
