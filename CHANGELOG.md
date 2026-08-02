@@ -11,7 +11,7 @@
 
 -->
 
-## 0.11.1 (unreleased)
+## 0.11.1 (2026/08/02)
 
 - I've switched the "Try it out!" button to npmjs.dev.
 - Other: Fix a basic example of the readme.
