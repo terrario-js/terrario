@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A refined, expressive parser combinator library.
-[Try it out!](https://npm.runkit.com/terrario)
+[Try it out!](https://npmjs.dev/terrario)
 
 - 📍 Minimal yet powerful APIs
 - 🖨 Supports scannerless parsing and tokens parsing
