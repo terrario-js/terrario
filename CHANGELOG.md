@@ -11,6 +11,12 @@
 
 -->
 
+## 0.11.1 (unreleased)
+
+- I've switched the "Try it out!" button to npmjs.dev.
+- Other: Fix a basic example of the readme.
+- Other: Fix CI.
+
 ## 0.11.0 (2023/08/20)
 
 - Change: Rename parser.text() to parser.span()
